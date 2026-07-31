@@ -108,9 +108,33 @@ export default function Settings() {
     // Clear device token
     await SecureStore.deleteItemAsync('betina_device_token');
     await SecureStore.deleteItemAsync('betina_device_phone');
-    
+
     await supabase.auth.signOut();
     router.replace('/(auth)/login');
+  };
+
+  // Account deletion (Apple 5.1.1(v) / Google requirement — must be doable
+  // in-app). Confirmation dialog → server-side wipe via the delete-account
+  // Edge Function → clear local session → back to login.
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(false);
+
+  const deleteAccount = async () => {
+    setDeleting(true);
+    setDeleteError(false);
+    try {
+      const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
+      if (error) throw error;
+      await SecureStore.deleteItemAsync('betina_device_token');
+      await SecureStore.deleteItemAsync('betina_device_phone');
+      await supabase.auth.signOut();
+      setDeleteModalOpen(false);
+      router.replace('/(auth)/login');
+    } catch {
+      setDeleting(false);
+      setDeleteError(true);
+    }
   };
 
   return (
@@ -177,6 +201,13 @@ export default function Settings() {
         {/* Logout */}
         <Animated.View entering={FadeInDown.delay(320).duration(500)} style={styles.section}>
           <GlowButton label={t.settingsLogout} variant="danger" onPress={logout} />
+          <Pressable
+            onPress={() => { setDeleteError(false); setDeleteModalOpen(true); }}
+            style={styles.deleteLink}
+            hitSlop={8}
+          >
+            <Text style={styles.deleteLinkLabel}>{t.settingsDeleteAccount}</Text>
+          </Pressable>
           <Text style={styles.version}>BETina v1.0 · powered by GeniusBet</Text>
         </Animated.View>
       </ScrollView>
@@ -217,6 +248,29 @@ export default function Settings() {
               {saved ? t.settingsSaved : saving ? '…' : t.settingsSave}
             </Text>
           </Pressable>
+        </View>
+      </Modal>
+
+      {/* ── Delete Account Confirmation ── */}
+      <Modal visible={deleteModalOpen} transparent animationType="fade" onRequestClose={() => { if (!deleting) setDeleteModalOpen(false); }}>
+        <View style={styles.deleteCenter}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => { if (!deleting) setDeleteModalOpen(false); }} />
+          <View style={styles.deleteDialog}>
+            <Text style={styles.deleteDialogEmoji}>⚠️</Text>
+            <Text style={styles.deleteDialogTitle}>{t.deleteAcctTitle}</Text>
+            <Text style={styles.deleteDialogBody}>{t.deleteAcctBody}</Text>
+            {deleteError && <Text style={styles.deleteDialogError}>{t.deleteAcctFailed}</Text>}
+            <Pressable
+              onPress={deleteAccount}
+              disabled={deleting}
+              style={[styles.deleteConfirmBtn, deleting && { opacity: 0.6 }]}
+            >
+              <Text style={styles.deleteConfirmLabel}>{deleting ? t.deleteAcctWorking : t.deleteAcctConfirm}</Text>
+            </Pressable>
+            <Pressable onPress={() => { if (!deleting) setDeleteModalOpen(false); }} disabled={deleting} style={styles.deleteCancelBtn}>
+              <Text style={styles.deleteCancelLabel}>{t.deleteAcctCancel}</Text>
+            </Pressable>
+          </View>
         </View>
       </Modal>
     </ScreenBg>
@@ -277,4 +331,25 @@ const styles = StyleSheet.create({
     borderRadius: 999, paddingVertical: 14, alignItems: 'center',
   },
   saveBtnLabel: { color: '#000', fontFamily: Fonts.bold, fontSize: Typography.base },
+
+  // Delete account
+  deleteLink: { alignItems: 'center', paddingVertical: 12, marginTop: 2 },
+  deleteLinkLabel: { color: Colors.danger, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
+  deleteCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.65)', padding: 28 },
+  deleteDialog: {
+    width: '100%', maxWidth: 380, backgroundColor: '#14111A',
+    borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,122,122,0.3)',
+    paddingHorizontal: 22, paddingTop: 22, paddingBottom: 14, alignItems: 'center',
+  },
+  deleteDialogEmoji: { fontSize: 34, marginBottom: 10 },
+  deleteDialogTitle: { color: '#FFF', fontSize: Typography.lg, fontFamily: Fonts.bold, textAlign: 'center', marginBottom: 8 },
+  deleteDialogBody: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center', lineHeight: 20, marginBottom: 18 },
+  deleteDialogError: { color: Colors.danger, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center', marginBottom: 14 },
+  deleteConfirmBtn: {
+    width: '100%', backgroundColor: Colors.danger,
+    borderRadius: 999, paddingVertical: 14, alignItems: 'center', marginBottom: 4,
+  },
+  deleteConfirmLabel: { color: '#2A0A0A', fontFamily: Fonts.bold, fontSize: Typography.base },
+  deleteCancelBtn: { width: '100%', paddingVertical: 14, alignItems: 'center' },
+  deleteCancelLabel: { color: Colors.textSecondary, fontFamily: Fonts.semibold, fontSize: Typography.base },
 });

@@ -10,7 +10,10 @@
     "backgroundColor": "#0A0A0F",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.geniusbet.betina"
+      "bundleIdentifier": "com.geniusbet.betina",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.geniusbet.betina",
@@ -56,6 +59,12 @@
         "projectId": "29f5b2fc-32b7-4efb-b826-fdc457740d5f"
       }
     },
-    "owner": "ultrakimo"
+    "owner": "ultrakimo",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/29f5b2fc-32b7-4efb-b826-fdc457740d5f"
+    }
   }
 }
