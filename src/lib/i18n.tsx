@@ -1371,7 +1371,7 @@ export function detectLang(locale: string): LangCode {
 
 const COUNTRY_LANG: Record<string, LangCode> = {
   AT: 'de', DE: 'de', CH: 'de',
-  ES: 'es', MX: 'es', CO: 'es', AR: 'es', SV: 'es',
+  ES: 'es', MX: 'es', CO: 'es', AR: 'es', SV: 'es', VE: 'es', GT: 'es',
   PT: 'pt', BR: 'pt', AO: 'pt',
   FR: 'fr', SN: 'fr', GN: 'fr', CD: 'fr',
   IT: 'it',
@@ -1386,7 +1386,7 @@ export function langForCountry(iso2: string): LangCode | null {
 
 const DIAL_LANG: Record<string, LangCode> = {
   '+43': 'de', '+49': 'de', '+41': 'de',
-  '+34': 'es', '+52': 'es', '+57': 'es', '+54': 'es', '+503': 'es',
+  '+34': 'es', '+52': 'es', '+57': 'es', '+54': 'es', '+503': 'es', '+58': 'es', '+502': 'es',
   '+351': 'pt', '+55': 'pt', '+244': 'pt',
   '+33': 'fr', '+221': 'fr', '+224': 'fr', '+243': 'fr',
   '+39': 'it',

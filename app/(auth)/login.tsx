@@ -41,6 +41,30 @@ const DIAL_CODES = [
   { flag: '🇰🇪', code: '+254', country: 'Kenya' },
   { flag: '🇬🇭', code: '+233', country: 'Ghana' },
   { flag: '🇸🇳', code: '+221', country: 'Senegal' },
+  { flag: '🇸🇱', code: '+232', country: 'Sierra Leone' },
+  // LatAm
+  { flag: '🇻🇪', code: '+58', country: 'Venezuela' },
+  { flag: '🇬🇹', code: '+502', country: 'Guatemala' },
+  // CIS
+  { flag: '🇷🇺', code: '+7', country: 'Russia' },
+  { flag: '🇰🇿', code: '+7', country: 'Kazakhstan' },
+  { flag: '🇺🇦', code: '+380', country: 'Ukraine' },
+  { flag: '🇧🇾', code: '+375', country: 'Belarus' },
+  { flag: '🇦🇲', code: '+374', country: 'Armenia' },
+  { flag: '🇦🇿', code: '+994', country: 'Azerbaijan' },
+  { flag: '🇬🇪', code: '+995', country: 'Georgia' },
+  { flag: '🇰🇬', code: '+996', country: 'Kyrgyzstan' },
+  { flag: '🇲🇩', code: '+373', country: 'Moldova' },
+  { flag: '🇹🇯', code: '+992', country: 'Tajikistan' },
+  { flag: '🇹🇲', code: '+993', country: 'Turkmenistan' },
+  { flag: '🇺🇿', code: '+998', country: 'Uzbekistan' },
+  // Asia
+  { flag: '🇹🇭', code: '+66', country: 'Thailand' },
+  { flag: '🇻🇳', code: '+84', country: 'Vietnam' },
+  { flag: '🇵🇭', code: '+63', country: 'Philippines' },
+  { flag: '🇮🇩', code: '+62', country: 'Indonesia' },
+  { flag: '🇮🇳', code: '+91', country: 'India' },
+  { flag: '🇲🇾', code: '+60', country: 'Malaysia' },
 ];
 
 export default function Login() {
