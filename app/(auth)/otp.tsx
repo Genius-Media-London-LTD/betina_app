@@ -65,10 +65,16 @@ export default function Otp() {
         refresh_token: data.refresh_token,
       });
 
-      // Save device token for 30-day auto-login (only if user opted in)
-      if (rememberDevice && data.device_token) {
-        await SecureStore.setItemAsync('betina_device_token', data.device_token);
-        await SecureStore.setItemAsync('betina_device_phone', phone ?? '');
+      // Save device token for 30-day auto-login (native only). SecureStore is
+      // unavailable on web and throws — which previously aborted the whole
+      // login with a "Network error". Guard by platform and swallow failures.
+      if (rememberDevice && data.device_token && Platform.OS !== 'web') {
+        try {
+          await SecureStore.setItemAsync('betina_device_token', data.device_token);
+          await SecureStore.setItemAsync('betina_device_phone', phone ?? '');
+        } catch (e) {
+          console.warn('device token save failed:', e);
+        }
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

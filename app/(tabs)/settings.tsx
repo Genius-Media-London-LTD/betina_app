@@ -105,10 +105,14 @@ export default function Settings() {
   };
 
   const logout = async () => {
-    // Clear device token
-    await SecureStore.deleteItemAsync('betina_device_token');
-    await SecureStore.deleteItemAsync('betina_device_phone');
-
+    // Clear device token (SecureStore is unavailable on web — don't let it
+    // throw and block sign-out).
+    try {
+      await SecureStore.deleteItemAsync('betina_device_token');
+      await SecureStore.deleteItemAsync('betina_device_phone');
+    } catch {
+      // no-op on web
+    }
     await supabase.auth.signOut();
     router.replace('/(auth)/login');
   };
