@@ -3,7 +3,9 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -108,7 +110,10 @@ export default function Interests() {
     <ScreenBg glowTop={0.14} glowSize={420}>
       {/* Team picker modal */}
       <Modal visible={teamPickerVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
           <View style={[styles.modalSheet, { paddingBottom: insets.bottom + 16 }]}>
             <Text style={styles.modalTitle}>{t.interestsSearchTitle}</Text>
 
@@ -160,7 +165,7 @@ export default function Interests() {
               <Text style={styles.modalCloseText}>Cancel</Text>
             </Pressable>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <ScrollView
