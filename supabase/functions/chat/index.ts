@@ -14,7 +14,7 @@ import { getPlayerByPhone } from '../_shared/crm-client.ts';
 import { normalizePhone } from '../_shared/phone.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
-const MODEL = 'claude-sonnet-5';
+const MODEL = 'claude-haiku-4-5';
 const MAX_TOOL_ROUNDS = 5;
 const SPORTS_API = 'https://intelligence.geniusbet.com';
 
@@ -223,7 +223,7 @@ async function callClaude(system: string, messages: any[]) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL, max_tokens: 1024, thinking: { type: 'disabled' }, system, tools: TOOLS, messages }),
+    body: JSON.stringify({ model: MODEL, max_tokens: 1024, system, tools: TOOLS, messages }),
   });
   if (!res.ok) throw new Error(`Anthropic ${res.status}`);
   return await res.json();

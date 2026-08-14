@@ -29,7 +29,7 @@ import { sendSms } from '../_shared/sms.ts';
 const EXPO_PUSH = 'https://exp.host/--/api/v2/push/send';
 const SPORTS_API = 'https://intelligence.geniusbet.com';
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
-const MODEL = 'claude-sonnet-5';
+const MODEL = 'claude-haiku-4-5';
 
 const MARKETING_MAX_PER_DAY = 1;
 const MARKETING_MAX_PER_WEEK = 3;
@@ -333,7 +333,7 @@ async function generateMessage(lang: string, name: string, brief: string): Promi
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: MODEL, max_tokens: 200, thinking: { type: 'disabled' }, system, messages: [{ role: 'user', content: brief }] }),
+      body: JSON.stringify({ model: MODEL, max_tokens: 200, system, messages: [{ role: 'user', content: brief }] }),
     });
     if (!res.ok) return null;
     const data = await res.json();
