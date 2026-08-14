@@ -96,10 +96,13 @@ export default function Register() {
     }
     const bday = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     setLoading(true);
-    const { data } = await supabase.auth.getUser();
-    if (data.user) {
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
+    // Use getSession() (in-memory, reliable) rather than getUser() — the latter
+    // makes a network call that can transiently return null on device, which
+    // previously caused this profile write to be silently skipped.
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const { error } = await supabase.from('profiles').upsert({
+        id: session.user.id,
         name: name.trim(),
         country: country.name,
         language: lang,
@@ -108,6 +111,7 @@ export default function Register() {
         xp_points: 100,
         streak_days: 0,
       });
+      if (error) console.warn('register: profile save failed:', error.message);
     }
     setLoading(false);
     router.push({ pathname: '/(auth)/interests', params: { name: name.trim() } });

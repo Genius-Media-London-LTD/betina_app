@@ -87,10 +87,11 @@ export default function Interests() {
   const finish = async (skip = false) => {
     setLoading(true);
     if (!skip) {
-      const { data } = await supabase.auth.getUser();
-      if (data.user) {
-        await supabase.from('profiles').upsert({
-          id: data.user.id,
+      // getSession() (in-memory) instead of getUser() (network) — see register.tsx.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { error } = await supabase.from('profiles').upsert({
+          id: session.user.id,
           favourite_sport: selected[0] ?? null,
           favourite_sports: selected.join(','),
           favourite_team: selectedTeam?.strTeam ?? null,
@@ -98,6 +99,7 @@ export default function Interests() {
           favourite_team_sport: selectedTeam?.strSport ?? null,
           favourite_team_league: selectedTeam?.strLeague ?? null,
         });
+        if (error) console.warn('interests: profile save failed:', error.message);
         // One-time +20 XP for finishing onboarding (server grants it once).
         await claimProfileCompleted();
       }
