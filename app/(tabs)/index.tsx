@@ -9,7 +9,9 @@ import BETinaAvatar from '../../src/components/BETinaAvatar';
 import GlowCard from '../../src/components/GlowCard';
 import ParticlesBg from '../../src/components/ParticlesBg';
 import ScreenBg from '../../src/components/ScreenBg';
+import SignInWall from '../../src/components/SignInWall';
 import XPBar from '../../src/components/XPBar';
+import { useSession } from '../../src/hooks/useSession';
 import { tiers } from '../../src/lib/demo';
 import { MatchEvent, fetchTeamNext, formatKickoff } from '../../src/lib/sports';
 import { supabase } from '../../src/lib/supabase';
@@ -46,6 +48,7 @@ export default function Home() {
   const { t, lang } = useI18n();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const session = useSession();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [fixtures, setFixtures] = useState<MatchEvent[]>([]);
@@ -97,7 +100,11 @@ export default function Home() {
   const kickoff = (e: MatchEvent) =>
     formatKickoff(e.date, e.time, lang, { today: t.homeToday, tomorrow: t.homeTomorrow });
 
-  if (loading) {
+  // Guest (no session) → gate the personalised home behind sign-in. Non-account
+  // content (news/articles) stays open on the Live tab.
+  if (session === null) return <SignInWall />;
+
+  if (loading || session === undefined) {
     return (
       <ScreenBg glowTop={0.16} glowSize={460}>
         <View style={styles.centered}>

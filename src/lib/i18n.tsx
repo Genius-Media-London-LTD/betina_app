@@ -29,6 +29,10 @@ type Translations = {
   registerCountry: string;
   registerBirthday: string;
   registerBtn: string;
+  loginGuest: string;
+  guestTitle: string;
+  guestBody: string;
+  guestCta: string;
   interestsTitle: string;
   interestsSubtitle: string;
   interestsTeamLabel: string;
@@ -225,6 +229,10 @@ const T: Record<LangCode, Translations> = {
     registerCountry: 'Country',
     registerBirthday: 'Birthday (DD / MM / YYYY)',
     registerBtn: "Let's go",
+    loginGuest: 'Just looking? Browse first',
+    guestTitle: 'Sign in to unlock this',
+    guestBody: 'Create your free BETina account to chat, follow your journey and get personalised insights.',
+    guestCta: 'Sign in / Create account',
     interestsTitle: 'Your sports',
     interestsSubtitle: 'Pick what you follow',
     interestsTeamLabel: 'Favourite team',
@@ -383,6 +391,10 @@ const T: Record<LangCode, Translations> = {
     registerCountry: 'Land',
     registerBirthday: 'Geburtstag (TT / MM / JJJJ)',
     registerBtn: 'Los geht\'s',
+    loginGuest: 'Nur schauen? Erst mal stöbern',
+    guestTitle: 'Zum Freischalten anmelden',
+    guestBody: 'Erstelle dein kostenloses BETina-Konto, um zu chatten, deine Journey zu verfolgen und persönliche Insights zu bekommen.',
+    guestCta: 'Anmelden / Konto erstellen',
     interestsTitle: 'Deine Sportarten',
     interestsSubtitle: 'Wähle was du verfolgst',
     interestsTeamLabel: 'Lieblingsverein',
@@ -541,6 +553,10 @@ const T: Record<LangCode, Translations> = {
     registerCountry: 'País',
     registerBirthday: 'Cumpleaños (DD / MM / AAAA)',
     registerBtn: 'Vamos',
+    loginGuest: '¿Solo mirando? Explora primero',
+    guestTitle: 'Inicia sesión para desbloquear',
+    guestBody: 'Crea tu cuenta gratuita de BETina para chatear, seguir tu progreso y recibir información personalizada.',
+    guestCta: 'Iniciar sesión / Crear cuenta',
     interestsTitle: 'Tus deportes',
     interestsSubtitle: 'Elige lo que sigues',
     interestsTeamLabel: 'Equipo favorito',
@@ -699,6 +715,10 @@ const T: Record<LangCode, Translations> = {
     registerCountry: 'País',
     registerBirthday: 'Aniversário (DD / MM / AAAA)',
     registerBtn: 'Vamos lá',
+    loginGuest: 'Só a ver? Explora primeiro',
+    guestTitle: 'Entra para desbloquear',
+    guestBody: 'Cria a tua conta grátis BETina para conversar, acompanhar a tua jornada e receber dicas personalizadas.',
+    guestCta: 'Entrar / Criar conta',
     interestsTitle: 'Seus esportes',
     interestsSubtitle: 'Escolha o que você acompanha',
     interestsTeamLabel: 'Time favorito',
@@ -857,6 +877,10 @@ const T: Record<LangCode, Translations> = {
     registerCountry: 'Pays',
     registerBirthday: 'Date de naissance (JJ / MM / AAAA)',
     registerBtn: 'C\'est parti',
+    loginGuest: 'Juste un coup d\'œil ? Explore d\'abord',
+    guestTitle: 'Connecte-toi pour débloquer',
+    guestBody: 'Crée ton compte BETina gratuit pour discuter, suivre ton parcours et recevoir des infos personnalisées.',
+    guestCta: 'Se connecter / Créer un compte',
     interestsTitle: 'Vos sports',
     interestsSubtitle: 'Choisissez ce que vous suivez',
     interestsTeamLabel: 'Équipe favorite',
@@ -1015,6 +1039,10 @@ const T: Record<LangCode, Translations> = {
     registerCountry: 'Paese',
     registerBirthday: 'Compleanno (GG / MM / AAAA)',
     registerBtn: 'Iniziamo',
+    loginGuest: 'Solo un\'occhiata? Esplora prima',
+    guestTitle: 'Accedi per sbloccare',
+    guestBody: 'Crea il tuo account BETina gratuito per chattare, seguire il tuo percorso e ricevere approfondimenti personalizzati.',
+    guestCta: 'Accedi / Crea account',
     interestsTitle: 'I tuoi sport',
     interestsSubtitle: 'Scegli cosa segui',
     interestsTeamLabel: 'Squadra preferita',
@@ -1173,6 +1201,10 @@ const T: Record<LangCode, Translations> = {
     registerCountry: 'Țară',
     registerBirthday: 'Ziua de naștere (ZZ / LL / AAAA)',
     registerBtn: 'Hai să mergem',
+    loginGuest: 'Doar te uiți? Explorează întâi',
+    guestTitle: 'Conectează-te pentru a debloca',
+    guestBody: 'Creează-ți contul BETina gratuit ca să discuți, să-ți urmărești parcursul și să primești informații personalizate.',
+    guestCta: 'Conectează-te / Creează cont',
     interestsTitle: 'Sporturile tale',
     interestsSubtitle: 'Alege ce urmărești',
     interestsTeamLabel: 'Echipa preferată',

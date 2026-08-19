@@ -11,6 +11,8 @@ import TeamCrest from '../../src/components/TeamCrest';
 import { SPORT_KEYS, useI18n } from '../../src/lib/i18n';
 import { parseSports, sportEmoji } from '../../src/lib/sports';
 import { useProfile } from '../../src/hooks/useProfile';
+import { useSession } from '../../src/hooks/useSession';
+import SignInWall from '../../src/components/SignInWall';
 import { supabase } from '../../src/lib/supabase';
 import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
 
@@ -66,7 +68,11 @@ export default function Journey() {
     ? (xp - currentTierObj.minXp) / (nextTierObj.minXp - currentTierObj.minXp)
     : 1;
   const insets = useSafeAreaInsets();
-  
+  const session = useSession();
+
+  // Guest → the journey/stats are account-based; gate behind sign-in. (Apple 5.1.1(v))
+  if (session === undefined) return <ScreenBg glowTop={0.14} glowSize={460} />;
+  if (session === null) return <SignInWall />;
 
   return (
     <ScreenBg glowTop={0.14} glowSize={460}>

@@ -10,6 +10,7 @@ import ScreenBg from '../../src/components/ScreenBg';
 import SectionLabel from '../../src/components/SectionLabel';
 import Toggle from '../../src/components/Toggle';
 import { useProfile } from '../../src/hooks/useProfile';
+import { useSession } from '../../src/hooks/useSession';
 import { LANGUAGES, LangCode, useI18n } from '../../src/lib/i18n';
 import { supabase } from '../../src/lib/supabase';
 import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
@@ -41,6 +42,8 @@ export default function Settings() {
   const tier = profile?.vip_tier ?? 'INITIATE';
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const session = useSession();
+  const guest = session === null;
 
   const [eventReminders, setEventReminders] = useState(true);
   const [betinaMessages, setBetinaMessages] = useState(true);
@@ -151,21 +154,33 @@ export default function Settings() {
           <Text style={styles.title}>{t.settingsTitle}</Text>
         </Animated.View>
 
-        {/* Profile card */}
+        {/* Profile card (or a sign-in prompt for guests) */}
         <Animated.View entering={FadeInDown.delay(80).duration(500)}>
-          <GlowCard style={styles.profileCard}>
-            <View style={styles.profileInitial}>
-              <Text style={styles.profileInitialLabel}>{(name[0] || '?').toUpperCase()}</Text>
-            </View>
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName} numberOfLines={1}>{name}</Text>
-              <Text style={styles.profileMeta}>{phone ?? '—'}</Text>
-            </View>
-            <View style={styles.tierPill}>
-              <View style={styles.tierDot} />
-              <Text style={styles.tierPillLabel}>{tier}</Text>
-            </View>
-          </GlowCard>
+          {guest ? (
+            <GlowCard style={styles.profileCard}>
+              <View style={styles.profileInitial}>
+                <Text style={styles.profileInitialLabel}>👋</Text>
+              </View>
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileName} numberOfLines={1}>{t.guestTitle}</Text>
+                <Text style={styles.profileMeta} numberOfLines={2}>{t.guestBody}</Text>
+              </View>
+            </GlowCard>
+          ) : (
+            <GlowCard style={styles.profileCard}>
+              <View style={styles.profileInitial}>
+                <Text style={styles.profileInitialLabel}>{(name[0] || '?').toUpperCase()}</Text>
+              </View>
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileName} numberOfLines={1}>{name}</Text>
+                <Text style={styles.profileMeta}>{phone ?? '—'}</Text>
+              </View>
+              <View style={styles.tierPill}>
+                <View style={styles.tierDot} />
+                <Text style={styles.tierPillLabel}>{tier}</Text>
+              </View>
+            </GlowCard>
+          )}
         </Animated.View>
 
         {/* General */}
@@ -182,15 +197,17 @@ export default function Settings() {
           </GlowCard>
         </Animated.View>
 
-        {/* Notifications */}
-        <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.section}>
-          <SectionLabel>{t.settingsPush}</SectionLabel>
-          <GlowCard>
-            <Row emoji="⚽" label={t.settingsEventReminders} right={<Toggle value={eventReminders} onValueChange={(v) => { setEventReminders(v); savePref('notify_events', v); }} />} />
-            <Row emoji="💬" label={t.settingsBetinaMsgs} right={<Toggle value={betinaMessages} onValueChange={(v) => { setBetinaMessages(v); savePref('notify_betina', v); }} />} />
-            <Row emoji="🏆" label={t.settingsTierUpdates} right={<Toggle value={tierUpdates} onValueChange={(v) => { setTierUpdates(v); savePref('notify_tier', v); }} />} last />
-          </GlowCard>
-        </Animated.View>
+        {/* Notifications (account-based → hidden for guests) */}
+        {!guest && (
+          <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.section}>
+            <SectionLabel>{t.settingsPush}</SectionLabel>
+            <GlowCard>
+              <Row emoji="⚽" label={t.settingsEventReminders} right={<Toggle value={eventReminders} onValueChange={(v) => { setEventReminders(v); savePref('notify_events', v); }} />} />
+              <Row emoji="💬" label={t.settingsBetinaMsgs} right={<Toggle value={betinaMessages} onValueChange={(v) => { setBetinaMessages(v); savePref('notify_betina', v); }} />} />
+              <Row emoji="🏆" label={t.settingsTierUpdates} right={<Toggle value={tierUpdates} onValueChange={(v) => { setTierUpdates(v); savePref('notify_tier', v); }} />} last />
+            </GlowCard>
+          </Animated.View>
+        )}
 
         {/* Support */}
         <Animated.View entering={FadeInDown.delay(260).duration(500)} style={styles.section}>
@@ -202,16 +219,22 @@ export default function Settings() {
           </GlowCard>
         </Animated.View>
 
-        {/* Logout */}
+        {/* Account actions — guests get a sign-in CTA instead of logout/delete */}
         <Animated.View entering={FadeInDown.delay(320).duration(500)} style={styles.section}>
-          <GlowButton label={t.settingsLogout} variant="danger" onPress={logout} />
-          <Pressable
-            onPress={() => { setDeleteError(false); setDeleteModalOpen(true); }}
-            style={styles.deleteLink}
-            hitSlop={8}
-          >
-            <Text style={styles.deleteLinkLabel}>{t.settingsDeleteAccount}</Text>
-          </Pressable>
+          {guest ? (
+            <GlowButton label={t.guestCta} onPress={() => router.replace('/(auth)/login')} />
+          ) : (
+            <>
+              <GlowButton label={t.settingsLogout} variant="danger" onPress={logout} />
+              <Pressable
+                onPress={() => { setDeleteError(false); setDeleteModalOpen(true); }}
+                style={styles.deleteLink}
+                hitSlop={8}
+              >
+                <Text style={styles.deleteLinkLabel}>{t.settingsDeleteAccount}</Text>
+              </Pressable>
+            </>
+          )}
           <Text style={styles.version}>BETina v1.0 · powered by GeniusBet</Text>
         </Animated.View>
       </ScrollView>

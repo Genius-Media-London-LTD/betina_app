@@ -187,6 +187,14 @@ export default function Login() {
           </Animated.View>
 
           <View style={styles.flex} />
+
+          {/* Guest access — Apple 5.1.1(v): non-account content (news/articles)
+              must be reachable without registering. Lands on the Live tab. */}
+          <Animated.View entering={FadeInDown.delay(350).duration(700)}>
+            <Pressable onPress={() => router.replace('/(tabs)/live')} hitSlop={8} style={styles.guestBtn}>
+              <Text style={styles.guestLabel}>{t.loginGuest} →</Text>
+            </Pressable>
+          </Animated.View>
         </View>
       </KeyboardAvoidingView>
     </ScreenBg>
@@ -196,6 +204,8 @@ export default function Login() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { flex: 1, paddingHorizontal: Spacing.xl },
+  guestBtn: { alignSelf: 'center', paddingVertical: 12 },
+  guestLabel: { color: Colors.textSecondary, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
   header: { alignItems: 'center', gap: Spacing.base, paddingTop: 28, paddingBottom: 36 },
   headerText: { alignItems: 'center', gap: 6 },
   title: { color: '#FFFFFF', fontSize: 26, fontFamily: Fonts.bold },
