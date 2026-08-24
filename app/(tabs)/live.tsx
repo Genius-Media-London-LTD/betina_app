@@ -243,7 +243,7 @@ export default function Live() {
                     </View>
                     <View style={styles.featuredContent}>
                       <Text style={styles.featuredTitle} numberOfLines={3}>{news[0].title}</Text>
-                      <Text style={styles.newsTime}>{timeAgo(news[0].pubDate, t)} · BBC Sport</Text>
+                      <Text style={styles.newsTime}>{timeAgo(news[0].pubDate, t)}</Text>
                     </View>
                   </GlowCard>
                 </Pressable>
@@ -257,7 +257,7 @@ export default function Live() {
                     )}
                     <View style={styles.newsBody}>
                       <Text style={styles.newsTitle} numberOfLines={2}>{item.title}</Text>
-                      <Text style={styles.newsTime}>{timeAgo(item.pubDate, t)} · BBC Sport</Text>
+                      <Text style={styles.newsTime}>{timeAgo(item.pubDate, t)}</Text>
                     </View>
                   </GlowCard>
                 </Pressable>
