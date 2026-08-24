@@ -166,11 +166,11 @@ export default function Notifications() {
           id: `news-${i}`,
           icon: '📰',
           title: n.title,
-          body: `BBC Sport · ${timeAgo(n.pubDate, {
+          body: timeAgo(n.pubDate, {
             justNow: t.liveJustNow,
             hours: t.liveAgoHours,
             days: t.liveAgoDays,
-          })}`,
+          }),
           ts: Number.isNaN(ts) ? now - 3_600_000 : ts,
           unread: false,
           accent: 'none',
