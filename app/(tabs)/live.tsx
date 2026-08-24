@@ -30,6 +30,12 @@ const SPORT_TO_BBC: Record<string, string> = {
   golf: 'golf', nfl: 'sport', mma: 'sport', esports: 'sport',
 };
 
+// The news source differs by market language (each lang has its own outlet on
+// the intelligence API). Used for the "· <source>" label under each headline.
+const SOURCE_BY_LANG: Record<string, string> = {
+  en: 'BBC Sport', de: 'Sportschau', es: 'Marca', fr: 'RMC Sport', pt: 'Record',
+};
+
 type NewsItem = { title: string; description: string; link: string; pubDate: string; image?: string };
 type MatchEvent = { id: string; name: string; home: string; away: string; homeScore: string | null; awayScore: string | null; date: string; time: string; league: string };
 
@@ -63,6 +69,7 @@ export default function Live() {
 
   const teamId = (profile as any)?.favourite_team_id ?? null;
   const teamName = profile?.favourite_team ?? null;
+  const newsSource = SOURCE_BY_LANG[lang] ?? 'BBC Sport';
 
   useEffect(() => {
     if (!profile) return;
@@ -247,7 +254,7 @@ export default function Live() {
                     </View>
                     <View style={styles.featuredContent}>
                       <Text style={styles.featuredTitle} numberOfLines={3}>{news[0].title}</Text>
-                      <Text style={styles.newsTime}>{timeAgo(news[0].pubDate, t)} · BBC Sport</Text>
+                      <Text style={styles.newsTime}>{timeAgo(news[0].pubDate, t)} · {(news[0] as any).source ?? newsSource}</Text>
                     </View>
                   </GlowCard>
                 </Pressable>
@@ -261,7 +268,7 @@ export default function Live() {
                     )}
                     <View style={styles.newsBody}>
                       <Text style={styles.newsTitle} numberOfLines={2}>{item.title}</Text>
-                      <Text style={styles.newsTime}>{timeAgo(item.pubDate, t)} · BBC Sport</Text>
+                      <Text style={styles.newsTime}>{timeAgo(item.pubDate, t)} · {(item as any).source ?? newsSource}</Text>
                     </View>
                   </GlowCard>
                 </Pressable>
