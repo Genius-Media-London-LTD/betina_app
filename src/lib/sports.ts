@@ -26,6 +26,21 @@ export type NewsItem = {
   image?: string;
 };
 
+/**
+ * Some upstream RSS sources (notably the Portuguese feed) leave raw CDATA
+ * wrappers around titles/descriptions, so they render literally as
+ * "<![CDATA[ … ]]>". Strip them (and collapse stray whitespace) wherever we
+ * show feed text.
+ */
+export function cleanFeedText(s: string | null | undefined): string {
+  if (!s) return '';
+  return s
+    .replace(/<!\[CDATA\[/gi, '')
+    .replace(/\]\]>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /** Upcoming fixtures for a team (TheSportsDB team id). Empty array on any error. */
 export async function fetchTeamNext(teamId: string): Promise<MatchEvent[]> {
   try {
@@ -53,7 +68,11 @@ export async function fetchNews(sport: string, count = 10, lang = 'en'): Promise
   try {
     const r = await fetch(`${SPORTS_API}/api/sports/news?sport=${sport}&count=${count}&lang=${lang}`);
     const d = await r.json();
-    return d.items ?? [];
+    return (d.items ?? []).map((it: NewsItem) => ({
+      ...it,
+      title: cleanFeedText(it.title),
+      description: cleanFeedText(it.description),
+    }));
   } catch {
     return [];
   }
