@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -114,6 +116,7 @@ export default function Otp() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.flex}
       >
+       <TouchableWithoutFeedback accessible={false} onPress={() => Keyboard.dismiss()}>
         <View
           style={[
             styles.content,
@@ -202,6 +205,7 @@ export default function Otp() {
             <ChatBubble role="assistant">{t.otpHint}</ChatBubble>
           </View>
         </View>
+       </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </ScreenBg>
   );

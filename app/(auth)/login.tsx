@@ -2,6 +2,7 @@ import { langForDialCode, useI18n } from '../../src/lib/i18n';
 import React, { useState } from 'react';
 import {
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -9,6 +10,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -139,6 +141,7 @@ export default function Login() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.flex}
       >
+       <TouchableWithoutFeedback accessible={false} onPress={() => Keyboard.dismiss()}>
         <View
           style={[
             styles.content,
@@ -171,7 +174,8 @@ export default function Login() {
                   placeholderTextColor="#55556A"
                   keyboardType="phone-pad"
                   style={styles.input}
-                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={() => Keyboard.dismiss()}
                 />
               </View>
             </View>
@@ -196,6 +200,7 @@ export default function Login() {
             </Pressable>
           </Animated.View>
         </View>
+       </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </ScreenBg>
   );
