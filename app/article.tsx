@@ -10,11 +10,13 @@ import {
   View,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import Head from 'expo-router/head';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useI18n } from '../src/lib/i18n';
+import { safeGenius2PlayCanonical } from '../src/lib/genius2playCanonical';
 import { Colors, Fonts, Spacing, Typography } from '../src/theme';
 
 const { width: W, height: H } = Dimensions.get('window');
@@ -27,6 +29,7 @@ type Article = {
   paragraphs: string[];
   source: string;
   url: string;
+  canonical?: string;
 };
 
 function readingTime(paragraphs?: string[]) {
@@ -74,6 +77,7 @@ export default function ArticleScreen() {
             paragraphs,
             source: typeof d?.source === 'string' ? d.source : '',
             url: typeof d?.url === 'string' ? d.url : url,
+            canonical: safeGenius2PlayCanonical(d?.canonical),
           });
         }
         setLoading(false);
@@ -106,7 +110,13 @@ export default function ArticleScreen() {
       )}
 
       {article && !loading && (
-        <Animated.View entering={FadeIn.duration(250)} style={{ flex: 1 }}>
+        <>
+          {article.canonical ? (
+            <Head>
+              <link rel="canonical" href={article.canonical} />
+            </Head>
+          ) : null}
+          <Animated.View entering={FadeIn.duration(250)} style={{ flex: 1 }}>
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 48 }}>
 
             {/* ── HERO ── */}
@@ -223,7 +233,8 @@ export default function ArticleScreen() {
             </Animated.View>
 
           </ScrollView>
-        </Animated.View>
+          </Animated.View>
+        </>
       )}
     </View>
   );
