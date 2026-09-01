@@ -1,6 +1,6 @@
 import { useI18n } from '../../src/lib/i18n';
 import React, { useEffect } from 'react';
-import { AppState, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppState, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -101,8 +101,7 @@ export default function TabsLayout() {
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: {
+const glassWrapStyle: ViewStyle & { backdropFilter: string } = {
     position: 'absolute',
     left: 12,
     right: 12,
@@ -115,7 +114,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
     backdropFilter: 'blur(12px)',
-  },
+};
+
+const styles = StyleSheet.create({
+  wrap: glassWrapStyle,
   tab: {
     flex: 1,
     alignItems: 'center',
