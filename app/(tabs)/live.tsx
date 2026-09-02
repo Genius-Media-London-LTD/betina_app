@@ -7,6 +7,7 @@ import GlowCard from '../../src/components/GlowCard';
 import ScreenBg from '../../src/components/ScreenBg';
 import { useProfile } from '../../src/hooks/useProfile';
 import { SPORT_KEYS, useI18n } from '../../src/lib/i18n';
+import { formatPublishedMonth } from '../../src/lib/newsDate';
 import { mentionsTeam } from '../../src/lib/sports';
 import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
 
@@ -30,7 +31,7 @@ const SPORT_TO_BBC: Record<string, string> = {
   golf: 'golf', nfl: 'sport', mma: 'sport', esports: 'sport',
 };
 
-type NewsItem = { title: string; description: string; link: string; pubDate: string; image?: string };
+type NewsItem = { title: string; description: string; link: string; pubDate: string; publishedMonth?: string; image?: string };
 type MatchEvent = { id: string; name: string; home: string; away: string; homeScore: string | null; awayScore: string | null; date: string; time: string; league: string };
 
 function timeAgo(dateStr: string, t: { liveJustNow: string; liveAgoHours: string; liveAgoDays: string }) {
@@ -39,6 +40,10 @@ function timeAgo(dateStr: string, t: { liveJustNow: string; liveAgoHours: string
   if (diff < 1) return t.liveJustNow;
   if (diff < 24) return t.liveAgoHours.replace('{n}', String(Math.floor(diff)));
   return t.liveAgoDays.replace('{n}', String(Math.floor(diff / 24)));
+}
+
+function newsDate(item: NewsItem, lang: string, t: { liveJustNow: string; liveAgoHours: string; liveAgoDays: string }) {
+  return formatPublishedMonth(item.publishedMonth, lang) || timeAgo(item.pubDate, t);
 }
 
 function formatMatchDate(dateStr: string, timeStr: string) {
@@ -243,7 +248,7 @@ export default function Live() {
                     </View>
                     <View style={styles.featuredContent}>
                       <Text style={styles.featuredTitle} numberOfLines={3}>{news[0].title}</Text>
-                      <Text style={styles.newsTime}>{timeAgo(news[0].pubDate, t)}</Text>
+                      <Text style={styles.newsTime}>{newsDate(news[0], lang, t)}</Text>
                     </View>
                   </GlowCard>
                 </Pressable>
@@ -257,7 +262,7 @@ export default function Live() {
                     )}
                     <View style={styles.newsBody}>
                       <Text style={styles.newsTitle} numberOfLines={2}>{item.title}</Text>
-                      <Text style={styles.newsTime}>{timeAgo(item.pubDate, t)}</Text>
+                      <Text style={styles.newsTime}>{newsDate(item, lang, t)}</Text>
                     </View>
                   </GlowCard>
                 </Pressable>

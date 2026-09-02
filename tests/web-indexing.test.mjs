@@ -5,17 +5,25 @@ import ts from 'typescript';
 
 const rootHtml = readFileSync(new URL('../app/+html.tsx', import.meta.url), 'utf8');
 const article = readFileSync(new URL('../app/article.tsx', import.meta.url), 'utf8');
+const notifications = readFileSync(new URL('../app/notifications.tsx', import.meta.url), 'utf8');
 const liveFeed = readFileSync(new URL('../app/(tabs)/live.tsx', import.meta.url), 'utf8');
 const vercel = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
 const appConfig = JSON.parse(readFileSync(new URL('../app.json', import.meta.url), 'utf8'));
 const exportedHtml = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
 const canonicalSource = readFileSync(new URL('../src/lib/genius2playCanonical.ts', import.meta.url), 'utf8');
+const newsDateSource = readFileSync(new URL('../src/lib/newsDate.ts', import.meta.url), 'utf8');
 const canonicalModule = { exports: {} };
 const canonicalJavaScript = ts.transpileModule(canonicalSource, {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
 new Function('exports', 'module', canonicalJavaScript)(canonicalModule.exports, canonicalModule);
 const { safeGenius2PlayCanonical } = canonicalModule.exports;
+const newsDateModule = { exports: {} };
+const newsDateJavaScript = ts.transpileModule(newsDateSource, {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText;
+new Function('exports', 'module', newsDateJavaScript)(newsDateModule.exports, newsDateModule);
+const { formatPublishedMonth } = newsDateModule.exports;
 
 const robots = 'noindex, nofollow, noarchive, nosnippet';
 
@@ -50,5 +58,16 @@ test('article pages expose the Genius2Play canonical from the API', () => {
     'https://www.genius2play.com/de/%2F/news/story',
   ]) {
     assert.equal(safeGenius2PlayCanonical(unsafe), '');
+  }
+});
+
+test('month-precision news dates never invent a publication day', () => {
+  assert.equal(formatPublishedMonth('2026-08', 'fr'), 'août 2026');
+  assert.equal(formatPublishedMonth('2026-08', 'pt'), 'agosto de 2026');
+  assert.equal(formatPublishedMonth('2026-08', 'es'), 'agosto de 2026');
+  assert.equal(formatPublishedMonth('2026-13', 'fr'), '');
+  assert.equal(formatPublishedMonth('2026-08-01', 'fr'), '');
+  for (const consumer of [liveFeed, notifications, article]) {
+    assert.match(consumer, /formatPublishedMonth/);
   }
 });

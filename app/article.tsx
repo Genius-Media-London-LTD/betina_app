@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useI18n } from '../src/lib/i18n';
 import { safeGenius2PlayCanonical } from '../src/lib/genius2playCanonical';
+import { formatPublishedMonth } from '../src/lib/newsDate';
 import { Colors, Fonts, Spacing, Typography } from '../src/theme';
 
 const { width: W, height: H } = Dimensions.get('window');
@@ -38,7 +39,9 @@ function readingTime(paragraphs?: string[]) {
   return Math.max(1, Math.round(words / 200));
 }
 
-function formatDate(rssDate: string) {
+function formatDate(rssDate: string, lang: string) {
+  const publishedMonth = formatPublishedMonth(rssDate, lang);
+  if (publishedMonth) return publishedMonth;
   try {
     return new Date(rssDate).toLocaleDateString('en-GB', {
       weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
@@ -47,7 +50,7 @@ function formatDate(rssDate: string) {
 }
 
 export default function ArticleScreen() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { url, title: paramTitle, pubDate, image: paramImage } = useLocalSearchParams<{
@@ -145,7 +148,7 @@ export default function ArticleScreen() {
               {/* Meta row */}
               <View style={styles.metaRow}>
                 <Text style={styles.metaText}>
-                  {pubDate ? formatDate(pubDate) : 'Latest'}
+                  {pubDate ? formatDate(pubDate, lang) : 'Latest'}
                 </Text>
                 <View style={styles.metaDot} />
                 <Text style={styles.metaText}>
