@@ -10,6 +10,7 @@ import SectionLabel from '../src/components/SectionLabel';
 import { tiers } from '../src/lib/demo';
 import { useI18n } from '../src/lib/i18n';
 import { useProfile } from '../src/hooks/useProfile';
+import { formatPublishedMonth } from '../src/lib/newsDate';
 import { fetchNews, fetchTeamNext, formatKickoff, timeAgo } from '../src/lib/sports';
 import { supabase } from '../src/lib/supabase';
 import { Colors, Fonts, Spacing, Typography } from '../src/theme';
@@ -166,7 +167,7 @@ export default function Notifications() {
           id: `news-${i}`,
           icon: '📰',
           title: n.title,
-          body: timeAgo(n.pubDate, {
+          body: formatPublishedMonth(n.publishedMonth, lang) || timeAgo(n.pubDate, {
             justNow: t.liveJustNow,
             hours: t.liveAgoHours,
             days: t.liveAgoDays,

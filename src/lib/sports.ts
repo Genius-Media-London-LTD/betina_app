@@ -23,6 +23,7 @@ export type NewsItem = {
   description: string;
   link: string;
   pubDate: string;
+  publishedMonth?: string;
   image?: string;
 };
 
