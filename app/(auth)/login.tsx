@@ -39,6 +39,8 @@ const DIAL_CODES = [
   { flag: '🇪🇸', code: '+34', country: 'Spain' },
   { flag: '🇬🇧', code: '+44', country: 'United Kingdom' },
   { flag: '🇫🇷', code: '+33', country: 'France' },
+  { flag: '🇷🇴', code: '+40', country: 'Romania' },
+  { flag: '🇷🇸', code: '+381', country: 'Serbia' },
   { flag: '🇺🇸', code: '+1', country: 'United States' },
   { flag: '🇰🇪', code: '+254', country: 'Kenya' },
   { flag: '🇬🇭', code: '+233', country: 'Ghana' },
