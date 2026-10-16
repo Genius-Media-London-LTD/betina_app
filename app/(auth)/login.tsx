@@ -10,13 +10,13 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import BETinaAvatar from '../../src/components/BETinaAvatar';
+import DismissKeyboard from '../../src/components/DismissKeyboard';
 import GlowButton from '../../src/components/GlowButton';
 import ScreenBg from '../../src/components/ScreenBg';
 import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
@@ -143,7 +143,7 @@ export default function Login() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.flex}
       >
-       <TouchableWithoutFeedback accessible={false} onPress={() => Keyboard.dismiss()}>
+       <DismissKeyboard>
         <View
           style={[
             styles.content,
@@ -202,7 +202,7 @@ export default function Login() {
             </Pressable>
           </Animated.View>
         </View>
-       </TouchableWithoutFeedback>
+       </DismissKeyboard>
       </KeyboardAvoidingView>
     </ScreenBg>
   );
