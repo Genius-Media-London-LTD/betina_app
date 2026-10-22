@@ -1,4 +1,5 @@
 // Fetch and normalise an RSS feed into the app's news item shape.
+import { decodeHTML } from 'entities';
 import { XMLParser } from 'fast-xml-parser';
 import { upgradeImage } from './sources.js';
 
@@ -12,22 +13,11 @@ const parser = new XMLParser({
   trimValues: true,
 });
 
-const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
-function decodeEntities(s) {
-  return s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) => {
-    if (e[0] === '#') {
-      const code = e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : m;
-    }
-    return ENTITIES[e.toLowerCase()] ?? m;
-  });
-}
-
-/** Plain text: decode entities (some feeds double-escape), drop CDATA + tags. */
+/** Plain text: decode HTML entities (some feeds double-escape, e.g. &amp;Egrave;), drop CDATA + tags. */
 export function cleanText(value) {
   if (value == null) return '';
   let s = typeof value === 'object' ? value['#text'] ?? '' : String(value);
-  s = decodeEntities(decodeEntities(s));
+  s = decodeHTML(decodeHTML(s));
   return s
     .replace(/<!\[CDATA\[|\]\]>/g, '')
     .replace(/<[^>]+>/g, ' ')

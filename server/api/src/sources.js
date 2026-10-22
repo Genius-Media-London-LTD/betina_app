@@ -118,9 +118,10 @@ export const BETTING_TITLE =
 export const LIVE_TITLE =
   /^(jetzt live|live[:\s-]|livestream|liveblog|direct\b|en direct|en directo|en vivo|ao vivo|jogos em direto|diretta|live ticker)|\b(live ticker|liveticker)\b|\((?:\d\.ª parte|intervalo|half-time|halbzeit)\)/i;
 
-// …and the same pages recognised by URL (e.g. Sportschau "/live-und-ergebnisse/").
+// …and the same pages recognised by URL (e.g. Sportschau "/live-und-ergebnisse/"),
+// plus podcast / audio / video pages (Sportschau ",audio-…" slugs, BBC "/av/").
 export const LIVE_LINK =
-  /\/(live-und-ergebnisse|live|livestream|liveticker|live-blog|direct|en-directo|en-vivo|jogos-em-direto|diretta)(\/|$)/i;
+  /\/(live-und-ergebnisse|live|livestream|liveticker|live-blog|direct|en-directo|en-vivo|jogos-em-direto|diretta)(\/|$)|\/(podcasts?|audio|video|videos|av|sounds)\/|,(audio|video|livestream)-/i;
 
 /** Bigger images where a publisher's feed only links small thumbnails. */
 export function upgradeImage(url) {
