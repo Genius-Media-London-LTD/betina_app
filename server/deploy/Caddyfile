@@ -1,0 +1,15 @@
+# Caddy terminates HTTPS (automatic Let's Encrypt certs) and proxies to the
+# BETina API on localhost.
+#
+# Until DNS for api.betina.geniusbet.com points here, the API is reachable
+# over plain HTTP on the server IP (block below). Once the DNS record exists,
+# Caddy obtains the certificate on its own.
+
+api.betina.geniusbet.com {
+	encode gzip
+	reverse_proxy 127.0.0.1:3000
+}
+
+:80 {
+	reverse_proxy 127.0.0.1:3000
+}
