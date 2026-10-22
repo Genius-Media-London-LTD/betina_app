@@ -46,6 +46,10 @@ async function fd(path: string) {
   return r.json();
 }
 
+// football-data serves most crests as SVG, which React Native's Image can't
+// render natively; the same path with .png exists for every team/competition.
+const png = (url: string | null | undefined) => (url ? url.replace(/\.svg$/i, '.png') : null);
+
 /** Score after 90 minutes: extra time and penalties don't count. */
 function regularScore(m: FdMatch): Score {
   const s = m.score;
@@ -78,12 +82,12 @@ async function syncCompetition(db: Db, code: string) {
         home_name: m.homeTeam.name,
         home_short: m.homeTeam.shortName ?? null,
         home_tla: m.homeTeam.tla ?? null,
-        home_crest: m.homeTeam.crest ?? null,
+        home_crest: png(m.homeTeam.crest),
         away_team_id: m.awayTeam.id,
         away_name: m.awayTeam.name,
         away_short: m.awayTeam.shortName ?? null,
         away_tla: m.awayTeam.tla ?? null,
-        away_crest: m.awayTeam.crest ?? null,
+        away_crest: png(m.awayTeam.crest),
         home_score: score.home,
         away_score: score.away,
         updated_at: new Date().toISOString(),
@@ -96,7 +100,7 @@ async function syncCompetition(db: Db, code: string) {
   }
 
   await db.from('tip_competitions').update({
-    emblem: data.competition?.emblem ?? null,
+    emblem: png(data.competition?.emblem),
     current_season: seasonYear,
     current_matchday: season.currentMatchday,
     season_start: season.startDate,
