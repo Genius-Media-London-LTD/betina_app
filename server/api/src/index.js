@@ -45,7 +45,8 @@ app.get('/v1/article', async (c) => {
 
 app.notFound((c) => c.json({ error: 'not_found' }, 404));
 app.onError((err, c) => {
-  if (err instanceof G2PError || err?.name === 'TimeoutError') {
+  const upstream = /^(article|feed) \d+|too_many_redirects|host_not_allowed|fetch failed/.test(err?.message ?? '');
+  if (err instanceof G2PError || err?.name === 'TimeoutError' || upstream) {
     console.error('upstream:', err.message);
     return c.json({ error: 'upstream_unavailable' }, 502);
   }

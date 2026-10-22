@@ -4,13 +4,18 @@
   "private": true,
   "description": "BETina's own backend services (runs on betina-server)",
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.0",
-    "hono": "^4.6.0"
+    "@mozilla/readability": "^0.6.0",
+    "fast-xml-parser": "^5.11.2",
+    "hono": "^4.6.0",
+    "jsdom": "^26.1.0"
   }
 }

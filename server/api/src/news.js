@@ -1,105 +1,60 @@
-// News for the BETina apps, sourced from Genius2Play (GeniusBet's own
-// editorial content). Response shapes match what the app already renders, so
-// switching the app over is only a URL change.
+// News for the BETina apps. Fresh daily news comes from each language's
+// sports outlets (RSS, see sources.js); Genius2Play — GeniusBet's own
+// editorial content — is mixed in only while it publishes fresh real news.
+// Response shapes match what the app already renders (switch = URL change).
 import { createCache } from './cache.js';
+import { extractArticle } from './extract.js';
 import { G2PError, getArticle, isConfigured, listArticles } from './g2p.js';
 import { markdownToParagraphs } from './markdown.js';
+import { fetchFeed } from './rss.js';
+import { BETTING_TITLE, feedFor, LIVE_LINK, LIVE_TITLE } from './sources.js';
 
-const SOURCE = 'Genius2Play';
+const feedCache = createCache({ ttlMs: 10 * 60_000 });
+const g2pCache = createCache({ ttlMs: 30 * 60_000 });
+const articleCache = createCache({ ttlMs: 6 * 60 * 60_000 });
 
-// App language -> Genius2Play edition. Languages without their own edition
-// (it, ro, tr, …) fall back to the English one.
+// ---- Genius2Play -------------------------------------------------------------
+const G2P_SOURCE = 'Genius2Play';
+const G2P_FRESH_DAYS = 3;
 const EDITION_BY_LANG = { en: 'global', de: 'de', es: 'es', fr: 'fr', pt: 'pt-BR' };
 // Canonical URLs use "en" in the path for the global edition.
 const EDITION_BY_PATH = { en: 'global', de: 'de', es: 'es', fr: 'fr', 'pt-br': 'pt-BR' };
-
-// App sport ids -> Genius2Play sports. Missing / "sport" = all sports.
-const SPORTS_BY_APP_ID = {
-  football: ['football'],
-  soccer: ['football'],
-  tennis: ['tennis'],
-  basketball: ['basketball'],
-  cricket: ['cricket'],
-  rugby: ['rugby', 'rugby-league'],
-  athletics: ['athletics'],
-  golf: ['golf'],
-  hockey: ['hockey'],
-  nfl: ['american-football'],
-  mma: ['mma'],
-  boxing: ['boxing'],
+const G2P_SPORTS = {
+  football: ['football'], tennis: ['tennis'], basketball: ['basketball'], cricket: ['cricket'],
+  rugby: ['rugby', 'rugby-league'], athletics: ['athletics'], golf: ['golf'], hockey: ['hockey'],
+  nfl: ['american-football'], mma: ['mma'], boxing: ['boxing'], cycling: ['cycling'],
 };
+// No betting tips (EXPERT_PICK) or odds-led previews (MATCH_PREVIEW).
+const G2P_NEWS_TYPES = ['SPORT_NEWS', 'BREAKING', 'TRANSFER', 'INJURY_REPORT', 'HERO_FEATURE', 'OPINION', 'PROFILE'];
 
-// BETina is a companion app, not a betting app: leave out betting tips and
-// odds-led match previews (EXPERT_PICK / MATCH_PREVIEW).
-const NEWS_TYPES = ['SPORT_NEWS', 'BREAKING', 'TRANSFER', 'INJURY_REPORT', 'HERO_FEATURE', 'OPINION', 'PROFILE'];
-const ODDS_WORDS = /\b(odds|quoten|cuotas|cotes|quotas|betting tips?|wett-?tipps?)\b/i;
-
-const listCache = createCache({ ttlMs: 10 * 60_000 });
-const articleCache = createCache({ ttlMs: 6 * 60 * 60_000 });
-
-export const editionFor = (lang) => EDITION_BY_LANG[String(lang ?? '').toLowerCase().slice(0, 2)] ?? 'global';
-
-function keep(a) {
-  if (a.publishedDateStatus && a.publishedDateStatus !== 'available') return false;
-  if (/\bTBD\b/.test(a.title ?? '')) return false; // placeholder fixtures
-  if (ODDS_WORDS.test(a.title ?? '')) return false;
-  return Boolean(a.title && a.canonicalUrl);
-}
-
-// Genius2Play sometimes publishes near-identical rewrites of one story
-// ("Liverpools 6 Europapokalsiege: 4 Titel …" / "Liverpools 6 Europapokale: 4 Titel …").
-const words = (t) => new Set(String(t).toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? []);
-function dedupe(articles) {
-  const seen = [];
-  return articles.filter((a) => {
-    const w = words(a.title);
-    const dup = seen.some((s) => {
-      const inter = [...w].filter((x) => s.has(x)).length;
-      return inter / Math.max(1, Math.min(w.size, s.size)) >= 0.6;
-    });
-    if (!dup) seen.push(w);
-    return !dup;
-  });
-}
-
-const toItem = (a) => ({
-  title: a.title,
-  description: a.excerpt ?? a.subtitle ?? '',
-  link: a.canonicalUrl,
-  pubDate: a.publishedDate ?? null,
-  image: a.image?.url ?? null,
-  source: SOURCE,
-});
-
-export async function newsList({ sport, count, lang }) {
-  if (!isConfigured()) return { status: 503, body: { error: 'not_configured' } };
-  const edition = editionFor(lang);
-  const limit = Math.min(Math.max(Number(count) || 12, 1), 30);
-  const sports = SPORTS_BY_APP_ID[String(sport ?? '').toLowerCase()];
-  const key = `${edition}|${(sports ?? ['*']).join(',')}|${limit}`;
-
-  const cached = listCache.get(key);
-  if (cached) return { status: 200, body: cached, cache: 'hit' };
-
+async function freshG2P(lang, sport) {
+  const edition = EDITION_BY_LANG[lang];
+  if (!edition || !isConfigured()) return [];
+  const sports = G2P_SPORTS[String(sport ?? '').toLowerCase()];
+  const key = `${edition}|${(sports ?? ['*']).join(',')}`;
+  const cached = g2pCache.get(key);
+  if (cached) return cached;
   try {
-    // Over-fetch a little: filtering drops some items.
     const res = await listArticles({
-      edition,
-      sport: sports,
-      type: NEWS_TYPES,
-      sort: 'publishedAt',
-      order: 'desc',
-      limit: Math.min(limit * 2, 60),
-      view: 'summary',
+      edition, sport: sports, type: G2P_NEWS_TYPES, sort: 'publishedAt', order: 'desc', limit: 20, view: 'summary',
     });
-    const items = dedupe((res.data ?? []).filter(keep)).slice(0, limit).map(toItem);
-    const body = { items, edition };
-    listCache.set(key, body);
-    return { status: 200, body, cache: 'miss' };
+    const cutoff = Date.now() - G2P_FRESH_DAYS * 86_400_000;
+    const items = (res.data ?? [])
+      .filter((a) => a.title && a.canonicalUrl && a.publishedDateStatus === 'available')
+      .filter((a) => new Date(a.publishedDate).getTime() >= cutoff)
+      .map((a) => ({
+        title: a.title,
+        description: a.excerpt ?? a.subtitle ?? '',
+        link: a.canonicalUrl,
+        pubDate: a.publishedDate ? new Date(a.publishedDate).toISOString() : null,
+        image: a.image?.url ?? null,
+        source: G2P_SOURCE,
+      }));
+    g2pCache.set(key, items);
+    return items;
   } catch (err) {
-    const stale = listCache.getStale(key);
-    if (stale) return { status: 200, body: stale, cache: 'stale' };
-    throw err;
+    console.error('g2p list:', err.message);
+    return g2pCache.getStale(key) ?? [];
   }
 }
 
@@ -117,35 +72,86 @@ export function parseCanonical(url) {
   }
 }
 
-export async function newsArticle({ url }) {
+async function g2pArticle(ref) {
   if (!isConfigured()) return { status: 503, body: { error: 'not_configured' } };
-  const ref = parseCanonical(url);
-  if (!ref) return { status: 400, body: { error: 'unsupported_url' } };
-  const key = `${ref.edition}|${ref.slug}`;
-
-  const cached = articleCache.get(key);
-  if (cached) return { status: 200, body: cached, cache: 'hit' };
-
   try {
     const { data: a } = await getArticle(ref.slug, ref.edition);
-    const body = {
-      title: a.title,
-      image: a.image?.url ?? '',
-      description: a.subtitle ?? a.excerpt ?? '',
-      paragraphs: markdownToParagraphs(a.body, a.title),
-      keyTakeaways: a.keyTakeaways ?? [],
-      source: SOURCE,
-      url: a.canonicalUrl,
-      // Genius2Play's terms: web pages rendering this must carry these.
-      canonical: a.syndication?.canonical ?? a.canonicalUrl,
-      robots: a.syndication?.robots ?? 'noindex, nofollow',
+    return {
+      status: 200,
+      body: {
+        title: a.title,
+        image: a.image?.url ?? '',
+        description: a.subtitle ?? a.excerpt ?? '',
+        paragraphs: markdownToParagraphs(a.body, a.title),
+        keyTakeaways: a.keyTakeaways ?? [],
+        source: G2P_SOURCE,
+        url: a.canonicalUrl,
+        // Genius2Play's terms: web pages rendering this must carry these.
+        canonical: a.syndication?.canonical ?? a.canonicalUrl,
+        robots: a.syndication?.robots ?? 'noindex, nofollow',
+      },
     };
-    articleCache.set(key, body);
-    return { status: 200, body, cache: 'miss' };
   } catch (err) {
     if (err instanceof G2PError && err.status === 404) return { status: 404, body: { error: 'not_found' } };
-    const stale = articleCache.getStale(key);
+    throw err;
+  }
+}
+
+// ---- List --------------------------------------------------------------------
+async function cachedFeed(feed) {
+  const hit = feedCache.get(feed.url);
+  if (hit) return { items: hit, ok: true };
+  try {
+    const items = await fetchFeed(feed);
+    feedCache.set(feed.url, items);
+    return { items, ok: true };
+  } catch (err) {
+    console.error('feed:', err.message);
+    const stale = feedCache.getStale(feed.url);
+    return { items: stale ?? [], ok: Boolean(stale) };
+  }
+}
+
+// Outlets (and Genius2Play) sometimes publish near-identical rewrites of a story.
+const words = (t) => new Set(String(t).toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? []);
+function dedupe(items) {
+  const seen = [];
+  return items.filter((it) => {
+    const w = words(it.title);
+    const dup = seen.some((s) => [...w].filter((x) => s.has(x)).length / Math.max(1, Math.min(w.size, s.size)) >= 0.6);
+    if (!dup) seen.push(w);
+    return !dup;
+  });
+}
+
+export async function newsList({ sport, count, lang }) {
+  const { lang: l, feed } = feedFor(lang, sport);
+  const limit = Math.min(Math.max(Number(count) || 12, 1), 30);
+  const [rss, g2p] = await Promise.all([cachedFeed(feed), freshG2P(l, sport)]);
+  if (!rss.ok && g2p.length === 0) return { status: 502, body: { error: 'upstream_unavailable', items: [] } };
+
+  const items = dedupe(
+    [...g2p, ...rss.items]
+      .filter((it) => !BETTING_TITLE.test(it.title) && !LIVE_TITLE.test(it.title) && !LIVE_LINK.test(it.link))
+      .sort((a, b) => (Date.parse(b.pubDate) || 0) - (Date.parse(a.pubDate) || 0)),
+  ).slice(0, limit);
+  return { status: 200, body: { items, lang: l } };
+}
+
+// ---- Article -------------------------------------------------------------------
+export async function newsArticle({ url }) {
+  const cached = articleCache.get(url);
+  if (cached) return { status: 200, body: cached, cache: 'hit' };
+
+  const g2pRef = parseCanonical(url);
+  let result;
+  try {
+    result = g2pRef ? await g2pArticle(g2pRef) : await extractArticle(url);
+  } catch (err) {
+    const stale = articleCache.getStale(url);
     if (stale) return { status: 200, body: stale, cache: 'stale' };
     throw err;
   }
+  if (result.status === 200) articleCache.set(url, result.body);
+  return { ...result, cache: 'miss' };
 }
