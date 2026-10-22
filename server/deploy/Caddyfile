@@ -1,5 +1,11 @@
 # Caddy terminates HTTPS (automatic Let's Encrypt certs) and proxies to the
 # BETina API on localhost.
+
+{
+	# Ubuntu's Caddy 2.6 falls back to ZeroSSL with a retired legacy account
+	# (EAB "caddy_legacy_user_removed"); use Let's Encrypt only.
+	cert_issuer acme
+}
 #
 # Until DNS for api.betina.geniusbet.com points here, the API is reachable
 # over plain HTTP on the server IP (block below). Once the DNS record exists,
