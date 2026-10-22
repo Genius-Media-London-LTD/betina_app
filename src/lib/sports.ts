@@ -1,7 +1,29 @@
-// Shared sports data layer — talks to the GeniusBet intelligence API
-// (BBC news + TheSportsDB fixtures). Used by both the Home and Live tabs.
+// Shared sports data layer. News + article full text come from BETina's own
+// news gateway (fresh outlet feeds per language); fixtures still come from the
+// GeniusBet intelligence API (TheSportsDB). Used by both the Home and Live tabs.
 
 export const SPORTS_API = 'https://intelligence.geniusbet.com';
+export const NEWS_API = 'https://api.betina.geniusbet.com';
+
+async function getJson(url: string) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+/**
+ * News list / article JSON from BETina's gateway. If it is unreachable, the
+ * intelligence API serves the same routes (it proxies to the gateway itself
+ * and has Genius2Play as a last resort).
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped JSON; callers normalise every field
+export async function fetchNewsApi(kind: 'news' | 'article', query: string): Promise<any> {
+  try {
+    return await getJson(`${NEWS_API}/v1/${kind}?${query}`);
+  } catch {
+    return getJson(`${SPORTS_API}/api/sports/${kind}?${query}`);
+  }
+}
 
 export type MatchEvent = {
   id: string;
@@ -63,11 +85,10 @@ export async function fetchTeamLast(teamId: string): Promise<MatchEvent[]> {
   }
 }
 
-/** Latest news for a sport (BBC feed). Empty array on any error. */
+/** Latest news for a sport in the player's language. Empty array on any error. */
 export async function fetchNews(sport: string, count = 10, lang = 'en'): Promise<NewsItem[]> {
   try {
-    const r = await fetch(`${SPORTS_API}/api/sports/news?sport=${sport}&count=${count}&lang=${lang}`);
-    const d = await r.json();
+    const d = await fetchNewsApi('news', `sport=${sport}&count=${count}&lang=${lang}`);
     return (d.items ?? []).map((it: NewsItem) => ({
       ...it,
       title: cleanFeedText(it.title),

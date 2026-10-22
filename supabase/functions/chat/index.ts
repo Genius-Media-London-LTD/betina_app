@@ -17,6 +17,8 @@ const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 const MODEL = 'claude-haiku-4-5';
 const MAX_TOOL_ROUNDS = 5;
 const SPORTS_API = 'https://intelligence.geniusbet.com';
+// BETina's own news gateway (betina-server): fresh news in the player's language.
+const NEWS_API = 'https://api.betina.geniusbet.com';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -177,7 +179,7 @@ function compactMatch(e: MatchEvent) {
 }
 
 // deno-lint-ignore no-explicit-any
-async function runTool(name: string, input: any, supabase: any, userId: string | null): Promise<string> {
+async function runTool(name: string, input: any, supabase: any, userId: string | null, lang: string): Promise<string> {
   try {
     if (name === 'search_team') {
       const r = await fetch(`https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(String(input.query ?? ''))}`);
@@ -196,7 +198,7 @@ async function runTool(name: string, input: any, supabase: any, userId: string |
       return JSON.stringify((d.events ?? []).slice(0, 5).map(compactMatch));
     }
     if (name === 'get_news') {
-      const r = await fetch(`${SPORTS_API}/api/sports/news?sport=${input.sport ?? 'sport'}&count=8`);
+      const r = await fetch(`${NEWS_API}/v1/news?sport=${input.sport ?? 'sport'}&count=8&lang=${encodeURIComponent(lang)}`);
       const d = await r.json();
       return JSON.stringify((d.items ?? []).slice(0, 8).map((n: NewsItem) => n.title));
     }
@@ -324,7 +326,7 @@ Deno.serve(async (req) => {
         messages.push({ role: 'assistant', content: response.content });
         const results = await Promise.all(
           // deno-lint-ignore no-explicit-any
-          toolUses.map(async (tu: any) => ({ type: 'tool_result', tool_use_id: tu.id, content: await runTool(tu.name, tu.input ?? {}, supabase, user.id) })),
+          toolUses.map(async (tu: any) => ({ type: 'tool_result', tool_use_id: tu.id, content: await runTool(tu.name, tu.input ?? {}, supabase, user.id, ctx.lang ?? 'en') })),
         );
         messages.push({ role: 'user', content: results });
         continue;

@@ -7,7 +7,7 @@ import GlowCard from '../../src/components/GlowCard';
 import ScreenBg from '../../src/components/ScreenBg';
 import { useProfile } from '../../src/hooks/useProfile';
 import { SPORT_KEYS, useI18n } from '../../src/lib/i18n';
-import { cleanFeedText, mentionsTeam } from '../../src/lib/sports';
+import { cleanFeedText, fetchNewsApi, mentionsTeam } from '../../src/lib/sports';
 import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
 
 const API = 'https://intelligence.geniusbet.com';
@@ -30,8 +30,8 @@ const SPORT_TO_BBC: Record<string, string> = {
   golf: 'golf', nfl: 'sport', mma: 'sport', esports: 'sport',
 };
 
-// The news source differs by market language (each lang has its own outlet on
-// the intelligence API). Used for the "· <source>" label under each headline.
+// Fallback for the "· <source>" label under each headline when an item has no
+// source of its own (the news gateway sets one per item).
 const SOURCE_BY_LANG: Record<string, string> = {
   en: 'BBC Sport', de: 'Sportschau', es: 'Marca', fr: 'RMC Sport', pt: 'Record',
 };
@@ -95,8 +95,7 @@ export default function Live() {
   const fetchNews = async () => {
     setLoadingNews(true);
     try {
-      const r = await fetch(`${API}/api/sports/news?sport=${sport}&count=12&lang=${lang}`);
-      const d = await r.json();
+      const d = await fetchNewsApi('news', `sport=${sport}&count=12&lang=${lang}`);
       const items: NewsItem[] = (d.items ?? []).map((it: NewsItem) => ({
         ...it,
         title: cleanFeedText(it.title),

@@ -15,11 +15,10 @@ import * as WebBrowser from 'expo-web-browser';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useI18n } from '../src/lib/i18n';
-import { cleanFeedText } from '../src/lib/sports';
+import { cleanFeedText, fetchNewsApi } from '../src/lib/sports';
 import { Colors, Fonts, Spacing, Typography } from '../src/theme';
 
 const { width: W, height: H } = Dimensions.get('window');
-const API = 'https://intelligence.geniusbet.com';
 
 type Article = {
   title: string;
@@ -57,8 +56,7 @@ export default function ArticleScreen() {
 
   useEffect(() => {
     if (!url) return;
-    fetch(`${API}/api/sports/article?url=${encodeURIComponent(url)}`)
-      .then((r) => r.json())
+    fetchNewsApi('article', `url=${encodeURIComponent(url)}`)
       .then((d) => {
         // The scraper can fail (e.g. Google News redirect links) and return an
         // error object or partial data. Normalise, and only error out if there
