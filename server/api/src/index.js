@@ -3,6 +3,8 @@
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { G2PError } from './g2p.js';
+import { newsArticle, newsList } from './news.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const VERSION = process.env.BETINA_API_VERSION ?? 'dev';
@@ -22,8 +24,31 @@ app.get('/health', (c) =>
   }),
 );
 
+// --- News (Genius2Play) ------------------------------------------------------
+// Same shapes as the app's existing news/article responses.
+function send(c, result, maxAge) {
+  if (result.cache) c.header('X-Cache', result.cache);
+  if (result.status === 200) c.header('Cache-Control', `public, max-age=${maxAge}`);
+  return c.json(result.body, result.status);
+}
+
+app.get('/v1/news', async (c) => {
+  const { sport, count, lang } = c.req.query();
+  return send(c, await newsList({ sport, count, lang }), 300);
+});
+
+app.get('/v1/article', async (c) => {
+  const { url } = c.req.query();
+  if (!url) return c.json({ error: 'missing_url' }, 400);
+  return send(c, await newsArticle({ url }), 3600);
+});
+
 app.notFound((c) => c.json({ error: 'not_found' }, 404));
 app.onError((err, c) => {
+  if (err instanceof G2PError || err?.name === 'TimeoutError') {
+    console.error('upstream:', err.message);
+    return c.json({ error: 'upstream_unavailable' }, 502);
+  }
   console.error(err);
   return c.json({ error: 'internal_error' }, 500);
 });
