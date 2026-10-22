@@ -57,14 +57,18 @@ const BOILERPLATE = /^(read more|related|lesen sie auch|mehr zum thema|más info
 // Dateline / byline rows that open many article pages.
 const DATELINE = /^(stand:|actualizado|publicado|atualizado|aggiornato|articol de|publicat|mis à jour|updated|published|von [\p{Lu}]|by [\p{Lu}])/iu;
 
+// Letters + digits only, so "Derby: X - Y" and "Derby X - Y" compare equal.
+const norm = (s) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+
 function cleanParagraphs(list, title) {
   const seen = new Set();
   const out = [];
+  const t = title ? norm(title) : '';
   for (const raw of list) {
     const p = cleanText(raw);
     if (p.length < 25 || BOILERPLATE.test(p)) continue;
     if (DATELINE.test(p) && p.length < 160) continue;
-    if (title && p.toLowerCase() === title.toLowerCase()) continue;
+    if (t && norm(p) === t) continue; // headline repeated as first paragraph
     if (seen.has(p)) continue;
     seen.add(p);
     out.push(p);
