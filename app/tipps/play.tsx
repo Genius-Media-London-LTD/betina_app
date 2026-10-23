@@ -15,7 +15,7 @@ import { useSession } from '../../src/hooks/useSession';
 import { useI18n } from '../../src/lib/i18n';
 import {
   Competition, Round, Tip, TipMatch,
-  currentRoundIndex, defaultCompetition, fetchBetinaTips, fetchCompetitions, fetchMatches, fetchMyCompetitions, fetchMyTips,
+  currentRoundIndex, defaultCompetition, fetchBetinaTipped, fetchBetinaTips, fetchCompetitions, fetchMatches, fetchMyCompetitions, fetchMyTips,
   isFinished, isLive, isOpen, isVoid, placeTip, toRounds,
 } from '../../src/lib/tippspiel';
 import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
@@ -50,6 +50,7 @@ function Play() {
   const [drafts, setDrafts] = useState<Record<number, Draft>>({});
   const [saveState, setSaveState] = useState<Record<number, SaveState>>({});
   const [betina, setBetina] = useState<Record<number, Tip>>({});
+  const [betinaTipped, setBetinaTipped] = useState<Set<number>>(new Set());
   const [mine, setMine] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -68,17 +69,20 @@ function Play() {
     }
     const matches = await fetchMatches(c.code, c.current_season);
     const rs = toRounds(matches);
-    // BETina's tips are readable from kickoff, so only ask for started matches.
+    // BETina's tips are readable from kickoff; before that we only learn that she has tipped.
     const started = matches.filter((m) => Date.parse(m.kickoff) <= Date.now()).map((m) => m.id);
-    const [myTips, betinaTips, myComps] = await Promise.all([
+    const upcoming = matches.filter((m) => Date.parse(m.kickoff) > Date.now()).map((m) => m.id);
+    const [myTips, betinaTips, tippedByBetina, myComps] = await Promise.all([
       fetchMyTips(matches.map((m) => m.id)),
       fetchBetinaTips(started.slice(-60)),
+      fetchBetinaTipped(upcoming),
       fetchMyCompetitions(),
     ]);
     setRounds(rs);
     if (!keepRound) setRoundIdx(currentRoundIndex(rs));
     setTips(myTips);
     setBetina(betinaTips);
+    setBetinaTipped(tippedByBetina);
     setMine(myComps);
     setLoading(false);
   }, [comp, competitions]);
@@ -238,6 +242,7 @@ function Play() {
                     score={scoreOf(m)}
                     tip={tips[m.id] ?? null}
                     betina={betina[m.id] ?? null}
+                    betinaHasTipped={betinaTipped.has(m.id)}
                     state={saveState[m.id]}
                     time={timeFmt.format(new Date(m.kickoff))}
                     onChange={change}
@@ -258,13 +263,14 @@ type MatchCardProps = {
   score: Draft | null;
   tip: Tip | null;
   betina: Tip | null;
+  betinaHasTipped: boolean;
   state?: SaveState;
   time: string;
   onChange: (m: TipMatch, side: 'home' | 'away', delta: number) => void;
   t: ReturnType<typeof useI18n>['t'];
 };
 
-function MatchCard({ match: m, score, tip, betina, state, time, onChange, t }: MatchCardProps) {
+function MatchCard({ match: m, score, tip, betina, betinaHasTipped, state, time, onChange, t }: MatchCardProps) {
   const open = isOpen(m);
   const live = isLive(m);
   const finished = isFinished(m);
@@ -317,6 +323,12 @@ function MatchCard({ match: m, score, tip, betina, state, time, onChange, t }: M
           </View>
         );
       })}
+      {open && betinaHasTipped && (
+        <View style={styles.betinaLocked}>
+          <BETinaAvatar size={16} />
+          <Text style={styles.betinaLockedText}>🔒 {t.tipBetinaLocked}</Text>
+        </View>
+      )}
       {!open && (tip || betina) && (
         <View style={styles.tipsRow}>
           {tip && <Text style={styles.yourTip}>{t.tipYourTip}: {tip.home}:{tip.away}</Text>}
@@ -401,6 +413,8 @@ const styles = StyleSheet.create({
   yourTip: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
   betinaTip: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 'auto' },
   betinaTipText: { color: Colors.accentLight, fontSize: Typography.xs + 1, fontFamily: Fonts.bold },
+  betinaLocked: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  betinaLockedText: { color: Colors.textMuted, fontSize: Typography.xs, fontFamily: Fonts.semibold },
   emptyCard: { padding: 20, alignItems: 'center' },
   emptyText: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center' },
 });

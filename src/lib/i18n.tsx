@@ -285,6 +285,7 @@ type Translations = {
   tipBetinaTip: string;
   tipTipsCol: string;
   tipSave: string;
+  tipBetinaLocked: string;
 };
 
 /** Sport-ID (app-intern) → Übersetzungs-Key */
@@ -555,6 +556,7 @@ const T: Record<LangCode, Translations> = {
     tipBetinaTip: 'BETina\'s tip',
     tipTipsCol: 'Tips',
     tipSave: 'Save',
+    tipBetinaLocked: 'BETina has tipped · revealed at kickoff',
   },
   de: {
     welcomeTitle: 'Willkommen',
@@ -807,6 +809,7 @@ const T: Record<LangCode, Translations> = {
     tipBetinaTip: 'BETinas Tipp',
     tipTipsCol: 'Tipps',
     tipSave: 'Speichern',
+    tipBetinaLocked: 'BETina hat getippt · sichtbar ab Anpfiff',
   },
   es: {
     welcomeTitle: 'Bienvenido',
@@ -1059,6 +1062,7 @@ const T: Record<LangCode, Translations> = {
     tipBetinaTip: 'Pronóstico de BETina',
     tipTipsCol: 'Pron.',
     tipSave: 'Guardar',
+    tipBetinaLocked: 'BETina ya pronosticó · se ve al empezar',
   },
   pt: {
     welcomeTitle: 'Bem-vindo',
@@ -1311,6 +1315,7 @@ const T: Record<LangCode, Translations> = {
     tipBetinaTip: 'Palpite da BETina',
     tipTipsCol: 'Palp.',
     tipSave: 'Guardar',
+    tipBetinaLocked: 'A BETina já deu palpite · visível no apito inicial',
   },
   fr: {
     welcomeTitle: 'Bienvenue',
@@ -1563,6 +1568,7 @@ const T: Record<LangCode, Translations> = {
     tipBetinaTip: 'Prono de BETina',
     tipTipsCol: 'Pronos',
     tipSave: 'Enregistrer',
+    tipBetinaLocked: 'BETina a pronostiqué · visible au coup d\'envoi',
   },
   it: {
     welcomeTitle: 'Benvenuto',
@@ -1815,6 +1821,7 @@ const T: Record<LangCode, Translations> = {
     tipBetinaTip: 'Pronostico di BETina',
     tipTipsCol: 'Pron.',
     tipSave: 'Salva',
+    tipBetinaLocked: 'BETina ha pronosticato · visibile al fischio d\'inizio',
   },
   ro: {
     welcomeTitle: 'Bun venit',
@@ -2067,6 +2074,7 @@ const T: Record<LangCode, Translations> = {
     tipBetinaTip: 'Pronosticul BETinei',
     tipTipsCol: 'Pron.',
     tipSave: 'Salvează',
+    tipBetinaLocked: 'BETina a pronosticat · vizibil la start',
   },
 };
 

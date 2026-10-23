@@ -343,3 +343,10 @@ export async function setNotifyTippspiel(on: boolean): Promise<void> {
   if (!user) return;
   await supabase.from('profiles').update({ notify_tippspiel: on }).eq('id', user.id);
 }
+
+/** Matches BETina has already tipped (ids only — her scores stay hidden until kickoff). */
+export async function fetchBetinaTipped(matchIds: number[]): Promise<Set<number>> {
+  if (matchIds.length === 0) return new Set();
+  const { data } = await supabase.rpc('betina_tipped', { p_matches: matchIds });
+  return new Set(((data ?? []) as (number | string)[]).map(Number));
+}
