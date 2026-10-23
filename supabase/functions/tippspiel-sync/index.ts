@@ -5,7 +5,8 @@
 //    (010_tippspiel.sql) then scores the tips. Results count after 90 minutes.
 // 2. Opens each season's bonus questions and resolves them once the season is
 //    decided (league champion / last place, Champions League winner).
-// 3. BETina as host: reminds players of untipped matches kicking off soon and
+// 3. "Beat BETina": BETina tips the next days' matches herself (betina.ts).
+// 4. BETina as host: reminds players of untipped matches kicking off soon and
 //    sends a recap once all of a player's tips of a day are scored.
 //
 // Deploy: supabase functions deploy tippspiel-sync --no-verify-jwt
@@ -15,6 +16,7 @@
 // sync does nothing (protects the football-data.org quota of 10 calls/min).
 
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { betinaTips } from './betina.ts';
 
 const FD_API = 'https://api.football-data.org/v4';
 const EXPO_PUSH = 'https://exp.host/--/api/v2/push/send';
@@ -166,48 +168,56 @@ type Lang = 'en' | 'de' | 'es' | 'pt' | 'fr' | 'it' | 'ro';
 const MSG: Record<Lang, {
   remindTitle: string; remind: (name: string, n: number) => string;
   recapTitle: string; recap: (name: string, pts: number, scored: number, exact: number, best: string | null) => string;
+  duel: (pts: number, betina: number) => string;
 }> = {
   en: {
     remindTitle: 'Predictor ⏰',
     remind: (n, c) => `${n}, ${c === 1 ? '1 match kicks off' : `${c} matches kick off`} within the hour and you haven't tipped yet. Quick, before the deadline!`,
     recapTitle: 'Your matchday recap',
-    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'point' : 'points'} from ${s} ${s === 1 ? 'tip' : 'tips'}${e > 0 ? ` incl. ${e}× spot on${b ? ` (${b})` : ''} 🎯` : ''}. Let's see the ranking!`,
+    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'point' : 'points'} from ${s} ${s === 1 ? 'tip' : 'tips'}${e > 0 ? ` incl. ${e}× spot on${b ? ` (${b})` : ''} 🎯` : ''}.`,
+    duel: (p, b) => (p > b ? `You beat BETina today (${b}) 😏` : p < b ? `BETina got ${b}, revenge next round?` : `Level with BETina (${b}).`),
   },
   de: {
     remindTitle: 'Tippspiel ⏰',
     remind: (n, c) => `${n}, in unter einer Stunde ${c === 1 ? 'geht 1 Spiel' : `gehen ${c} Spiele`} los und dein Tipp fehlt noch. Schnell, bevor Tippschluss ist!`,
     recapTitle: 'Deine Tagesbilanz',
-    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'Punkt' : 'Punkte'} aus ${s} ${s === 1 ? 'Tipp' : 'Tipps'}${e > 0 ? `, davon ${e}× exakt${b ? ` (${b})` : ''} 🎯` : ''}. Schau mal in die Tabelle!`,
+    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'Punkt' : 'Punkte'} aus ${s} ${s === 1 ? 'Tipp' : 'Tipps'}${e > 0 ? `, davon ${e}× exakt${b ? ` (${b})` : ''} 🎯` : ''}.`,
+    duel: (p, b) => (p > b ? `Du hast BETina geschlagen (${b}) 😏` : p < b ? `BETina hat ${b}, Revanche am nächsten Spieltag?` : `Gleichstand mit BETina (${b}).`),
   },
   es: {
     remindTitle: 'Porra ⏰',
     remind: (n, c) => `${n}, en menos de una hora ${c === 1 ? 'empieza 1 partido' : `empiezan ${c} partidos`} y aún no has hecho tu pronóstico. ¡Rápido!`,
     recapTitle: 'Tu resumen del día',
-    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'punto' : 'puntos'} de ${s} ${s === 1 ? 'pronóstico' : 'pronósticos'}${e > 0 ? `, ${e}× resultado exacto${b ? ` (${b})` : ''} 🎯` : ''}. ¡Mira la clasificación!`,
+    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'punto' : 'puntos'} de ${s} ${s === 1 ? 'pronóstico' : 'pronósticos'}${e > 0 ? `, ${e}× resultado exacto${b ? ` (${b})` : ''} 🎯` : ''}.`,
+    duel: (p, b) => (p > b ? `¡Le ganaste a BETina (${b}) 😏` : p < b ? `BETina hizo ${b}, ¿revancha en la próxima?` : `Empate con BETina (${b}).`),
   },
   pt: {
     remindTitle: 'Palpites ⏰',
     remind: (n, c) => `${n}, em menos de uma hora ${c === 1 ? 'começa 1 jogo' : `começam ${c} jogos`} e ainda não deste o teu palpite. Rápido!`,
     recapTitle: 'O teu resumo do dia',
-    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'ponto' : 'pontos'} em ${s} ${s === 1 ? 'palpite' : 'palpites'}${e > 0 ? `, ${e}× resultado exato${b ? ` (${b})` : ''} 🎯` : ''}. Vê a classificação!`,
+    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'ponto' : 'pontos'} em ${s} ${s === 1 ? 'palpite' : 'palpites'}${e > 0 ? `, ${e}× resultado exato${b ? ` (${b})` : ''} 🎯` : ''}.`,
+    duel: (p, b) => (p > b ? `Ganhaste à BETina (${b}) 😏` : p < b ? `A BETina fez ${b}, desforra na próxima?` : `Empate com a BETina (${b}).`),
   },
   fr: {
     remindTitle: 'Pronos ⏰',
     remind: (n, c) => `${n}, ${c === 1 ? '1 match commence' : `${c} matchs commencent`} dans moins d'une heure et tu n'as pas encore pronostiqué. Vite !`,
     recapTitle: 'Ton bilan du jour',
-    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'point' : 'points'} sur ${s} ${s === 1 ? 'prono' : 'pronos'}${e > 0 ? `, dont ${e}× score exact${b ? ` (${b})` : ''} 🎯` : ''}. Jette un œil au classement !`,
+    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'point' : 'points'} sur ${s} ${s === 1 ? 'prono' : 'pronos'}${e > 0 ? `, dont ${e}× score exact${b ? ` (${b})` : ''} 🎯` : ''}.`,
+    duel: (p, b) => (p > b ? `Tu as battu BETina (${b}) 😏` : p < b ? `BETina a fait ${b}, revanche la prochaine fois ?` : `Égalité avec BETina (${b}).`),
   },
   it: {
     remindTitle: 'Pronostici ⏰',
     remind: (n, c) => `${n}, tra meno di un'ora ${c === 1 ? 'inizia 1 partita' : `iniziano ${c} partite`} e manca ancora il tuo pronostico. Veloce!`,
     recapTitle: 'Il tuo riepilogo',
-    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'punto' : 'punti'} su ${s} ${s === 1 ? 'pronostico' : 'pronostici'}${e > 0 ? `, ${e}× risultato esatto${b ? ` (${b})` : ''} 🎯` : ''}. Guarda la classifica!`,
+    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'punto' : 'punti'} su ${s} ${s === 1 ? 'pronostico' : 'pronostici'}${e > 0 ? `, ${e}× risultato esatto${b ? ` (${b})` : ''} 🎯` : ''}.`,
+    duel: (p, b) => (p > b ? `Hai battuto BETina (${b}) 😏` : p < b ? `BETina ha fatto ${b}, rivincita alla prossima?` : `Pari con BETina (${b}).`),
   },
   ro: {
     remindTitle: 'Pronosticuri ⏰',
     remind: (n, c) => `${n}, în mai puțin de o oră ${c === 1 ? 'începe 1 meci' : `încep ${c} meciuri`} și încă nu ai dat pronosticul. Repede!`,
     recapTitle: 'Bilanțul zilei',
-    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'punct' : 'puncte'} din ${s} ${s === 1 ? 'pronostic' : 'pronosticuri'}${e > 0 ? `, ${e}× scor exact${b ? ` (${b})` : ''} 🎯` : ''}. Vezi clasamentul!`,
+    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'punct' : 'puncte'} din ${s} ${s === 1 ? 'pronostic' : 'pronosticuri'}${e > 0 ? `, ${e}× scor exact${b ? ` (${b})` : ''} 🎯` : ''}.`,
+    duel: (p, b) => (p > b ? `Ai bătut-o pe BETina (${b}) 😏` : p < b ? `BETina a făcut ${b}, revanșa data viitoare?` : `Egal cu BETina (${b}).`),
   },
 };
 
@@ -218,7 +228,7 @@ const firstName = (name: string | null) => (name ?? '').trim().split(/\s+/)[0] |
 
 async function deliver(
   db: Db,
-  target: { user_id: string; push_token: string | null; notify_betina: boolean },
+  target: { user_id: string; push_token: string | null; notify_push: boolean },
   triggerKey: string,
   title: string,
   body: string,
@@ -226,7 +236,7 @@ async function deliver(
   // Log first so an overlapping run can't double-send.
   await db.from('trigger_log').insert({ user_id: target.user_id, trigger_key: triggerKey, category: 'engagement' });
   await db.from('notifications').insert({ user_id: target.user_id, type: 'betina', title, body });
-  if (target.notify_betina && target.push_token) {
+  if (target.notify_push && target.push_token) {
     await fetch(EXPO_PUSH, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -251,7 +261,8 @@ async function hostMessages(db: Db) {
   if (e2) console.error('recap targets:', e2.message);
   for (const t of recap ?? []) {
     const m = msgFor(t.language);
-    const body = m.recap(firstName(t.name), Number(t.points), Number(t.scored), Number(t.exact), Number(t.exact) > 0 ? t.best : null);
+    // BETina tipped the same matches: close with today's duel.
+    const body = `${m.recap(firstName(t.name), Number(t.points), Number(t.scored), Number(t.exact), Number(t.exact) > 0 ? t.best : null)} ${m.duel(Number(t.points), Number(t.betina_points))}`;
     await deliver(db, t, `tip_recap:${t.day}`, m.recapTitle, body);
     recaps++;
   }
@@ -279,6 +290,7 @@ Deno.serve(async () => {
       results.push({ code: c.code, error: (err as Error).message });
     }
   }
+  const betina = await betinaTips(db).catch((err) => ({ error: (err as Error).message }));
   const host = await hostMessages(db);
-  return json({ results, host });
+  return json({ results, betina, host });
 });
