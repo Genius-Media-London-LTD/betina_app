@@ -7,15 +7,25 @@ import BETinaAvatar from '../src/components/BETinaAvatar';
 import GlowCard from '../src/components/GlowCard';
 import ScreenBg from '../src/components/ScreenBg';
 import XPBar from '../src/components/XPBar';
-import { demoProfile, tiers } from '../src/lib/demo';
+import { tiers } from '../src/lib/demo';
+import { useProfile } from '../src/hooks/useProfile';
 import { useI18n } from '../src/lib/i18n';
 import { Colors, Fonts, Spacing, Typography } from '../src/theme';
 
 export default function Tiers() {
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
-  const currentIndex = tiers.findIndex((t) => t.name === demoProfile.tier);
-  const progress = demoProfile.xp / demoProfile.xpForNextTier;
+  const { profile } = useProfile();
+
+  // Derive the real tier + progress from the player's actual XP (was showing
+  // hardcoded demo values — THINKER/2,340 XP — regardless of the real profile).
+  const xp = profile?.xp_points ?? 0;
+  let currentIndex = 0;
+  for (let i = 0; i < tiers.length; i++) if (xp >= tiers[i].minXp) currentIndex = i;
+  const nextTier = tiers[currentIndex + 1] ?? null;
+  const progress = nextTier
+    ? Math.min(1, Math.max(0, (xp - tiers[currentIndex].minXp) / (nextTier.minXp - tiers[currentIndex].minXp)))
+    : 1;
 
   return (
     <ScreenBg glowTop={0.14} glowSize={460}>
@@ -98,8 +108,8 @@ export default function Tiers() {
                   <View style={styles.progressBlock}>
                     <XPBar progress={progress} height={6} />
                     <Text style={styles.progressMeta}>
-                      {demoProfile.xp.toLocaleString('en-US')} XP ·{' '}
-                      {demoProfile.xpForNextTier - demoProfile.xp} to {demoProfile.nextTier}
+                      {xp.toLocaleString('en-US')} XP
+                      {nextTier ? ` · ${(nextTier.minXp - xp).toLocaleString('en-US')} to ${nextTier.name}` : ''}
                     </Text>
                   </View>
                 )}

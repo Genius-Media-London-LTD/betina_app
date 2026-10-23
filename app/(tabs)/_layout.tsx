@@ -1,10 +1,10 @@
 import { useI18n } from '../../src/lib/i18n';
 import React, { useEffect } from 'react';
 import { AppState, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { registerForPush } from '../../src/lib/push';
+import { onNotificationTap, registerForPush } from '../../src/lib/push';
 import { claimDailyLogin } from '../../src/lib/xp';
 import { Colors, Fonts } from '../../src/theme';
 
@@ -15,6 +15,7 @@ const TAB_CONFIG: Record<string, { emoji: string; labelKey: string }> = {
   chat: { emoji: '💬', labelKey: 'tabChat' },
   journey: { emoji: '🚀', labelKey: 'tabJourney' },
   live: { emoji: '⚽', labelKey: 'tabLive' },
+  tippspiel: { emoji: '🎯', labelKey: 'tabTipps' },
   settings: { emoji: '⚙️', labelKey: 'tabSettings' },
 };
 
@@ -70,6 +71,7 @@ function GlassTabBar({ state, navigation }: TabBarProps) {
 }
 
 export default function TabsLayout() {
+  const router = useRouter();
   // Register this device for push, and grant the daily open reward (server
   // enforces once-per-day), once the player enters the app. Re-run push
   // registration whenever the app returns to the foreground so a token gets
@@ -80,7 +82,13 @@ export default function TabsLayout() {
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') registerForPush();
     });
-    return () => sub.remove();
+    // Pushes with a deep link (e.g. Tippspiel reminders) open their screen.
+    const offTap = onNotificationTap((url) => router.push(url as never));
+    return () => {
+      sub.remove();
+      offTap();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per mount
   }, []);
 
   return (
@@ -94,6 +102,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" />
       <Tabs.Screen name="live" />
+      <Tabs.Screen name="tippspiel" />
       <Tabs.Screen name="chat" />
       <Tabs.Screen name="journey" />
       <Tabs.Screen name="settings" />

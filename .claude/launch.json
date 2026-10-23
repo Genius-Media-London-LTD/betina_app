@@ -12,6 +12,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["expo", "start", "--web", "--port", "8082"],
       "port": 8082
+    },
+    {
+      "name": "web-dist",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8099", "--directory", "dist"],
+      "port": 8099
     }
   ]
 }

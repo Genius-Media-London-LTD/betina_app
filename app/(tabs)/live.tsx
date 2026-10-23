@@ -7,7 +7,7 @@ import GlowCard from '../../src/components/GlowCard';
 import ScreenBg from '../../src/components/ScreenBg';
 import { useProfile } from '../../src/hooks/useProfile';
 import { SPORT_KEYS, useI18n } from '../../src/lib/i18n';
-import { mentionsTeam } from '../../src/lib/sports';
+import { cleanFeedText, fetchNewsApi, mentionsTeam } from '../../src/lib/sports';
 import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
 
 const API = 'https://intelligence.geniusbet.com';
@@ -28,6 +28,12 @@ const SPORT_TO_BBC: Record<string, string> = {
   football: 'football', tennis: 'tennis', basketball: 'sport',
   cricket: 'cricket', rugby: 'rugby', athletics: 'athletics',
   golf: 'golf', nfl: 'sport', mma: 'sport', esports: 'sport',
+};
+
+// Fallback for the "· <source>" label under each headline when an item has no
+// source of its own (the news gateway sets one per item).
+const SOURCE_BY_LANG: Record<string, string> = {
+  en: 'BBC Sport', de: 'Sportschau', es: 'Marca', fr: 'RMC Sport', pt: 'Record',
 };
 
 type NewsItem = { title: string; description: string; link: string; pubDate: string; image?: string };
@@ -63,6 +69,7 @@ export default function Live() {
 
   const teamId = (profile as any)?.favourite_team_id ?? null;
   const teamName = profile?.favourite_team ?? null;
+  const newsSource = SOURCE_BY_LANG[lang] ?? 'BBC Sport';
 
   useEffect(() => {
     if (!profile) return;
@@ -88,9 +95,12 @@ export default function Live() {
   const fetchNews = async () => {
     setLoadingNews(true);
     try {
-      const r = await fetch(`${API}/api/sports/news?sport=${sport}&count=12&lang=${lang}`);
-      const d = await r.json();
-      const items: NewsItem[] = d.items ?? [];
+      const d = await fetchNewsApi('news', `sport=${sport}&count=12&lang=${lang}`);
+      const items: NewsItem[] = (d.items ?? []).map((it: NewsItem) => ({
+        ...it,
+        title: cleanFeedText(it.title),
+        description: cleanFeedText(it.description),
+      }));
       // Surface anything about the player's team first (source is sport-wide)
       if (teamName) {
         items.sort(
@@ -243,7 +253,7 @@ export default function Live() {
                     </View>
                     <View style={styles.featuredContent}>
                       <Text style={styles.featuredTitle} numberOfLines={3}>{news[0].title}</Text>
-                      <Text style={styles.newsTime}>{timeAgo(news[0].pubDate, t)}</Text>
+                      <Text style={styles.newsTime}>{timeAgo(news[0].pubDate, t)} · {(news[0] as any).source ?? newsSource}</Text>
                     </View>
                   </GlowCard>
                 </Pressable>
@@ -257,7 +267,7 @@ export default function Live() {
                     )}
                     <View style={styles.newsBody}>
                       <Text style={styles.newsTitle} numberOfLines={2}>{item.title}</Text>
-                      <Text style={styles.newsTime}>{timeAgo(item.pubDate, t)}</Text>
+                      <Text style={styles.newsTime}>{timeAgo(item.pubDate, t)} · {(item as any).source ?? newsSource}</Text>
                     </View>
                   </GlowCard>
                 </Pressable>

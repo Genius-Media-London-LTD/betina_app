@@ -1,0 +1,31 @@
+[Unit]
+Description=BETina API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=betina
+Group=betina
+WorkingDirectory=/opt/betina-api
+# Secrets (e.g. GENIUS2PLAY_API_KEY) live only on the server, never in git.
+EnvironmentFile=-/etc/betina/api.env
+ExecStart=/usr/bin/node src/index.js
+Restart=always
+RestartSec=3
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/opt/betina-api
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryMax=1G
+
+[Install]
+WantedBy=multi-user.target

@@ -16,11 +16,11 @@ import * as WebBrowser from 'expo-web-browser';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useI18n } from '../src/lib/i18n';
+import { cleanFeedText, fetchNewsApi } from '../src/lib/sports';
 import { safeGenius2PlayCanonical } from '../src/lib/genius2playCanonical';
 import { Colors, Fonts, Spacing, Typography } from '../src/theme';
 
 const { width: W, height: H } = Dimensions.get('window');
-const API = 'https://intelligence.geniusbet.com';
 
 type Article = {
   title: string;
@@ -59,21 +59,23 @@ export default function ArticleScreen() {
 
   useEffect(() => {
     if (!url) return;
-    fetch(`${API}/api/sports/article?url=${encodeURIComponent(url)}`)
-      .then((r) => r.json())
+    fetchNewsApi('article', `url=${encodeURIComponent(url)}`)
       .then((d) => {
         // The scraper can fail (e.g. Google News redirect links) and return an
         // error object or partial data. Normalise, and only error out if there
         // is nothing at all to show.
-        const paragraphs = Array.isArray(d?.paragraphs) ? d.paragraphs.filter((p: unknown) => typeof p === 'string') : [];
+        const paragraphs = (Array.isArray(d?.paragraphs)
+          ? d.paragraphs.filter((p: unknown) => typeof p === 'string')
+          : []
+        ).map((p: string) => cleanFeedText(p)).filter(Boolean);
         const hasContent = !d?.error && (paragraphs.length > 0 || d?.title || paramTitle);
         if (!hasContent) {
           setError(true);
         } else {
           setArticle({
-            title: d?.title ?? paramTitle ?? '',
+            title: cleanFeedText(d?.title ?? paramTitle ?? ''),
             image: typeof d?.image === 'string' ? d.image : '',
-            description: typeof d?.description === 'string' ? d.description : '',
+            description: cleanFeedText(typeof d?.description === 'string' ? d.description : ''),
             paragraphs,
             source: typeof d?.source === 'string' ? d.source : '',
             url: typeof d?.url === 'string' ? d.url : url,

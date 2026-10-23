@@ -68,3 +68,19 @@ export async function registerForPush(): Promise<string | null> {
     return null;
   }
 }
+
+/**
+ * Call `open(url)` when the player taps a push that carries `data.url` (e.g.
+ * the Tippspiel reminders open "/tippspiel"), including the tap that launched
+ * the app. Returns an unsubscribe function. No-op on web.
+ */
+export function onNotificationTap(open: (url: string) => void): () => void {
+  if (Platform.OS === 'web') return () => {};
+  const handle = (response: Notifications.NotificationResponse | null) => {
+    const url = response?.notification.request.content.data?.url;
+    if (typeof url === 'string' && url.startsWith('/')) open(url);
+  };
+  Notifications.getLastNotificationResponseAsync().then(handle).catch(() => {});
+  const sub = Notifications.addNotificationResponseReceivedListener(handle);
+  return () => sub.remove();
+}

@@ -40,6 +40,8 @@ const COUNTRIES = [
   { flag: '🇪🇸', name: 'Spain', code: 'ES' },
   { flag: '🇬🇧', name: 'United Kingdom', code: 'GB' },
   { flag: '🇫🇷', name: 'France', code: 'FR' },
+  { flag: '🇷🇴', name: 'Romania', code: 'RO' },
+  { flag: '🇷🇸', name: 'Serbia', code: 'RS' },
   { flag: '🇮🇹', name: 'Italy', code: 'IT' },
   { flag: '🇺🇸', name: 'United States', code: 'US' },
   { flag: '🇰🇪', name: 'Kenya', code: 'KE' },

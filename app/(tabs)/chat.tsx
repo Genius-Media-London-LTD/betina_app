@@ -31,6 +31,8 @@ import { XP_REWARDS, awardChatXp } from '../../src/lib/xp';
 import { LiveContext, fetchLiveContext, parseSports } from '../../src/lib/sports';
 import { supabase } from '../../src/lib/supabase';
 import { useProfile } from '../../src/hooks/useProfile';
+import { useSession } from '../../src/hooks/useSession';
+import SignInWall from '../../src/components/SignInWall';
 import { useI18n } from '../../src/lib/i18n';
 import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
 
@@ -63,6 +65,7 @@ function TypingDot({ delay }: { delay: number }) {
 export default function Chat() {
   const { t, lang } = useI18n();
   const { profile, bumpXp } = useProfile();
+  const session = useSession();
   const userName = profile?.name ?? 'friend';
   const quickReplies = [t.chatQuick1, t.chatQuick2, t.chatQuick3];
   const insets = useSafeAreaInsets();
@@ -194,6 +197,10 @@ export default function Chat() {
     const t = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
     return () => clearTimeout(t);
   }, [messages, typing]);
+
+  // Guest → chatting needs an account; gate it. (Apple 5.1.1(v))
+  if (session === undefined) return <ScreenBg glowTop={0.3} glowSize={460} />;
+  if (session === null) return <SignInWall />;
 
   return (
     <ScreenBg glowTop={0.3} glowSize={460}>

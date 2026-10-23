@@ -17,6 +17,8 @@ const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 const MODEL = 'claude-haiku-4-5';
 const MAX_TOOL_ROUNDS = 5;
 const SPORTS_API = 'https://intelligence.geniusbet.com';
+// BETina's own news gateway (betina-server): fresh news in the player's language.
+const NEWS_API = 'https://api.betina.geniusbet.com';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -154,7 +156,8 @@ Rules:
 - When they ask to be reminded of something, use set_reminder with a concrete future datetime, then confirm warmly. If timing is unclear, ask.
 - NEVER promise wins, NEVER suggest chasing losses, NEVER pressure anyone to bet. Stay caring, not pushy.
 - If the player expresses distress, mentions chasing losses, or says things like "I can't stop", "I've lost everything", "I need help" — drop everything else, respond with genuine empathy, share the responsible-gaming tools (geniusbet.com/responsible-gaming), and offer to connect them with a human agent. Never minimize it, never pivot to betting or bonuses.
-- No real money moves in this app — bets happen on the GeniusBet website only.`;
+- No real money moves in this app — bets happen on the GeniusBet website only.
+- The app has a Tippspiel (a free score-prediction game: 3 points for the exact result, 2 for winner + goal difference, 1 for the right tendency; points and XP only, no money, no prizes). Use get_tippspiel when they talk about it: cheer exact hits, tease near misses playfully, remind them of matches they haven't tipped yet. If they ask what to tip, give a fun, form-based opinion for the Tippspiel only. Never connect it to betting, odds or stakes.`;
 }
 
 // ── Tools ─────────────────────────────────────────────────────────────────────
@@ -168,6 +171,7 @@ const TOOLS = [
   { name: 'get_fixtures', description: "A team's upcoming matches. Needs a team id from search_team.", input_schema: { type: 'object', properties: { team_id: { type: 'string' } }, required: ['team_id'] } },
   { name: 'get_results', description: "A team's recent finished matches with scores. Needs a team id from search_team.", input_schema: { type: 'object', properties: { team_id: { type: 'string' } }, required: ['team_id'] } },
   { name: 'get_news', description: 'Latest sports headlines. Optional sport filter.', input_schema: { type: 'object', properties: { sport: { type: 'string' } }, required: [] } },
+  { name: 'get_tippspiel', description: "The player's Tippspiel (free prediction game): season points + rank, matches in the next days they still have to tip, their upcoming tips and latest scored tips.", input_schema: { type: 'object', properties: {}, required: [] } },
   { name: 'remember_fact', description: 'Save a lasting fact/preference the player shares so you recall it next time. Only worthwhile things, not small talk.', input_schema: { type: 'object', properties: { fact: { type: 'string' } }, required: ['fact'] } },
   { name: 'set_reminder', description: 'Set a reminder. Work out a concrete future ISO datetime from what they said and today\'s date.', input_schema: { type: 'object', properties: { text: { type: 'string' }, datetime: { type: 'string' } }, required: ['text', 'datetime'] } },
 ];
@@ -177,7 +181,7 @@ function compactMatch(e: MatchEvent) {
 }
 
 // deno-lint-ignore no-explicit-any
-async function runTool(name: string, input: any, supabase: any, userId: string | null): Promise<string> {
+async function runTool(name: string, input: any, supabase: any, userId: string | null, lang: string): Promise<string> {
   try {
     if (name === 'search_team') {
       const r = await fetch(`https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(String(input.query ?? ''))}`);
@@ -196,9 +200,40 @@ async function runTool(name: string, input: any, supabase: any, userId: string |
       return JSON.stringify((d.events ?? []).slice(0, 5).map(compactMatch));
     }
     if (name === 'get_news') {
-      const r = await fetch(`${SPORTS_API}/api/sports/news?sport=${input.sport ?? 'sport'}&count=8`);
+      const r = await fetch(`${NEWS_API}/v1/news?sport=${input.sport ?? 'sport'}&count=8&lang=${encodeURIComponent(lang)}`);
       const d = await r.json();
       return JSON.stringify((d.items ?? []).slice(0, 8).map((n: NewsItem) => n.title));
+    }
+    if (name === 'get_tippspiel') {
+      if (!userId) return 'Not signed in.';
+      const now = new Date();
+      const soon = new Date(now.getTime() + 4 * 86_400_000);
+      const [{ data: upcoming }, { data: tips }, { data: board }] = await Promise.all([
+        supabase.from('tip_matches')
+          .select('id, competition, home_name, away_name, kickoff')
+          .in('status', ['SCHEDULED', 'TIMED'])
+          .gt('kickoff', now.toISOString()).lt('kickoff', soon.toISOString())
+          .order('kickoff').limit(80),
+        supabase.from('tips')
+          .select('match_id, home, away, points, tip_matches(competition, home_name, away_name, kickoff, status, home_score, away_score)')
+          .eq('user_id', userId).order('updated_at', { ascending: false }).limit(40),
+        supabase.rpc('tip_leaderboard', { p_competition: null, p_matchday: null, p_group: null, p_limit: 1 }),
+      ]);
+      // deno-lint-ignore no-explicit-any
+      const mine = (tips ?? []) as any[];
+      const tipped = new Set(mine.map((t) => t.match_id));
+      // deno-lint-ignore no-explicit-any
+      const me = ((board ?? []) as any[]).find((r) => r.is_me);
+      const label = (m: { home_name: string; away_name: string; competition: string }) => `${m.home_name} vs ${m.away_name} (${m.competition})`;
+      return JSON.stringify({
+        season: me ? { points: Number(me.points), rank: Number(me.rank), exact: Number(me.exact), tips: Number(me.tips) } : { points: 0, tips: 0 },
+        still_to_tip: (upcoming ?? []).filter((m) => !tipped.has(m.id)).slice(0, 10).map((m) => ({ match: label(m), kickoff: m.kickoff })),
+        upcoming_tips: mine.filter((t) => t.tip_matches && Date.parse(t.tip_matches.kickoff) > now.getTime())
+          .slice(0, 10).map((t) => ({ match: label(t.tip_matches), tip: `${t.home}:${t.away}`, kickoff: t.tip_matches.kickoff })),
+        recent_results: mine.filter((t) => t.points != null)
+          .sort((a, b) => Date.parse(b.tip_matches.kickoff) - Date.parse(a.tip_matches.kickoff))
+          .slice(0, 8).map((t) => ({ match: label(t.tip_matches), result: `${t.tip_matches.home_score}:${t.tip_matches.away_score}`, tip: `${t.home}:${t.away}`, points: t.points })),
+      });
     }
     if (name === 'remember_fact') {
       if (!userId) return "Can't save (not signed in).";
@@ -324,7 +359,7 @@ Deno.serve(async (req) => {
         messages.push({ role: 'assistant', content: response.content });
         const results = await Promise.all(
           // deno-lint-ignore no-explicit-any
-          toolUses.map(async (tu: any) => ({ type: 'tool_result', tool_use_id: tu.id, content: await runTool(tu.name, tu.input ?? {}, supabase, user.id) })),
+          toolUses.map(async (tu: any) => ({ type: 'tool_result', tool_use_id: tu.id, content: await runTool(tu.name, tu.input ?? {}, supabase, user.id, ctx.lang ?? 'en') })),
         );
         messages.push({ role: 'user', content: results });
         continue;

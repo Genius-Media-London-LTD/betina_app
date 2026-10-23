@@ -2,6 +2,7 @@ import { langForDialCode, useI18n } from '../../src/lib/i18n';
 import React, { useState } from 'react';
 import {
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -15,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import BETinaAvatar from '../../src/components/BETinaAvatar';
+import DismissKeyboard from '../../src/components/DismissKeyboard';
 import GlowButton from '../../src/components/GlowButton';
 import ScreenBg from '../../src/components/ScreenBg';
 import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
@@ -37,6 +39,8 @@ const DIAL_CODES = [
   { flag: '🇪🇸', code: '+34', country: 'Spain' },
   { flag: '🇬🇧', code: '+44', country: 'United Kingdom' },
   { flag: '🇫🇷', code: '+33', country: 'France' },
+  { flag: '🇷🇴', code: '+40', country: 'Romania' },
+  { flag: '🇷🇸', code: '+381', country: 'Serbia' },
   { flag: '🇺🇸', code: '+1', country: 'United States' },
   { flag: '🇰🇪', code: '+254', country: 'Kenya' },
   { flag: '🇬🇭', code: '+233', country: 'Ghana' },
@@ -139,6 +143,7 @@ export default function Login() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.flex}
       >
+       <DismissKeyboard>
         <View
           style={[
             styles.content,
@@ -171,7 +176,8 @@ export default function Login() {
                   placeholderTextColor="#55556A"
                   keyboardType="phone-pad"
                   style={styles.input}
-                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={() => Keyboard.dismiss()}
                 />
               </View>
             </View>
@@ -187,7 +193,16 @@ export default function Login() {
           </Animated.View>
 
           <View style={styles.flex} />
+
+          {/* Guest access — Apple 5.1.1(v): non-account content (news/articles)
+              must be reachable without registering. Lands on the Live tab. */}
+          <Animated.View entering={FadeInDown.delay(350).duration(700)}>
+            <Pressable onPress={() => router.replace('/(tabs)/live')} hitSlop={8} style={styles.guestBtn}>
+              <Text style={styles.guestLabel}>{t.loginGuest} →</Text>
+            </Pressable>
+          </Animated.View>
         </View>
+       </DismissKeyboard>
       </KeyboardAvoidingView>
     </ScreenBg>
   );
@@ -196,6 +211,8 @@ export default function Login() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { flex: 1, paddingHorizontal: Spacing.xl },
+  guestBtn: { alignSelf: 'center', paddingVertical: 12 },
+  guestLabel: { color: Colors.textSecondary, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
   header: { alignItems: 'center', gap: Spacing.base, paddingTop: 28, paddingBottom: 36 },
   headerText: { alignItems: 'center', gap: 6 },
   title: { color: '#FFFFFF', fontSize: 26, fontFamily: Fonts.bold },
