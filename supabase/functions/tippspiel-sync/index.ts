@@ -40,9 +40,13 @@ type Db = SupabaseClient<any, 'public', any>;
 
 async function fd(path: string) {
   const r = await fetch(`${FD_API}${path}`, {
-    headers: { 'X-Auth-Token': Deno.env.get('FOOTBALL_DATA_API_KEY') ?? '' },
+    // Tolerate whitespace/quotes pasted along with the key in the dashboard.
+    headers: { 'X-Auth-Token': (Deno.env.get('FOOTBALL_DATA_API_KEY') ?? '').trim().replace(/^["']|["']$/g, '') },
   });
-  if (!r.ok) throw new Error(`football-data ${r.status} ${path}`);
+  if (!r.ok) {
+    const detail = await r.json().then((b) => b?.message ?? '').catch(() => '');
+    throw new Error(`football-data ${r.status} ${path}${detail ? `: ${detail}` : ''}`);
+  }
   return r.json();
 }
 
