@@ -97,7 +97,7 @@ export default function GroupsScreen() {
         {loading ? (
           <ActivityIndicator color={Colors.primary} style={{ marginTop: 24 }} />
         ) : groups.length === 0 ? (
-          <GlowCard variant="purple" style={styles.emptyCard}>
+          <GlowCard variant="accent" style={styles.emptyCard}>
             <Text style={styles.emptyEmoji}>👥</Text>
             <Text style={styles.emptyText}>{t.tipNoGroups}</Text>
           </GlowCard>

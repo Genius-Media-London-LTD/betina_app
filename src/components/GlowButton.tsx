@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { Animation, BorderRadius, Colors, Fonts, Shadows, Spacing, Typography } from '../theme';
+import { Animation, BorderRadius, Colors, Fonts, Shadows, Spacing, Typography, withAlpha } from '../theme';
 
 type Props = {
   label: string;
@@ -74,12 +74,12 @@ const styles = StyleSheet.create({
   ghost: {
     backgroundColor: Colors.glass,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: withAlpha(Colors.white, 0.1),
   },
   danger: {
-    backgroundColor: 'rgba(255,80,80,0.08)',
+    backgroundColor: withAlpha(Colors.danger, 0.08),
     borderWidth: 1,
-    borderColor: 'rgba(255,80,80,0.3)',
+    borderColor: withAlpha(Colors.danger, 0.3),
   },
   disabled: {
     opacity: 0.5,
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semibold,
   },
   dangerLabel: {
-    color: '#FF7A7A',
+    color: Colors.danger,
     fontSize: Typography.base - 1,
     fontFamily: Fonts.bold,
   },

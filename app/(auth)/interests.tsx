@@ -24,7 +24,7 @@ import { sports } from '../../src/lib/demo';
 import { SPORT_KEYS, useI18n } from '../../src/lib/i18n';
 import { supabase } from '../../src/lib/supabase';
 import { claimProfileCompleted } from '../../src/lib/xp';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
 
 type Team = {
   idTeam: string;
@@ -124,7 +124,7 @@ export default function Interests() {
                 value={teamQuery}
                 onChangeText={setTeamQuery}
                 placeholder="e.g. Barcelona, Lakers, Federer..."
-                placeholderTextColor="#55556A"
+                placeholderTextColor={Colors.textMuted}
                 style={styles.searchInput}
                 autoFocus
               />
@@ -269,11 +269,11 @@ const styles = StyleSheet.create({
   progress: { flexDirection: 'row', gap: 6 },
   progressSeg: {
     width: 22, height: 4, borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: withAlpha(Colors.white, 0.12),
   },
   progressActive: { backgroundColor: Colors.primary },
   headerBlock: { gap: Spacing.sm, paddingBottom: 26 },
-  title: { color: '#FFFFFF', fontSize: 26, fontFamily: Fonts.bold },
+  title: { color: Colors.white, fontSize: 26, fontFamily: Fonts.bold },
   subtitle: {
     color: Colors.textSecondary, fontSize: Typography.sm + 1,
     fontFamily: Fonts.medium, lineHeight: 21,
@@ -287,9 +287,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
     borderRadius: 999, paddingVertical: 11, paddingHorizontal: 18,
   },
-  chipActive: { backgroundColor: 'rgba(184,233,38,0.14)', borderColor: 'rgba(184,233,38,0.6)' },
+  chipActive: { backgroundColor: withAlpha(Colors.primary, 0.14), borderColor: withAlpha(Colors.primary, 0.6) },
   chipLabel: { color: Colors.textSecondary, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
-  chipLabelActive: { color: '#FFFFFF' },
+  chipLabelActive: { color: Colors.white },
   chipCheck: { color: Colors.primary, fontSize: Typography.sm + 1 },
   teamBlock: { gap: Spacing.sm + 2 },
   fieldLabel: {
@@ -301,44 +301,44 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
     borderRadius: 20, paddingVertical: 16, paddingHorizontal: 18,
   },
-  teamPickerBtnActive: { borderColor: 'rgba(184,233,38,0.45)' },
+  teamPickerBtnActive: { borderColor: withAlpha(Colors.primary, 0.45) },
   teamPickerPlaceholder: {
-    color: '#55556A', fontSize: Typography.sm + 1, fontFamily: Fonts.medium,
+    color: Colors.textMuted, fontSize: Typography.sm + 1, fontFamily: Fonts.medium,
   },
   selectedTeamRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   selectedBadge: { width: 32, height: 32, resizeMode: 'contain' },
-  selectedTeamName: { color: '#FFFFFF', fontSize: Typography.md - 1, fontFamily: Fonts.semibold },
+  selectedTeamName: { color: Colors.white, fontSize: Typography.md - 1, fontFamily: Fonts.semibold },
   selectedTeamMeta: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
-  caret: { color: '#55556A', fontSize: 12 },
-  teamHint: { color: '#55556A', fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
+  caret: { color: Colors.textMuted, fontSize: 12 },
+  teamHint: { color: Colors.textMuted, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
   spacer: { flex: 1, minHeight: Spacing.xl },
   ctaBlock: { gap: Spacing.base - 2 },
   skip: { alignItems: 'center' },
-  skipLabel: { color: '#55556A', fontSize: Typography.sm, fontFamily: Fonts.medium },
+  skipLabel: { color: Colors.textMuted, fontSize: Typography.sm, fontFamily: Fonts.medium },
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, backgroundColor: withAlpha(Colors.black, 0.75), justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: '#16162A', borderTopLeftRadius: 28,
+    backgroundColor: Colors.card, borderTopLeftRadius: 28,
     borderTopRightRadius: 28, paddingTop: 20, maxHeight: '85%',
   },
   modalTitle: {
-    color: '#FFFFFF', fontSize: Typography.base, fontFamily: Fonts.bold,
+    color: Colors.white, fontSize: Typography.base, fontFamily: Fonts.bold,
     textAlign: 'center', paddingBottom: 14,
   },
   searchWrap: {
     flexDirection: 'row', alignItems: 'center',
     marginHorizontal: 20, marginBottom: 12,
     backgroundColor: Colors.glass, borderWidth: 1,
-    borderColor: 'rgba(184,233,38,0.4)', borderRadius: 16,
+    borderColor: withAlpha(Colors.primary, 0.4), borderRadius: 16,
     paddingHorizontal: 16,
   },
   searchInput: {
-    flex: 1, color: '#FFFFFF', fontSize: Typography.base - 1,
+    flex: 1, color: Colors.white, fontSize: Typography.base - 1,
     fontFamily: Fonts.medium, paddingVertical: 14,
   },
   searchSpinner: { marginLeft: 8 },
   noResults: {
-    color: '#55556A', textAlign: 'center',
+    color: Colors.textMuted, textAlign: 'center',
     fontFamily: Fonts.medium, fontSize: Typography.sm, paddingVertical: 20,
   },
   teamRow: {
@@ -351,8 +351,8 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   teamInfo: { flex: 1 },
-  teamName: { color: '#FFFFFF', fontSize: Typography.base - 1, fontFamily: Fonts.semibold },
+  teamName: { color: Colors.white, fontSize: Typography.base - 1, fontFamily: Fonts.semibold },
   teamMeta: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, marginTop: 2 },
   modalClose: { alignItems: 'center', paddingVertical: 16 },
-  modalCloseText: { color: '#55556A', fontSize: Typography.sm, fontFamily: Fonts.medium },
+  modalCloseText: { color: Colors.textMuted, fontSize: Typography.sm, fontFamily: Fonts.medium },
 });

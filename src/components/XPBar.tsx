@@ -8,7 +8,7 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import { Animation, Colors } from '../theme';
+import { Animation, Colors, withAlpha } from '../theme';
 
 type Props = {
   /** 0..1 */
@@ -36,7 +36,7 @@ export default function XPBar({ progress, height = 8, delay = 300 }: Props) {
     <View style={[styles.track, { height, borderRadius: height }]}>
       <Animated.View style={[styles.fill, { height, borderRadius: height }, fillStyle]}>
         <LinearGradient
-          colors={['#8FB81E', Colors.primary]}
+          colors={[Colors.primaryDim, Colors.primary]}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={[StyleSheet.absoluteFill, { borderRadius: height }]}
@@ -49,7 +49,7 @@ export default function XPBar({ progress, height = 8, delay = 300 }: Props) {
 const styles = StyleSheet.create({
   track: {
     width: '100%',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: withAlpha(Colors.white, 0.08),
     overflow: 'hidden',
   },
   fill: {

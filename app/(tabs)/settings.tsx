@@ -13,7 +13,7 @@ import { useProfile } from '../../src/hooks/useProfile';
 import { useSession } from '../../src/hooks/useSession';
 import { LANGUAGES, LangCode, useI18n } from '../../src/lib/i18n';
 import { supabase } from '../../src/lib/supabase';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
 
 
 function Row({
@@ -306,20 +306,20 @@ export default function Settings() {
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.lg, gap: Spacing.md },
-  title: { color: '#FFF', fontSize: 26, fontFamily: Fonts.bold },
+  title: { color: Colors.white, fontSize: 26, fontFamily: Fonts.bold },
   profileCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 14, paddingHorizontal: 16 },
   profileInitial: {
     width: 48, height: 48, borderRadius: 24,
-    backgroundColor: 'rgba(184,233,38,0.12)', borderWidth: 1, borderColor: 'rgba(184,233,38,0.35)',
+    backgroundColor: withAlpha(Colors.primary, 0.12), borderWidth: 1, borderColor: withAlpha(Colors.primary, 0.35),
     alignItems: 'center', justifyContent: 'center',
   },
   profileInitialLabel: { color: Colors.primary, fontSize: Typography.md + 1, fontFamily: Fonts.bold },
   profileInfo: { flex: 1, gap: 1 },
-  profileName: { color: '#FFF', fontSize: Typography.base + 1, fontFamily: Fonts.bold },
+  profileName: { color: Colors.white, fontSize: Typography.base + 1, fontFamily: Fonts.bold },
   profileMeta: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
   tierPill: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: 'rgba(184,233,38,0.1)', borderWidth: 1, borderColor: 'rgba(184,233,38,0.3)',
+    backgroundColor: withAlpha(Colors.primary, 0.1), borderWidth: 1, borderColor: withAlpha(Colors.primary, 0.3),
     borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12,
   },
   tierDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: Colors.primary },
@@ -327,29 +327,29 @@ const styles = StyleSheet.create({
   section: { gap: Spacing.sm },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 12, paddingHorizontal: 16 },
   rowEmoji: { fontSize: 17 },
-  rowLabel: { flex: 1, color: '#FFF', fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
+  rowLabel: { flex: 1, color: Colors.white, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
   rowValue: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium },
-  rowChevron: { color: '#55556A', fontSize: Typography.sm + 1 },
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginHorizontal: 16 },
-  version: { textAlign: 'center', color: '#3A3A4A', fontSize: Typography.xs, fontFamily: Fonts.medium, paddingTop: Spacing.xs },
+  rowChevron: { color: Colors.textMuted, fontSize: Typography.sm + 1 },
+  divider: { height: 1, backgroundColor: withAlpha(Colors.white, 0.06), marginHorizontal: 16 },
+  version: { textAlign: 'center', color: Colors.textMuted, fontSize: Typography.xs, fontFamily: Fonts.medium, paddingTop: Spacing.xs },
 
   // Modal
-  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
+  modalBackdrop: { flex: 1, backgroundColor: withAlpha(Colors.black, 0.6) },
   modalSheet: {
-    backgroundColor: '#0F0F1F', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: Colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    borderWidth: 1, borderColor: withAlpha(Colors.white, 0.08),
     paddingHorizontal: Spacing.lg, paddingTop: 12, maxHeight: '75%',
   },
-  modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: '#3A3A4A', alignSelf: 'center', marginBottom: 16 },
-  modalTitle: { color: '#FFF', fontSize: Typography.lg, fontFamily: Fonts.bold, marginBottom: 16 },
+  modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: Colors.textMuted, alignSelf: 'center', marginBottom: 16 },
+  modalTitle: { color: Colors.white, fontSize: Typography.lg, fontFamily: Fonts.bold, marginBottom: 16 },
   langList: { maxHeight: 380 },
   langRow: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     paddingVertical: 14, paddingHorizontal: 12, borderRadius: 12, marginBottom: 4,
   },
-  langRowActive: { backgroundColor: 'rgba(184,233,38,0.08)', borderWidth: 1, borderColor: 'rgba(184,233,38,0.2)' },
+  langRowActive: { backgroundColor: withAlpha(Colors.primary, 0.08), borderWidth: 1, borderColor: withAlpha(Colors.primary, 0.2) },
   langFlag: { fontSize: 28 },
-  langNative: { color: '#FFF', fontSize: Typography.base, fontFamily: Fonts.semibold },
+  langNative: { color: Colors.white, fontSize: Typography.base, fontFamily: Fonts.semibold },
   langNativeActive: { color: Colors.primary },
   langLabel: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, marginTop: 2 },
   langCheck: { color: Colors.primary, fontSize: Typography.base + 2, fontFamily: Fonts.bold },
@@ -357,26 +357,26 @@ const styles = StyleSheet.create({
     marginTop: 12, backgroundColor: Colors.primary,
     borderRadius: 999, paddingVertical: 14, alignItems: 'center',
   },
-  saveBtnLabel: { color: '#000', fontFamily: Fonts.bold, fontSize: Typography.base },
+  saveBtnLabel: { color: Colors.black, fontFamily: Fonts.bold, fontSize: Typography.base },
 
   // Delete account
   deleteLink: { alignItems: 'center', paddingVertical: 12, marginTop: 2 },
   deleteLinkLabel: { color: Colors.danger, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
-  deleteCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.65)', padding: 28 },
+  deleteCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: withAlpha(Colors.black, 0.65), padding: 28 },
   deleteDialog: {
-    width: '100%', maxWidth: 380, backgroundColor: '#14111A',
-    borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,122,122,0.3)',
+    width: '100%', maxWidth: 380, backgroundColor: Colors.surface,
+    borderRadius: 22, borderWidth: 1, borderColor: withAlpha(Colors.danger, 0.3),
     paddingHorizontal: 22, paddingTop: 22, paddingBottom: 14, alignItems: 'center',
   },
   deleteDialogEmoji: { fontSize: 34, marginBottom: 10 },
-  deleteDialogTitle: { color: '#FFF', fontSize: Typography.lg, fontFamily: Fonts.bold, textAlign: 'center', marginBottom: 8 },
+  deleteDialogTitle: { color: Colors.white, fontSize: Typography.lg, fontFamily: Fonts.bold, textAlign: 'center', marginBottom: 8 },
   deleteDialogBody: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center', lineHeight: 20, marginBottom: 18 },
   deleteDialogError: { color: Colors.danger, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center', marginBottom: 14 },
   deleteConfirmBtn: {
     width: '100%', backgroundColor: Colors.danger,
     borderRadius: 999, paddingVertical: 14, alignItems: 'center', marginBottom: 4,
   },
-  deleteConfirmLabel: { color: '#2A0A0A', fontFamily: Fonts.bold, fontSize: Typography.base },
+  deleteConfirmLabel: { color: Colors.dangerDeep, fontFamily: Fonts.bold, fontSize: Typography.base },
   deleteCancelBtn: { width: '100%', paddingVertical: 14, alignItems: 'center' },
   deleteCancelLabel: { color: Colors.textSecondary, fontFamily: Fonts.semibold, fontSize: Typography.base },
 });

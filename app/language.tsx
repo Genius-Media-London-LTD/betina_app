@@ -8,7 +8,7 @@ import GlowCard from '../src/components/GlowCard';
 import ScreenBg from '../src/components/ScreenBg';
 import { languages } from '../src/lib/demo';
 import { supabase } from '../src/lib/supabase';
-import { Colors, Fonts, Spacing, Typography } from '../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
 
 export default function Language() {
   const insets = useSafeAreaInsets();
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   },
   topText: { gap: 1 },
   title: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.lg + 2,
     fontFamily: Fonts.bold,
   },
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   langName: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.base,
     fontFamily: Fonts.semibold,
   },
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
   },
   langNative: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.xs + 1,
     fontFamily: Fonts.medium,
   },
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: withAlpha(Colors.white, 0.06),
     marginHorizontal: 16,
   },
   spacer: {
@@ -147,16 +147,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm + 2,
-    backgroundColor: 'rgba(139,92,246,0.18)',
+    backgroundColor: withAlpha(Colors.accent, 0.18),
     borderWidth: 1,
-    borderColor: 'rgba(139,92,246,0.4)',
+    borderColor: withAlpha(Colors.accent, 0.4),
     borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 14,
   },
   noteText: {
     flex: 1,
-    color: '#E8E8F0',
+    color: Colors.textPrimary,
     fontSize: Typography.xs + 1,
     fontFamily: Fonts.medium,
     lineHeight: 18,

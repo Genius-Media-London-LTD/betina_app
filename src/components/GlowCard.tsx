@@ -1,18 +1,18 @@
 import React from 'react';
 import { StyleSheet, View, ViewProps } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BorderRadius, Colors } from '../theme';
+import { BorderRadius, Colors, withAlpha } from '../theme';
 
-type Variant = 'glass' | 'purple' | 'gold' | 'green';
+type Variant = 'glass' | 'accent' | 'gold' | 'green';
 
 type Props = ViewProps & {
   variant?: Variant;
 };
 
 const GRADIENTS: Record<Exclude<Variant, 'glass'>, { colors: [string, string]; border: string }> = {
-  purple: { colors: ['rgba(139,92,246,0.35)', 'rgba(255,255,255,0.04)'], border: 'rgba(139,92,246,0.5)' },
-  gold: { colors: ['rgba(255,215,0,0.14)', 'rgba(255,255,255,0.04)'], border: 'rgba(255,215,0,0.4)' },
-  green: { colors: ['rgba(184,233,38,0.12)', 'rgba(255,255,255,0.04)'], border: 'rgba(184,233,38,0.5)' },
+  accent: { colors: [withAlpha(Colors.accent, 0.35), withAlpha(Colors.white, 0.04)], border: withAlpha(Colors.accent, 0.5) },
+  gold: { colors: [withAlpha(Colors.gold, 0.14), withAlpha(Colors.white, 0.04)], border: withAlpha(Colors.gold, 0.4) },
+  green: { colors: [withAlpha(Colors.primary, 0.12), withAlpha(Colors.white, 0.04)], border: withAlpha(Colors.primary, 0.5) },
 };
 
 /** Glassmorphism card — the base surface of every list row / panel in BETina. */

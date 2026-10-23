@@ -109,11 +109,11 @@ function ConfettiPiece({ spec, color }: { spec: ParticleSpec; color: string }) {
 }
 
 const PALETTES = {
-  green: [Colors.primary, '#D4FF4D', '#EAFF9E'],
-  gold: [Colors.gold, '#FFE666', '#FFF0A0'],
+  green: [Colors.primary, Colors.primaryLight, Colors.primaryLight],
+  gold: [Colors.gold, Colors.goldLight, Colors.goldLight],
 };
 
-const CONFETTI_COLORS = [Colors.primary, '#A855F7', Colors.gold, '#D4FF4D', '#FFFFFF'];
+const CONFETTI_COLORS = [Colors.primary, Colors.accent, Colors.gold, Colors.primaryLight, Colors.white];
 
 // Deterministic pseudo-random layout so the field is stable across renders.
 function makeSpecs(count: number, palette: string[], seed: number): ParticleSpec[] {

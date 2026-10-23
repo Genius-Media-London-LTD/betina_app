@@ -10,6 +10,7 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { supabase } from './supabase';
+import { Colors } from '../theme';
 
 // Show notifications while the app is foregrounded, too.
 Notifications.setNotificationHandler({
@@ -35,7 +36,7 @@ export async function registerForPush(): Promise<string | null> {
       await Notifications.setNotificationChannelAsync('default', {
         name: 'BETina',
         importance: Notifications.AndroidImportance.HIGH,
-        lightColor: '#B8E926',
+        lightColor: Colors.primary,
       });
     }
 

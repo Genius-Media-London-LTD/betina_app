@@ -34,7 +34,7 @@ import { useProfile } from '../../src/hooks/useProfile';
 import { useSession } from '../../src/hooks/useSession';
 import SignInWall from '../../src/components/SignInWall';
 import { useI18n } from '../../src/lib/i18n';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
 
 type Message = {
   id: string;
@@ -292,7 +292,7 @@ export default function Chat() {
               value={input}
               onChangeText={setInput}
               placeholder={t.chatPlaceholder}
-              placeholderTextColor="#55556A"
+              placeholderTextColor={Colors.textMuted}
               style={styles.input}
               onSubmitEditing={() => send(input)}
               returnKeyType="send"
@@ -316,8 +316,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.06)',
-    backgroundColor: 'rgba(10,10,15,0.7)',
+    borderBottomColor: withAlpha(Colors.white, 0.06),
+    backgroundColor: withAlpha(Colors.background, 0.7),
   },
   headerText: {
     flex: 1,
@@ -328,12 +328,12 @@ const styles = StyleSheet.create({
     fontSize: Typography.md + 2,
     fontFamily: Fonts.blackItalic,
     letterSpacing: -0.5,
-    textShadowColor: 'rgba(184,233,38,0.45)',
+    textShadowColor: withAlpha(Colors.primary, 0.45),
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 16,
   },
   headerNameAccent: {
-    color: '#FFFFFF',
+    color: Colors.white,
     textShadowColor: 'transparent',
   },
   headerStatus: {
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   },
   timestamp: {
     alignSelf: 'center',
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.xs,
     fontFamily: Fonts.semibold,
     letterSpacing: 0.9,
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
   },
   statValue: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.lg,
     fontFamily: Fonts.bold,
   },
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semibold,
   },
   xpNote: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.xs,
     fontFamily: Fonts.semibold,
     paddingLeft: 38,
@@ -417,9 +417,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(139,92,246,0.25)',
+    backgroundColor: withAlpha(Colors.accent, 0.25),
     borderWidth: 1,
-    borderColor: 'rgba(139,92,246,0.45)',
+    borderColor: withAlpha(Colors.accent, 0.45),
     borderRadius: 20,
     borderBottomLeftRadius: 6,
     paddingVertical: 14,
@@ -442,13 +442,13 @@ const styles = StyleSheet.create({
   quickReply: {
     backgroundColor: Colors.glass,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: withAlpha(Colors.white, 0.1),
     borderRadius: 999,
     paddingVertical: 7,
     paddingHorizontal: 13,
   },
   quickReplyLabel: {
-    color: '#E8E8F0',
+    color: Colors.textPrimary,
     fontSize: Typography.xs + 1,
     fontFamily: Fonts.semibold,
   },
@@ -461,11 +461,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.glass,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: withAlpha(Colors.white, 0.1),
     borderRadius: 999,
     paddingVertical: 14,
     paddingHorizontal: 18,
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.sm + 1,
     fontFamily: Fonts.medium,
   },

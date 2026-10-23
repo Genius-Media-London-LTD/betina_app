@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { fetchTeamBadge } from '../lib/sports';
-import { Colors, Fonts } from '../theme';
+import { Colors, Fonts, withAlpha } from '../theme';
 
 type Props = {
   teamId?: string | null;
@@ -47,14 +47,14 @@ export default function TeamCrest({ teamId, teamName, size = 28 }: Props) {
 
 const styles = StyleSheet.create({
   fallback: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: withAlpha(Colors.white, 0.08),
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: withAlpha(Colors.white, 0.15),
     alignItems: 'center',
     justifyContent: 'center',
   },
   initials: {
-    color: '#9999AA',
+    color: Colors.textSecondary,
     fontFamily: Fonts.bold,
   },
 });

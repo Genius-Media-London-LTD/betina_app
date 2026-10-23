@@ -7,7 +7,7 @@ import BETinaAvatar from '../src/components/BETinaAvatar';
 import GlowCard from '../src/components/GlowCard';
 import ScreenBg from '../src/components/ScreenBg';
 import SectionLabel from '../src/components/SectionLabel';
-import { Colors, Fonts, Spacing, Typography } from '../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
 
 const FAQS = [
   {
@@ -40,7 +40,7 @@ export default function Help() {
 
         {/* ask BETina first */}
         <Pressable onPress={() => router.push('/(tabs)/chat')}>
-          <GlowCard variant="purple" style={styles.askCard}>
+          <GlowCard variant="accent" style={styles.askCard}>
             <BETinaAvatar size={52} />
             <View style={styles.askText}>
               <Text style={styles.askTitle}>Ask BETina first</Text>
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
   },
   title: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.lg + 2,
     fontFamily: Fonts.bold,
   },
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   askTitle: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.base,
     fontFamily: Fonts.bold,
   },
@@ -156,12 +156,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   faqQuestion: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.sm + 1,
     fontFamily: Fonts.semibold,
   },
   faqCaret: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.sm,
   },
   faqCaretOpen: {
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: withAlpha(Colors.white, 0.06),
     marginHorizontal: 16,
   },
   contactRow: {
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   },
   contactEmoji: { fontSize: 22 },
   contactLabel: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.sm,
     fontFamily: Fonts.bold,
   },
@@ -231,12 +231,12 @@ const styles = StyleSheet.create({
   rgEmoji: { fontSize: 17 },
   rgLabel: {
     flex: 1,
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.sm,
     fontFamily: Fonts.semibold,
   },
   rgHint: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.xs + 1,
     fontFamily: Fonts.medium,
   },

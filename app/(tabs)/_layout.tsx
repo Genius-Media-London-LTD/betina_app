@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { onNotificationTap, registerForPush } from '../../src/lib/push';
 import { claimDailyLogin } from '../../src/lib/xp';
-import { Colors, Fonts } from '../../src/theme';
+import { Colors, Fonts, withAlpha } from '../../src/theme';
 
 type TabMeta = { emoji: string; labelKey: keyof any };
 
@@ -118,10 +118,10 @@ const glassWrapStyle: ViewStyle & { backdropFilter: string } = {
     justifyContent: 'space-around',
     alignItems: 'center',
     height: 60,
-    backgroundColor: 'rgba(15,15,31,0.85)',
+    backgroundColor: withAlpha(Colors.surface, 0.85),
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: withAlpha(Colors.white, 0.1),
     backdropFilter: 'blur(12px)',
 };
 
@@ -136,11 +136,11 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   tabFocused: {
-    backgroundColor: 'rgba(184,233,38,0.1)',
+    backgroundColor: withAlpha(Colors.primary, 0.1),
     borderWidth: 1,
-    borderColor: 'rgba(184,233,38,0.25)',
+    borderColor: withAlpha(Colors.primary, 0.25),
   },
   tabEmoji: { fontSize: 18 },
-  tabLabel: { color: '#888899', fontSize: 9, fontWeight: '600', letterSpacing: 0.3 },
+  tabLabel: { color: Colors.textSecondary, fontSize: 9, fontWeight: '600', letterSpacing: 0.3 },
   tabLabelFocused: { color: Colors.primary },
 });

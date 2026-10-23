@@ -20,7 +20,7 @@ import GlowButton from '../../src/components/GlowButton';
 import ScreenBg from '../../src/components/ScreenBg';
 import { langForCountry, useI18n } from '../../src/lib/i18n';
 import { supabase } from '../../src/lib/supabase';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
 
 const COUNTRIES = [
   { flag: '🇦🇹', name: 'Austria', code: 'AT' },
@@ -192,7 +192,7 @@ export default function Register() {
                   value={name}
                   onChangeText={setName}
                   placeholder="Your name"
-                  placeholderTextColor="#55556A"
+                  placeholderTextColor={Colors.textMuted}
                   style={styles.input}
                   autoFocus
                 />
@@ -206,19 +206,19 @@ export default function Register() {
                 <View style={[styles.birthdayBox, { flex: 1 }]}>
                   <TextInput value={day}
                     onChangeText={(v) => { setDay(v.replace(/\D/g,'').slice(0,2)); setBirthdayError(null); }}
-                    placeholder="DD" placeholderTextColor="#55556A"
+                    placeholder="DD" placeholderTextColor={Colors.textMuted}
                     keyboardType="number-pad" maxLength={2} style={styles.birthdayInput} />
                 </View>
                 <View style={[styles.birthdayBox, { flex: 1 }]}>
                   <TextInput value={month}
                     onChangeText={(v) => { setMonth(v.replace(/\D/g,'').slice(0,2)); setBirthdayError(null); }}
-                    placeholder="MM" placeholderTextColor="#55556A"
+                    placeholder="MM" placeholderTextColor={Colors.textMuted}
                     keyboardType="number-pad" maxLength={2} style={styles.birthdayInput} />
                 </View>
                 <View style={[styles.birthdayBox, { flex: 1.4 }]}>
                   <TextInput value={year}
                     onChangeText={(v) => { setYear(v.replace(/\D/g,'').slice(0,4)); setBirthdayError(null); }}
-                    placeholder="YYYY" placeholderTextColor="#55556A"
+                    placeholder="YYYY" placeholderTextColor={Colors.textMuted}
                     keyboardType="number-pad" maxLength={4} style={styles.birthdayInput} />
                 </View>
               </View>
@@ -264,11 +264,11 @@ const styles = StyleSheet.create({
   progress: { flexDirection: 'row', gap: 6 },
   progressSeg: {
     width: 22, height: 4, borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: withAlpha(Colors.white, 0.12),
   },
   progressActive: { backgroundColor: Colors.primary },
   headerBlock: { gap: Spacing.sm, paddingBottom: 30 },
-  title: { color: '#FFFFFF', fontSize: 26, fontFamily: Fonts.bold },
+  title: { color: Colors.white, fontSize: 26, fontFamily: Fonts.bold },
   subtitle: {
     color: Colors.textSecondary, fontSize: Typography.sm + 1,
     fontFamily: Fonts.medium, lineHeight: 21,
@@ -286,49 +286,49 @@ const styles = StyleSheet.create({
   },
   selectLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm + 2 },
   flag: { fontSize: 20 },
-  selectValue: { color: '#FFFFFF', fontSize: Typography.md - 1, fontFamily: Fonts.semibold },
-  caret: { color: '#55556A', fontSize: 12 },
+  selectValue: { color: Colors.white, fontSize: Typography.md - 1, fontFamily: Fonts.semibold },
+  caret: { color: Colors.textMuted, fontSize: 12 },
   inputWrap: {
     backgroundColor: Colors.glass, borderWidth: 1,
-    borderColor: 'rgba(184,233,38,0.45)', borderRadius: 20, paddingHorizontal: 18,
+    borderColor: withAlpha(Colors.primary, 0.45), borderRadius: 20, paddingHorizontal: 18,
   },
   input: {
-    color: '#FFFFFF', fontSize: Typography.md - 1,
+    color: Colors.white, fontSize: Typography.md - 1,
     fontFamily: Fonts.semibold, paddingVertical: 16,
   },
   spacer: { flex: 1, minHeight: Spacing.xl },
   hintRow: { paddingBottom: 18 },
   hintText: {
-    color: '#E8E8F0', fontSize: Typography.sm,
+    color: Colors.textPrimary, fontSize: Typography.sm,
     fontFamily: Fonts.medium, lineHeight: 20,
   },
   hintAccent: { color: Colors.primary, fontFamily: Fonts.semibold },
   birthdayRow: { flexDirection: 'row', gap: Spacing.sm + 2 },
   birthdayBox: { backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder, borderRadius: 20 },
-  birthdayInput: { color: '#FFFFFF', fontSize: Typography.md - 1, fontFamily: Fonts.semibold, paddingVertical: 16, textAlign: 'center' },
-  ageHint: { color: '#55556A', fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
+  birthdayInput: { color: Colors.white, fontSize: Typography.md - 1, fontFamily: Fonts.semibold, paddingVertical: 16, textAlign: 'center' },
+  ageHint: { color: Colors.textMuted, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
   birthdayErr: { color: Colors.danger, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
   // Modal
   modalOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.7)',
+    flex: 1, backgroundColor: withAlpha(Colors.black, 0.7),
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: '#16162A', borderTopLeftRadius: 28,
+    backgroundColor: Colors.card, borderTopLeftRadius: 28,
     borderTopRightRadius: 28, paddingTop: 20, maxHeight: '75%',
   },
   modalTitle: {
-    color: '#FFFFFF', fontSize: Typography.base,
+    color: Colors.white, fontSize: Typography.base,
     fontFamily: Fonts.bold, textAlign: 'center', paddingBottom: 16,
   },
   modalItem: {
     flexDirection: 'row', alignItems: 'center',
     gap: Spacing.md, paddingVertical: 14, paddingHorizontal: 24,
   },
-  modalItemActive: { backgroundColor: 'rgba(184,233,38,0.08)' },
+  modalItemActive: { backgroundColor: withAlpha(Colors.primary, 0.08) },
   modalFlag: { fontSize: 22 },
   modalCountryName: {
-    flex: 1, color: '#FFFFFF',
+    flex: 1, color: Colors.white,
     fontSize: Typography.base - 1, fontFamily: Fonts.medium,
   },
   modalCheck: { color: Colors.primary, fontSize: Typography.base, fontFamily: Fonts.bold },

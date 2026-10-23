@@ -12,9 +12,9 @@ import { useI18n } from '../src/lib/i18n';
 import { useProfile } from '../src/hooks/useProfile';
 import { fetchNews, fetchTeamNext, formatKickoff, timeAgo } from '../src/lib/sports';
 import { supabase } from '../src/lib/supabase';
-import { Colors, Fonts, Spacing, Typography } from '../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
 
-type Accent = 'gold' | 'green' | 'purple' | 'none';
+type Accent = 'gold' | 'green' | 'accent' | 'none';
 
 type FeedItem = {
   id: string;
@@ -35,7 +35,7 @@ function NotificationCard({ item, index, read }: { item: FeedItem; index: number
         variant={item.accent === 'gold' ? 'gold' : 'glass'}
         style={[
           styles.card,
-          item.accent === 'purple' && styles.purpleCard,
+          item.accent === 'accent' && styles.accentCard,
           !unread && { opacity: 0.75 },
         ]}
       >
@@ -153,7 +153,7 @@ export default function Notifications() {
             })}`,
             ts: now - 120_000,
             unread: true,
-            accent: 'purple',
+            accent: 'accent',
           });
         }
       }
@@ -284,12 +284,12 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  title: { color: '#FFFFFF', fontSize: Typography.xl, fontFamily: Fonts.bold },
+  title: { color: Colors.white, fontSize: Typography.xl, fontFamily: Fonts.bold },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   newPill: {
-    backgroundColor: 'rgba(184,233,38,0.14)',
+    backgroundColor: withAlpha(Colors.primary, 0.14),
     borderWidth: 1,
-    borderColor: 'rgba(184,233,38,0.4)',
+    borderColor: withAlpha(Colors.primary, 0.4),
     borderRadius: 999,
     paddingVertical: 5,
     paddingHorizontal: 11,
@@ -312,9 +312,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   card: { flexDirection: 'row', gap: Spacing.md, paddingVertical: 15, paddingHorizontal: 16 },
-  purpleCard: {
-    backgroundColor: 'rgba(139,92,246,0.18)',
-    borderColor: 'rgba(139,92,246,0.4)',
+  accentCard: {
+    backgroundColor: withAlpha(Colors.accent, 0.18),
+    borderColor: withAlpha(Colors.accent, 0.4),
   },
   iconBox: {
     width: 42,
@@ -326,8 +326,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconBoxGold: { backgroundColor: 'rgba(255,215,0,0.15)', borderColor: 'rgba(255,215,0,0.35)' },
-  iconBoxGreen: { backgroundColor: 'rgba(184,233,38,0.1)', borderColor: 'rgba(184,233,38,0.3)' },
+  iconBoxGold: { backgroundColor: withAlpha(Colors.gold, 0.15), borderColor: withAlpha(Colors.gold, 0.35) },
+  iconBoxGreen: { backgroundColor: withAlpha(Colors.primary, 0.1), borderColor: withAlpha(Colors.primary, 0.3) },
   iconEmoji: { fontSize: 20 },
   cardBody: { flex: 1, gap: 3 },
   cardTitleRow: {
@@ -336,11 +336,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.sm,
   },
-  cardTitle: { flex: 1, color: '#FFFFFF', fontSize: Typography.sm + 1, fontFamily: Fonts.bold },
+  cardTitle: { flex: 1, color: Colors.white, fontSize: Typography.sm + 1, fontFamily: Fonts.bold },
   cardTitleGold: { color: Colors.gold },
   timeWrap: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.primary },
-  time: { color: '#55556A', fontSize: Typography.xs, fontFamily: Fonts.semibold },
+  time: { color: Colors.textMuted, fontSize: Typography.xs, fontFamily: Fonts.semibold },
   cardText: {
     color: Colors.textSecondary,
     fontSize: Typography.sm,

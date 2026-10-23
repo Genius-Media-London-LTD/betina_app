@@ -20,7 +20,7 @@ import GlowButton from '../../src/components/GlowButton';
 import ScreenBg from '../../src/components/ScreenBg';
 import { useI18n } from '../../src/lib/i18n';
 import { supabase } from '../../src/lib/supabase';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
 
 const CODE_LENGTH = 6;
 
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     paddingBottom: 34,
   },
   title: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: 26,
     fontFamily: Fonts.bold,
   },
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   phone: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontFamily: Fonts.semibold,
   },
   otpRow: {
@@ -256,10 +256,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   otpBoxActive: {
-    borderColor: 'rgba(184,233,38,0.55)',
+    borderColor: withAlpha(Colors.primary, 0.55),
   },
   otpDigit: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: 26,
     fontFamily: Fonts.bold,
   },
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xl,
   },
   resendHint: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.sm,
     fontFamily: Fonts.medium,
   },
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   },
   checkboxActive: {
     borderColor: Colors.primary,
-    backgroundColor: 'rgba(184,233,38,0.15)',
+    backgroundColor: withAlpha(Colors.primary, 0.15),
   },
   checkmark: {
     color: Colors.primary,

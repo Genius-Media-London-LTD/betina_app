@@ -15,7 +15,7 @@ import BETinaAvatar from '../../src/components/BETinaAvatar';
 import ScreenBg from '../../src/components/ScreenBg';
 import ParticlesBg from '../../src/components/ParticlesBg';
 import { supabase } from '../../src/lib/supabase';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
 
 const LOAD_MS = 2800;
 
@@ -72,7 +72,7 @@ export default function Splash() {
         <Animated.View entering={FadeInDown.delay(900).duration(1000)} style={styles.loadTrack}>
           <Animated.View style={[styles.loadFill, barStyle]}>
             <LinearGradient
-              colors={['#8FB81E', Colors.primary]}
+              colors={[Colors.primaryDim, Colors.primary]}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
               style={StyleSheet.absoluteFill}
@@ -101,12 +101,12 @@ const styles = StyleSheet.create({
     fontSize: 42,
     fontFamily: Fonts.blackItalic,
     letterSpacing: -1,
-    textShadowColor: 'rgba(184,233,38,0.5)',
+    textShadowColor: withAlpha(Colors.primary, 0.5),
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 22,
   },
   titleAccent: {
-    color: '#FFFFFF',
+    color: Colors.white,
     textShadowColor: 'transparent',
   },
   subtitle: {
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm + 2,
   },
   poweredByLabel: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: 10,
     fontFamily: Fonts.semibold,
     letterSpacing: 2.2,
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 4,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: withAlpha(Colors.white, 0.08),
     overflow: 'hidden',
   },
   loadFill: {

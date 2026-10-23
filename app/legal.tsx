@@ -6,7 +6,7 @@ import BackButton from '../src/components/BackButton';
 import GlowCard from '../src/components/GlowCard';
 import ScreenBg from '../src/components/ScreenBg';
 import { LEGAL_DOCS, LegalDocKey } from '../src/lib/legal';
-import { Colors, Fonts, Spacing, Typography } from '../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
 
 const DOCS: { key: LegalDocKey; emoji: string }[] = [
   { key: 'privacy', emoji: '🔒' },
@@ -64,12 +64,12 @@ export default function Legal() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.lg, gap: 14 },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingTop: Spacing.sm },
-  title: { color: '#FFFFFF', fontSize: Typography.lg + 2, fontFamily: Fonts.bold },
+  title: { color: Colors.white, fontSize: Typography.lg + 2, fontFamily: Fonts.bold },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 14, paddingHorizontal: 16 },
   rowEmoji: { fontSize: 17 },
-  rowLabel: { flex: 1, color: '#FFFFFF', fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
-  chevron: { color: '#55556A', fontSize: Typography.sm + 1 },
-  external: { color: '#55556A', fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginHorizontal: 16 },
+  rowLabel: { flex: 1, color: Colors.white, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
+  chevron: { color: Colors.textMuted, fontSize: Typography.sm + 1 },
+  external: { color: Colors.textMuted, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
+  divider: { height: 1, backgroundColor: withAlpha(Colors.white, 0.06), marginHorizontal: 16 },
   rgCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 14, paddingHorizontal: 16 },
 });

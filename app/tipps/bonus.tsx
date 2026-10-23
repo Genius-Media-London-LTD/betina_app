@@ -102,7 +102,7 @@ export default function BonusScreen() {
             const correct = teamById(q.answer_team_id);
             return (
               <Animated.View key={q.id} entering={FadeInDown.delay(i * 60).duration(400)}>
-                <GlowCard variant={q.kind === 'champion' ? 'gold' : 'purple'} style={styles.qCard}>
+                <GlowCard variant={q.kind === 'champion' ? 'gold' : 'accent'} style={styles.qCard}>
                   <View style={styles.qHead}>
                     <Text style={styles.qText}>{questionText(q)}</Text>
                     {answer?.points != null ? <PointsBadge points={answer.points} /> : (

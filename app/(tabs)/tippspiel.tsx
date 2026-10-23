@@ -214,7 +214,7 @@ function Hub() {
             <SectionHead title={t.tipGroups} action="+" onAction={() => go('/tipps/groups')} />
             {groups.map((g) => (
               <Pressable key={g.id} onPress={() => go('/tipps/ranking', { group: g.id, groupName: g.name, code: g.code })}>
-                <GlowCard variant="purple" style={styles.groupCard}>
+                <GlowCard variant="accent" style={styles.groupCard}>
                   <Text style={styles.groupEmoji}>👥</Text>
                   <View style={{ flex: 1, gap: 2 }}>
                     <Text style={styles.compName} numberOfLines={1}>{g.name}</Text>
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
   },
   duelSide: { flex: 1, paddingVertical: 14, paddingHorizontal: 16, gap: 2 },
   duelYou: { backgroundColor: Colors.glowGreen, alignItems: 'flex-start' },
-  duelBetina: { backgroundColor: Colors.glowPurple, alignItems: 'flex-end' },
+  duelBetina: { backgroundColor: Colors.glowAccent, alignItems: 'flex-end' },
   duelMid: { width: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.card },
   duelVs: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.blackItalic },
   duelWho: { color: Colors.textPrimary, fontSize: Typography.xs + 1, fontFamily: Fonts.extrabold, letterSpacing: 1 },

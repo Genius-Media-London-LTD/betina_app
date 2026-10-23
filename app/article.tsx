@@ -18,7 +18,7 @@ import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated'
 import { useI18n } from '../src/lib/i18n';
 import { cleanFeedText, fetchNewsApi } from '../src/lib/sports';
 import { safeGenius2PlayCanonical } from '../src/lib/genius2playCanonical';
-import { Colors, Fonts, Spacing, Typography } from '../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
 
 const { width: W, height: H } = Dimensions.get('window');
 
@@ -132,7 +132,7 @@ export default function ArticleScreen() {
               )}
               {/* Deep gradient so text is readable */}
               <LinearGradient
-                colors={['transparent', 'rgba(8,8,18,0.5)', Colors.background]}
+                colors={['transparent', withAlpha(Colors.background, 0.5), Colors.background]}
                 locations={[0.3, 0.7, 1]}
                 style={styles.heroGradient}
               />
@@ -193,7 +193,7 @@ export default function ArticleScreen() {
                     style={styles.pullQuoteWrap}
                   >
                     <LinearGradient
-                      colors={['rgba(184,233,38,0.06)', 'rgba(120,80,255,0.06)']}
+                      colors={[withAlpha(Colors.primary, 0.06), withAlpha(Colors.accent, 0.06)]}
                       style={styles.pullQuote}
                     >
                       <View style={styles.pullQuoteBar} />
@@ -217,7 +217,7 @@ export default function ArticleScreen() {
             {/* ── BETINA CTA ── */}
             <Animated.View entering={FadeInDown.delay(500).duration(400)} style={styles.ctaWrap}>
               <LinearGradient
-                colors={['rgba(184,233,38,0.1)', 'rgba(120,80,255,0.12)']}
+                colors={[withAlpha(Colors.primary, 0.1), withAlpha(Colors.accent, 0.12)]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                 style={styles.ctaCard}
               >
@@ -249,11 +249,11 @@ const styles = StyleSheet.create({
   backBtn: {
     position: 'absolute', left: Spacing.lg, zIndex: 100,
     width: 42, height: 42, borderRadius: 21,
-    backgroundColor: 'rgba(8,8,18,0.75)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: withAlpha(Colors.background, 0.75),
+    borderWidth: 1, borderColor: withAlpha(Colors.white, 0.18),
     alignItems: 'center', justifyContent: 'center',
   },
-  backIcon: { color: '#FFF', fontSize: 22, fontFamily: Fonts.bold, marginTop: -1 },
+  backIcon: { color: Colors.white, fontSize: 22, fontFamily: Fonts.bold, marginTop: -1 },
 
   loadingText: { color: Colors.textSecondary, fontFamily: Fonts.medium, fontSize: Typography.sm, marginTop: 8 },
   errorText: { color: Colors.textSecondary, fontFamily: Fonts.medium, fontSize: Typography.base, textAlign: 'center' },
@@ -261,20 +261,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24, paddingVertical: 12, borderRadius: 999,
     backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
   },
-  retryLabel: { color: '#FFF', fontFamily: Fonts.semibold, fontSize: Typography.sm },
+  retryLabel: { color: Colors.white, fontFamily: Fonts.semibold, fontSize: Typography.sm },
 
   /* Hero */
   heroWrap: { width: W, height: H * 0.45, position: 'relative' },
   heroImage: { width: '100%', height: '100%' },
-  heroFallback: { backgroundColor: '#111124', alignItems: 'center', justifyContent: 'center' },
+  heroFallback: { backgroundColor: Colors.cardElevated, alignItems: 'center', justifyContent: 'center' },
   heroGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '65%' },
   sourcePill: {
     position: 'absolute', top: 16, right: 16,
-    backgroundColor: 'rgba(8,8,18,0.75)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: withAlpha(Colors.background, 0.75),
+    borderWidth: 1, borderColor: withAlpha(Colors.white, 0.15),
     borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5,
   },
-  sourcePillText: { color: '#FFF', fontSize: Typography.xs, fontFamily: Fonts.semibold },
+  sourcePillText: { color: Colors.white, fontSize: Typography.xs, fontFamily: Fonts.semibold },
 
   /* Header block */
   headerBlock: { paddingHorizontal: Spacing.lg, paddingTop: 12, gap: 10 },
@@ -282,17 +282,17 @@ const styles = StyleSheet.create({
   metaText: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
   metaDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: Colors.textSecondary },
   title: {
-    color: '#FFF', fontSize: Typography.xl + 3,
+    color: Colors.white, fontSize: Typography.xl + 3,
     fontFamily: Fonts.bold, lineHeight: 36, letterSpacing: -0.3,
   },
   lead: {
-    color: 'rgba(255,255,255,0.7)', fontSize: Typography.base + 1,
+    color: withAlpha(Colors.white, 0.7), fontSize: Typography.base + 1,
     fontFamily: Fonts.medium, lineHeight: 26, fontStyle: 'italic',
   },
 
   /* Divider */
   dividerWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: Spacing.lg, marginVertical: 20 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.08)' },
+  dividerLine: { flex: 1, height: 1, backgroundColor: withAlpha(Colors.white, 0.08) },
   dividerIcon: { fontSize: 14, color: Colors.primary },
 
   /* Body */
@@ -302,9 +302,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 12, borderRadius: 999,
     backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
   },
-  openLabel: { color: '#FFF', fontFamily: Fonts.semibold, fontSize: Typography.sm },
+  openLabel: { color: Colors.white, fontFamily: Fonts.semibold, fontSize: Typography.sm },
   para: {
-    color: 'rgba(255,255,255,0.82)', fontSize: Typography.sm + 2,
+    color: withAlpha(Colors.white, 0.82), fontSize: Typography.sm + 2,
     fontFamily: Fonts.regular, lineHeight: 28,
   },
   pullQuoteWrap: { marginVertical: 4 },
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   },
   pullQuoteBar: { width: 3, borderRadius: 2, backgroundColor: Colors.primary, alignSelf: 'stretch' },
   pullQuoteText: {
-    flex: 1, color: 'rgba(255,255,255,0.9)', fontSize: Typography.base + 1,
+    flex: 1, color: withAlpha(Colors.white, 0.9), fontSize: Typography.base + 1,
     fontFamily: Fonts.semibold, lineHeight: 26, fontStyle: 'italic',
   },
 
@@ -323,15 +323,15 @@ const styles = StyleSheet.create({
   ctaCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     borderRadius: 16, padding: 16,
-    borderWidth: 1, borderColor: 'rgba(184,233,38,0.2)',
+    borderWidth: 1, borderColor: withAlpha(Colors.primary, 0.2),
   },
   ctaLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   ctaEmoji: { fontSize: 28 },
-  ctaTitle: { color: '#FFF', fontFamily: Fonts.bold, fontSize: Typography.sm + 1 },
+  ctaTitle: { color: Colors.white, fontFamily: Fonts.bold, fontSize: Typography.sm + 1 },
   ctaDesc: { color: Colors.textSecondary, fontFamily: Fonts.medium, fontSize: Typography.xs + 1, marginTop: 2 },
   ctaBtn: {
     paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999,
     backgroundColor: Colors.primary,
   },
-  ctaBtnLabel: { color: '#000', fontFamily: Fonts.bold, fontSize: Typography.sm },
+  ctaBtnLabel: { color: Colors.black, fontFamily: Fonts.bold, fontSize: Typography.sm },
 });

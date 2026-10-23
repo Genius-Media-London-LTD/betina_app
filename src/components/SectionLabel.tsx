@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TextProps } from 'react-native';
-import { Fonts, Typography } from '../theme';
+import { Colors, Fonts, Typography } from '../theme';
 
 /** Tiny letter-spaced uppercase section header ("FREQUENT QUESTIONS", "TODAY", …). */
 export default function SectionLabel({ style, children, ...rest }: TextProps) {
@@ -13,7 +13,7 @@ export default function SectionLabel({ style, children, ...rest }: TextProps) {
 
 const styles = StyleSheet.create({
   label: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.xs,
     fontFamily: Fonts.bold,
     letterSpacing: 1.3,

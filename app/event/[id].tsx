@@ -11,7 +11,7 @@ import GlowCard from '../../src/components/GlowCard';
 import ScreenBg from '../../src/components/ScreenBg';
 import TeamBadge from '../../src/components/TeamBadge';
 import { demoEvents } from '../../src/lib/demo';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
 
 const FORM = {
   home: ['W', 'W', 'D', 'W', 'W'],
@@ -70,7 +70,7 @@ export default function EventDetail() {
 
         {/* match hero */}
         <Animated.View entering={FadeInDown.duration(500)}>
-          <GlowCard variant="purple" style={styles.hero}>
+          <GlowCard variant="accent" style={styles.hero}>
             <View style={styles.heroTeams}>
               <View style={styles.heroTeam}>
                 <TeamBadge short={event.homeShort} size={56} />
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   heroTeamName: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.base,
     fontFamily: Fonts.bold,
   },
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   heroTime: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: 26,
     fontFamily: Fonts.bold,
   },
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
   },
   heroDot: {
-    color: '#3A3A4A',
+    color: Colors.textMuted,
   },
   formCard: {
     paddingVertical: 14,
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   },
   formTitle: {
     textAlign: 'center',
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.xs,
     fontFamily: Fonts.bold,
     letterSpacing: 1.1,
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   formVs: {
-    color: '#3A3A4A',
+    color: Colors.textMuted,
     fontSize: Typography.xs,
     fontFamily: Fonts.bold,
   },
@@ -258,19 +258,19 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 7,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: withAlpha(Colors.white, 0.08),
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: withAlpha(Colors.white, 0.15),
     alignItems: 'center',
     justifyContent: 'center',
   },
   formChipWin: {
-    backgroundColor: 'rgba(184,233,38,0.18)',
-    borderColor: 'rgba(184,233,38,0.45)',
+    backgroundColor: withAlpha(Colors.primary, 0.18),
+    borderColor: withAlpha(Colors.primary, 0.45),
   },
   formChipLoss: {
-    backgroundColor: 'rgba(255,80,80,0.15)',
-    borderColor: 'rgba(255,80,80,0.4)',
+    backgroundColor: withAlpha(Colors.danger, 0.15),
+    borderColor: withAlpha(Colors.danger, 0.4),
   },
   formChipLabel: {
     color: Colors.textSecondary,
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   formChipLabelLoss: {
-    color: '#FF7A7A',
+    color: Colors.danger,
   },
   takeRow: {
     flexDirection: 'row',
@@ -293,13 +293,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   takeLabel: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.xs,
     fontFamily: Fonts.bold,
     letterSpacing: 1.1,
   },
   takeText: {
-    color: '#E8E8F0',
+    color: Colors.textPrimary,
     fontSize: Typography.sm,
     fontFamily: Fonts.medium,
     lineHeight: 20,

@@ -6,7 +6,7 @@ import GlowCard from '../src/components/GlowCard';
 import ScreenBg from '../src/components/ScreenBg';
 import SectionLabel from '../src/components/SectionLabel';
 import Toggle from '../src/components/Toggle';
-import { Colors, Fonts, Spacing, Typography } from '../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
 
 type PrefRow = {
   key: string;
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
   },
   title: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.lg + 2,
     fontFamily: Fonts.bold,
   },
@@ -121,18 +121,18 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   rowLabel: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.sm + 1,
     fontFamily: Fonts.semibold,
   },
   rowHint: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.xs + 1,
     fontFamily: Fonts.medium,
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: withAlpha(Colors.white, 0.06),
     marginHorizontal: 16,
   },
 });

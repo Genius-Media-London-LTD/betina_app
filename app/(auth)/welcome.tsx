@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     paddingTop: 28,
   },
   headline: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: 30,
     fontFamily: Fonts.bold,
     textAlign: 'center',
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
   },
   rewardValue: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: 22,
     fontFamily: Fonts.bold,
   },

@@ -14,7 +14,7 @@ import { useProfile } from '../../src/hooks/useProfile';
 import { useSession } from '../../src/hooks/useSession';
 import SignInWall from '../../src/components/SignInWall';
 import { supabase } from '../../src/lib/supabase';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
 
 export default function Journey() {
   const { t, lang } = useI18n();
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   },
   headerLeft: { gap: 2 },
   title: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: 26,
     fontFamily: Fonts.bold,
   },
@@ -267,12 +267,12 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     backgroundColor: Colors.glass,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: withAlpha(Colors.white, 0.15),
     alignItems: 'center',
     justifyContent: 'center',
   },
   nodeDone: {
-    backgroundColor: 'rgba(184,233,38,0.15)',
+    backgroundColor: withAlpha(Colors.primary, 0.15),
     borderColor: Colors.primary,
   },
   nodeCurrent: {
@@ -285,11 +285,11 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   nodeGold: {
-    backgroundColor: 'rgba(255,215,0,0.12)',
-    borderColor: 'rgba(255,215,0,0.5)',
+    backgroundColor: withAlpha(Colors.gold, 0.12),
+    borderColor: withAlpha(Colors.gold, 0.5),
   },
   nodeLabel: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: 11,
     fontFamily: Fonts.bold,
   },
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     width: 2,
     flex: 1,
     minHeight: 16,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: withAlpha(Colors.white, 0.12),
   },
   timelineLineDone: {
     backgroundColor: Colors.primary,
@@ -328,16 +328,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   tierNameCurrent: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.base,
   },
   tierNameGold: {
     color: Colors.gold,
   },
   currentPill: {
-    backgroundColor: 'rgba(184,233,38,0.14)',
+    backgroundColor: withAlpha(Colors.primary, 0.14),
     borderWidth: 1,
-    borderColor: 'rgba(184,233,38,0.4)',
+    borderColor: withAlpha(Colors.primary, 0.4),
     borderRadius: 999,
     paddingVertical: 3,
     paddingHorizontal: 9,
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     paddingTop: 2,
   },
   tierMeta: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.xs + 1,
     fontFamily: Fonts.medium,
   },
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   statValue: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.lg + 2,
     fontFamily: Fonts.bold,
   },
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   teamValue: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.md + 1,
     fontFamily: Fonts.bold,
   },
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   activeDaysMeta: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.xs + 1,
     fontFamily: Fonts.semibold,
   },
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   teamCardName: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.md,
     fontFamily: Fonts.bold,
   },
@@ -444,15 +444,15 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   sportChip: {
-    backgroundColor: 'rgba(184,233,38,0.1)',
+    backgroundColor: withAlpha(Colors.primary, 0.1),
     borderWidth: 1,
-    borderColor: 'rgba(184,233,38,0.3)',
+    borderColor: withAlpha(Colors.primary, 0.3),
     borderRadius: 999,
     paddingVertical: 7,
     paddingHorizontal: 13,
   },
   sportChipText: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.sm,
     fontFamily: Fonts.semibold,
   },

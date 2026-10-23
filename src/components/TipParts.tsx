@@ -46,7 +46,7 @@ export function Crest({ uri, name, size = 26 }: { uri: string | null; name: stri
 const BADGE: Record<number, { bg: string; border: string; text: string }> = {
   3: { bg: Colors.glowGold, border: Colors.gold, text: Colors.gold },
   2: { bg: Colors.glowGreen, border: Colors.primary, text: Colors.primary },
-  1: { bg: Colors.glowPurple, border: Colors.accentLight, text: Colors.accentLight },
+  1: { bg: Colors.glowAccent, border: Colors.accentLight, text: Colors.accentLight },
   0: { bg: Colors.glass, border: Colors.glassBorder, text: Colors.textMuted },
 };
 

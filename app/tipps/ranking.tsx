@@ -208,7 +208,7 @@ function TeamCard({ duel }: { duel: GroupDuel | null }) {
   const decided = duel ? duel.won + duel.lost + duel.drawn : 0;
   return (
     <Animated.View entering={FadeInDown.duration(400)}>
-      <GlowCard variant="purple" style={styles.team}>
+      <GlowCard variant="accent" style={styles.team}>
         <Text style={styles.teamTitle}>{t.tipTeamTitle}</Text>
         {decided === 0 ? (
           <Text style={styles.teamSub}>{t.tipTeamEmpty}</Text>
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   legendText: { color: Colors.textMuted, fontSize: Typography.xs, fontFamily: Fonts.bold },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 10, paddingVertical: 10, borderRadius: 12 },
   rowMe: { backgroundColor: Colors.glowGreen },
-  rowBetina: { backgroundColor: Colors.glowPurple },
+  rowBetina: { backgroundColor: Colors.glowAccent },
   rank: { width: 26, color: Colors.textSecondary, fontSize: Typography.base, fontFamily: Fonts.bold, textAlign: 'right' },
   trend: { width: 26, fontSize: Typography.xs, fontFamily: Fonts.extrabold, textAlign: 'center' },
   name: { color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.semibold },

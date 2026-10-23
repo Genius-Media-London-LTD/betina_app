@@ -19,7 +19,7 @@ import BETinaAvatar from '../../src/components/BETinaAvatar';
 import DismissKeyboard from '../../src/components/DismissKeyboard';
 import GlowButton from '../../src/components/GlowButton';
 import ScreenBg from '../../src/components/ScreenBg';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
 
 const DIAL_CODES = [
   { flag: '🇦🇹', code: '+43', country: 'Austria' },
@@ -173,7 +173,7 @@ export default function Login() {
                   value={phone}
                   onChangeText={(v) => { setPhone(v); setError(null); }}
                   placeholder="664 123 45"
-                  placeholderTextColor="#55556A"
+                  placeholderTextColor={Colors.textMuted}
                   keyboardType="phone-pad"
                   style={styles.input}
                   returnKeyType="done"
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   guestLabel: { color: Colors.textSecondary, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
   header: { alignItems: 'center', gap: Spacing.base, paddingTop: 28, paddingBottom: 36 },
   headerText: { alignItems: 'center', gap: 6 },
-  title: { color: '#FFFFFF', fontSize: 26, fontFamily: Fonts.bold },
+  title: { color: Colors.white, fontSize: 26, fontFamily: Fonts.bold },
   subtitle: {
     color: Colors.textSecondary, fontSize: Typography.sm + 1,
     fontFamily: Fonts.medium, textAlign: 'center', lineHeight: 21,
@@ -232,37 +232,37 @@ const styles = StyleSheet.create({
     borderRadius: 20, paddingHorizontal: 14,
   },
   dialFlag: { fontSize: 18 },
-  dialText: { color: '#FFFFFF', fontSize: Typography.md - 1, fontFamily: Fonts.semibold },
-  dialCaret: { color: '#55556A', fontSize: 11 },
+  dialText: { color: Colors.white, fontSize: Typography.md - 1, fontFamily: Fonts.semibold },
+  dialCaret: { color: Colors.textMuted, fontSize: 11 },
   inputWrap: {
     flex: 1, backgroundColor: Colors.glass, borderWidth: 1,
-    borderColor: 'rgba(184,233,38,0.45)', borderRadius: 20, paddingHorizontal: 18,
+    borderColor: withAlpha(Colors.primary, 0.45), borderRadius: 20, paddingHorizontal: 18,
   },
   input: {
-    color: '#FFFFFF', fontSize: Typography.md - 1,
+    color: Colors.white, fontSize: Typography.md - 1,
     fontFamily: Fonts.semibold, paddingVertical: 16,
   },
   error: { color: Colors.danger, fontSize: Typography.sm, fontFamily: Fonts.medium, lineHeight: 19 },
   ctaBlock: { gap: 18, marginTop: 28 },
   terms: {
-    color: '#55556A', fontSize: Typography.xs + 1,
+    color: Colors.textMuted, fontSize: Typography.xs + 1,
     fontFamily: Fonts.medium, textAlign: 'center', lineHeight: 19,
   },
   termsLink: { color: Colors.textSecondary, textDecorationLine: 'underline' },
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, backgroundColor: withAlpha(Colors.black, 0.7), justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: '#16162A', borderTopLeftRadius: 28,
+    backgroundColor: Colors.card, borderTopLeftRadius: 28,
     borderTopRightRadius: 28, paddingTop: 20, maxHeight: '80%',
   },
   modalTitle: {
-    color: '#FFFFFF', fontSize: Typography.base, fontFamily: Fonts.bold,
+    color: Colors.white, fontSize: Typography.base, fontFamily: Fonts.bold,
     textAlign: 'center', paddingBottom: 16,
   },
   dialRow: {
     flexDirection: 'row', alignItems: 'center',
     gap: Spacing.md, paddingVertical: 14, paddingHorizontal: 24,
   },
-  dialRowActive: { backgroundColor: 'rgba(184,233,38,0.08)' },
-  dialCountry: { flex: 1, color: '#FFFFFF', fontSize: Typography.base - 1, fontFamily: Fonts.medium },
+  dialRowActive: { backgroundColor: withAlpha(Colors.primary, 0.08) },
+  dialCountry: { flex: 1, color: Colors.white, fontSize: Typography.base - 1, fontFamily: Fonts.medium },
 });

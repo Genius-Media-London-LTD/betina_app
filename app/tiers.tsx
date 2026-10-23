@@ -10,7 +10,7 @@ import XPBar from '../src/components/XPBar';
 import { tiers } from '../src/lib/demo';
 import { useProfile } from '../src/hooks/useProfile';
 import { useI18n } from '../src/lib/i18n';
-import { Colors, Fonts, Spacing, Typography } from '../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
 
 export default function Tiers() {
   const { t } = useI18n();
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   },
   topText: { gap: 1, flex: 1 },
   title: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.lg + 2,
     fontFamily: Fonts.bold,
   },
@@ -171,13 +171,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: Colors.glass,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: withAlpha(Colors.white, 0.15),
     alignItems: 'center',
     justifyContent: 'center',
   },
   tierBadgeDone: {
-    backgroundColor: 'rgba(184,233,38,0.12)',
-    borderColor: 'rgba(184,233,38,0.5)',
+    backgroundColor: withAlpha(Colors.primary, 0.12),
+    borderColor: withAlpha(Colors.primary, 0.5),
   },
   tierBadgeCurrent: {
     backgroundColor: Colors.primary,
@@ -189,11 +189,11 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   tierBadgeGold: {
-    backgroundColor: 'rgba(255,215,0,0.12)',
-    borderColor: 'rgba(255,215,0,0.5)',
+    backgroundColor: withAlpha(Colors.gold, 0.12),
+    borderColor: withAlpha(Colors.gold, 0.5),
   },
   tierBadgeLabel: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.sm,
     fontFamily: Fonts.bold,
   },
@@ -207,15 +207,15 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   tierName: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.sm + 1,
     fontFamily: Fonts.bold,
     letterSpacing: 0.7,
   },
   currentPill: {
-    backgroundColor: 'rgba(184,233,38,0.14)',
+    backgroundColor: withAlpha(Colors.primary, 0.14),
     borderWidth: 1,
-    borderColor: 'rgba(184,233,38,0.4)',
+    borderColor: withAlpha(Colors.primary, 0.4),
     borderRadius: 999,
     paddingVertical: 3,
     paddingHorizontal: 9,
@@ -235,12 +235,12 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   cashbackValue: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.base + 2,
     fontFamily: Fonts.bold,
   },
   cashbackLabel: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: 10,
     fontFamily: Fonts.semibold,
     letterSpacing: 0.8,
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   progressMeta: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.xs,
     fontFamily: Fonts.medium,
   },
@@ -261,16 +261,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm + 2,
-    backgroundColor: 'rgba(139,92,246,0.18)',
+    backgroundColor: withAlpha(Colors.accent, 0.18),
     borderWidth: 1,
-    borderColor: 'rgba(139,92,246,0.4)',
+    borderColor: withAlpha(Colors.accent, 0.4),
     borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 14,
   },
   noteText: {
     flex: 1,
-    color: '#E8E8F0',
+    color: Colors.textPrimary,
     fontSize: Typography.xs + 1,
     fontFamily: Fonts.medium,
     lineHeight: 18,

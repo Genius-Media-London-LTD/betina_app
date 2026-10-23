@@ -10,7 +10,7 @@ import GlowCard from '../src/components/GlowCard';
 import ParticlesBg from '../src/components/ParticlesBg';
 import ScreenBg from '../src/components/ScreenBg';
 import { demoProfile } from '../src/lib/demo';
-import { Colors, Fonts, Spacing, Typography } from '../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
 
 // No "Big Win" variant by design — win/loss messaging stays off this app
 // so it reads as an AI companion, not a gambling app (App Store safety).
@@ -50,7 +50,7 @@ export default function Celebration() {
       avatarVariant: 'gold' as const,
       emoji: '🥳',
       kicker: 'MARCH 14',
-      kickerColor: '#A855F7',
+      kickerColor: Colors.accent,
       headline: `Happy Birthday,\n${demoProfile.name}! 🎂`,
       sub: '32 today! I baked you something special — no calories, all XP.',
       cta: 'Unwrap my gift 🎁',
@@ -162,22 +162,22 @@ const styles = StyleSheet.create({
     letterSpacing: 2.5,
   },
   headline: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: 44,
     fontFamily: Fonts.bold,
     textAlign: 'center',
-    textShadowColor: 'rgba(184,233,38,0.3)',
+    textShadowColor: withAlpha(Colors.primary, 0.3),
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 40,
   },
   headlineGold: {
-    textShadowColor: 'rgba(255,215,0,0.35)',
+    textShadowColor: withAlpha(Colors.gold, 0.35),
     letterSpacing: 1.5,
   },
   headlineBirthday: {
     fontSize: 34,
     lineHeight: 40,
-    textShadowColor: 'rgba(168,85,247,0.4)',
+    textShadowColor: withAlpha(Colors.accent, 0.4),
   },
   sub: {
     color: Colors.textSecondary,
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   contextTitle: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: Typography.sm + 1,
     fontFamily: Fonts.bold,
   },
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dismissLabel: {
-    color: '#55556A',
+    color: Colors.textMuted,
     fontSize: Typography.sm,
     fontFamily: Fonts.medium,
   },

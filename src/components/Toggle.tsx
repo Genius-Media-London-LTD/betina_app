@@ -7,7 +7,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { Animation, Colors } from '../theme';
+import { Animation, Colors, withAlpha } from '../theme';
 
 type Props = {
   value: boolean;
@@ -26,13 +26,13 @@ export default function Toggle({ value, onValueChange }: Props) {
     backgroundColor: interpolateColor(
       progress.value,
       [0, 1],
-      ['rgba(255,255,255,0.12)', Colors.primary],
+      [withAlpha(Colors.white, 0.12), Colors.primary],
     ),
   }));
 
   const knobStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: progress.value * 18 }],
-    backgroundColor: interpolateColor(progress.value, [0, 1], ['#55556A', Colors.background]),
+    backgroundColor: interpolateColor(progress.value, [0, 1], [Colors.textMuted, Colors.background]),
   }));
 
   return (

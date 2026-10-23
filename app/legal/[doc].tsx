@@ -42,8 +42,8 @@ export default function LegalDocScreen() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.lg, gap: Spacing.base },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingTop: Spacing.sm },
-  title: { color: '#FFFFFF', fontSize: Typography.lg + 2, fontFamily: Fonts.bold, flex: 1 },
-  updated: { color: '#55556A', fontSize: Typography.xs + 1, fontFamily: Fonts.medium, marginTop: -6 },
+  title: { color: Colors.white, fontSize: Typography.lg + 2, fontFamily: Fonts.bold, flex: 1 },
+  updated: { color: Colors.textMuted, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, marginTop: -6 },
   section: { gap: 6 },
   heading: { color: Colors.primary, fontSize: Typography.base, fontFamily: Fonts.bold },
   body: { color: Colors.textSecondary, fontSize: Typography.sm + 1, fontFamily: Fonts.medium, lineHeight: 22 },

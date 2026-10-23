@@ -71,7 +71,7 @@ export default function StatsScreen() {
           <>
             {/* Duel */}
             <Animated.View entering={FadeInDown.duration(400)}>
-              <GlowCard variant="purple" style={styles.duelCard}>
+              <GlowCard variant="accent" style={styles.duelCard}>
                 <Text style={styles.cardTitle}>{t.tipDuelTitle}</Text>
                 <View style={styles.duelRow}>
                   <View style={styles.duelSide}>

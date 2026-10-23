@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Fonts } from '../theme';
+import { Colors, Fonts, withAlpha } from '../theme';
 
 type Props = {
   short: string;
@@ -21,7 +21,7 @@ export default function TeamBadge({ short, size = 40 }: Props) {
         end={{ x: 1, y: 1 }}
         style={[styles.badge, { width: size, height: size, borderRadius: size / 2 }]}
       >
-        <Text style={[styles.label, { fontSize, color: '#FFD700' }]}>FCB</Text>
+        <Text style={[styles.label, { fontSize, color: Colors.gold }]}>FCB</Text>
       </LinearGradient>
     );
   }
@@ -30,10 +30,10 @@ export default function TeamBadge({ short, size = 40 }: Props) {
       <View
         style={[
           styles.badge,
-          { width: size, height: size, borderRadius: size / 2, backgroundColor: '#FFFFFF' },
+          { width: size, height: size, borderRadius: size / 2, backgroundColor: Colors.white },
         ]}
       >
-        <Text style={[styles.label, { fontSize, color: '#4B4B8F' }]}>RMA</Text>
+        <Text style={[styles.label, { fontSize, color: Colors.accent }]}>RMA</Text>
       </View>
     );
   }
@@ -45,13 +45,13 @@ export default function TeamBadge({ short, size = 40 }: Props) {
           width: size,
           height: size,
           borderRadius: size / 2,
-          backgroundColor: 'rgba(255,255,255,0.08)',
+          backgroundColor: withAlpha(Colors.white, 0.08),
           borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.15)',
+          borderColor: withAlpha(Colors.white, 0.15),
         },
       ]}
     >
-      <Text style={[styles.label, { fontSize, color: '#9999AA' }]}>{short}</Text>
+      <Text style={[styles.label, { fontSize, color: Colors.textSecondary }]}>{short}</Text>
     </View>
   );
 }

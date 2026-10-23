@@ -8,7 +8,7 @@ import ScreenBg from '../../src/components/ScreenBg';
 import { useProfile } from '../../src/hooks/useProfile';
 import { SPORT_KEYS, useI18n } from '../../src/lib/i18n';
 import { cleanFeedText, fetchNewsApi, mentionsTeam } from '../../src/lib/sports';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
 
 const API = 'https://intelligence.geniusbet.com';
 
@@ -283,7 +283,7 @@ export default function Live() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.lg, gap: 16 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { color: '#FFFFFF', fontSize: Typography.xl - 2, fontFamily: Fonts.bold },
+  title: { color: Colors.white, fontSize: Typography.xl - 2, fontFamily: Fonts.bold },
   bell: {
     width: 38, height: 38, borderRadius: 19,
     backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
@@ -295,16 +295,16 @@ const styles = StyleSheet.create({
     borderRadius: 5, backgroundColor: Colors.primary, borderWidth: 2, borderColor: Colors.background,
   },
   section: { gap: 10 },
-  sectionTitle: { color: '#FFFFFF', fontSize: Typography.base + 1, fontFamily: Fonts.bold, paddingLeft: 2 },
+  sectionTitle: { color: Colors.white, fontSize: Typography.base + 1, fontFamily: Fonts.bold, paddingLeft: 2 },
   tabs: { gap: 8, paddingVertical: 2 },
   tab: {
     paddingHorizontal: 16, paddingVertical: 9,
     borderRadius: 999, backgroundColor: Colors.glass,
     borderWidth: 1, borderColor: Colors.glassBorder,
   },
-  tabActive: { backgroundColor: 'rgba(184,233,38,0.14)', borderColor: 'rgba(184,233,38,0.6)' },
+  tabActive: { backgroundColor: withAlpha(Colors.primary, 0.14), borderColor: withAlpha(Colors.primary, 0.6) },
   tabLabel: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.semibold },
-  tabLabelActive: { color: '#FFFFFF' },
+  tabLabelActive: { color: Colors.white },
   matchCard: { gap: 12, padding: 16 },
   matchLabel: {
     color: Colors.primary, fontSize: Typography.xs, fontFamily: Fonts.bold,
@@ -312,8 +312,8 @@ const styles = StyleSheet.create({
   },
   matchRow: { gap: 4 },
   matchTeams: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  matchTeam: { flex: 1, color: '#FFFFFF', fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
-  matchVs: { color: '#55556A', fontSize: Typography.xs + 1, fontFamily: Fonts.bold },
+  matchTeam: { flex: 1, color: Colors.white, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
+  matchVs: { color: Colors.textMuted, fontSize: Typography.xs + 1, fontFamily: Fonts.bold },
   matchScore: { color: Colors.primary, fontFamily: Fonts.bold },
   matchScoreBig: { fontSize: Typography.base, paddingHorizontal: 4 },
   matchMeta: { gap: 2 },
@@ -321,21 +321,21 @@ const styles = StyleSheet.create({
   matchDate: { color: Colors.textSecondary, fontSize: Typography.xs, fontFamily: Fonts.medium },
   featuredCard: { padding: 0, overflow: 'hidden', gap: 0 },
   featuredImage: { width: '100%', height: 200, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
-  imagePlaceholder: { backgroundColor: '#1A1A2E', alignItems: 'center', justifyContent: 'center' },
+  imagePlaceholder: { backgroundColor: Colors.cardElevated, alignItems: 'center', justifyContent: 'center' },
   imagePlaceholderEmoji: { fontSize: 40 },
   featuredBadge: {
     position: 'absolute', top: 12, left: 12,
-    backgroundColor: 'rgba(184,233,38,0.9)', borderRadius: 999,
+    backgroundColor: withAlpha(Colors.primary, 0.9), borderRadius: 999,
     paddingHorizontal: 10, paddingVertical: 4,
   },
-  featuredBadgeText: { color: '#000', fontSize: Typography.xs - 1, fontFamily: Fonts.bold, letterSpacing: 0.8 },
+  featuredBadgeText: { color: Colors.black, fontSize: Typography.xs - 1, fontFamily: Fonts.bold, letterSpacing: 0.8 },
   featuredContent: { padding: 14, gap: 6 },
-  featuredTitle: { color: '#FFFFFF', fontSize: Typography.base + 1, fontFamily: Fonts.bold, lineHeight: 24 },
+  featuredTitle: { color: Colors.white, fontSize: Typography.base + 1, fontFamily: Fonts.bold, lineHeight: 24 },
   newsCard: { flexDirection: 'row', gap: 12, padding: 12, alignItems: 'center' },
   newsThumb: { width: 80, height: 80, borderRadius: 10 },
   newsBody: { flex: 1, gap: 6 },
-  newsTitle: { color: '#FFFFFF', fontSize: Typography.sm, fontFamily: Fonts.semibold, lineHeight: 20 },
-  newsTime: { color: '#55556A', fontSize: Typography.xs, fontFamily: Fonts.medium },
+  newsTitle: { color: Colors.white, fontSize: Typography.sm, fontFamily: Fonts.semibold, lineHeight: 20 },
+  newsTime: { color: Colors.textMuted, fontSize: Typography.xs, fontFamily: Fonts.medium },
   emptyCard: { padding: 20, alignItems: 'center' },
   emptyText: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center' },
 });

@@ -12,7 +12,7 @@ import GlowButton from '../src/components/GlowButton';
 import GlowCard from '../src/components/GlowCard';
 import ScreenBg from '../src/components/ScreenBg';
 import SectionLabel from '../src/components/SectionLabel';
-import { Colors, Fonts, Spacing, Typography } from '../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
 
 const GENIUSBET_RG_URL = 'https://www.geniusbet.com/responsible-gaming';
 
@@ -58,7 +58,7 @@ export default function ResponsibleGaming() {
         </View>
 
         {/* BETina intro */}
-        <GlowCard variant="purple" style={styles.introCard}>
+        <GlowCard variant="accent" style={styles.introCard}>
           <BETinaAvatar size={52} />
           <View style={styles.introText}>
             <Text style={styles.introTitle}>Let’s keep it fun 💚</Text>
@@ -154,30 +154,30 @@ export default function ResponsibleGaming() {
 const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingHorizontal: Spacing.lg, gap: 16 },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingTop: Spacing.sm },
-  title: { color: '#FFFFFF', fontSize: Typography.lg + 2, fontFamily: Fonts.bold },
+  title: { color: Colors.white, fontSize: Typography.lg + 2, fontFamily: Fonts.bold },
   introCard: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
   introText: { flex: 1, gap: 3 },
-  introTitle: { color: '#FFFFFF', fontSize: Typography.base, fontFamily: Fonts.bold },
+  introTitle: { color: Colors.white, fontSize: Typography.base, fontFamily: Fonts.bold },
   introBody: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, lineHeight: 18 },
   section: { gap: Spacing.sm },
   listCard: { paddingVertical: 14, paddingHorizontal: 16, gap: 10 },
   bulletRow: { flexDirection: 'row', gap: 8 },
   bulletDot: { color: Colors.primary, fontSize: Typography.sm + 1, lineHeight: 20 },
-  bulletText: { flex: 1, color: '#E8E8F0', fontSize: Typography.sm, fontFamily: Fonts.medium, lineHeight: 20 },
+  bulletText: { flex: 1, color: Colors.textPrimary, fontSize: Typography.sm, fontFamily: Fonts.medium, lineHeight: 20 },
   toolRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 13, paddingHorizontal: 16 },
   toolEmoji: { fontSize: 20 },
   toolText: { flex: 1, gap: 2 },
-  toolLabel: { color: '#FFFFFF', fontSize: Typography.sm + 1, fontFamily: Fonts.bold },
+  toolLabel: { color: Colors.white, fontSize: Typography.sm + 1, fontFamily: Fonts.bold },
   toolHint: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, lineHeight: 17 },
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginHorizontal: 16 },
-  toolsNote: { color: '#55556A', fontSize: Typography.xs + 1, fontFamily: Fonts.medium, lineHeight: 17, paddingHorizontal: 4 },
+  divider: { height: 1, backgroundColor: withAlpha(Colors.white, 0.06), marginHorizontal: 16 },
+  toolsNote: { color: Colors.textMuted, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, lineHeight: 17, paddingHorizontal: 4 },
   cta: { marginTop: 4 },
   signsFooter: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.semibold, lineHeight: 20, paddingTop: 4 },
   helpCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, padding: 16 },
   helpEmoji: { fontSize: 22 },
   helpText: { flex: 1, gap: 2 },
-  helpTitle: { color: '#FFFFFF', fontSize: Typography.sm + 1, fontFamily: Fonts.bold },
+  helpTitle: { color: Colors.white, fontSize: Typography.sm + 1, fontFamily: Fonts.bold },
   helpHint: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, lineHeight: 17 },
   helpArrow: { color: Colors.primary, fontSize: Typography.base },
-  footer: { color: '#55556A', fontSize: Typography.xs, fontFamily: Fonts.medium, lineHeight: 17, textAlign: 'center', paddingHorizontal: Spacing.sm, paddingTop: Spacing.sm },
+  footer: { color: Colors.textMuted, fontSize: Typography.xs, fontFamily: Fonts.medium, lineHeight: 17, textAlign: 'center', paddingHorizontal: Spacing.sm, paddingTop: Spacing.sm },
 });

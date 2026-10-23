@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chevron: {
-    color: '#FFFFFF',
+    color: Colors.white,
     fontSize: 20,
     lineHeight: 24,
     marginTop: -2,

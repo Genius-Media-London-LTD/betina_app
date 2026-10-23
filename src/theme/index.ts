@@ -1,44 +1,73 @@
 // BETina Design System
 // SINGLE SOURCE OF TRUTH — import everything from here, never hardcode values
 
+/** '#RRGGBB' + alpha → 'rgba(r,g,b,a)' — for tints of the palette colours. */
+export function withAlpha(hex: string, alpha: number): string {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const n = parseInt(full.slice(0, 6), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+}
+
+// Urban palette (2026-10-24): true black + graphite, neon lime as the signal
+// colour, electric cyan as the second accent (replaces the old violet).
+const PALETTE = {
+  black: '#000000',
+  white: '#FFFFFF',
+  background: '#060607',
+  surface: '#0D0D10',
+  card: '#121216',
+  cardElevated: '#1B1B21',
+  lime: '#B8E926',
+  cyan: '#2FE3F0',
+  gold: '#FFD700',
+  danger: '#FF6B6B',
+} as const;
+
 export const Colors = {
-  // Backgrounds — deep purple-tinted black (matches the BETina landing page)
-  background: '#0D0B11',
-  surface: '#14111A',
-  card: '#16121D',
-  cardElevated: '#1F1A29',
+  black: PALETTE.black,
+  white: PALETTE.white,
+
+  // Backgrounds — true black + graphite
+  background: PALETTE.background,
+  surface: PALETTE.surface,
+  card: PALETTE.card,
+  cardElevated: PALETTE.cardElevated,
 
   // Brand
-  primary: '#B8E926',      // Lime — CTAs, Live, aktive Elemente
+  primary: PALETTE.lime,   // Neon-Lime — CTAs, Live, aktive Elemente
+  primaryLight: '#D4FF4D', // Helles Neon für Highlights
   primaryDim: '#9BC21E',   // Gedämpftes Grün für Hover/Pressed
-  accent: '#8B5CF6',       // Violett — Akzente, Glows
-  accentLight: '#A78BFA',  // Helleres Violett
-  gold: '#FFD700',         // VIP, Premium
+  accent: PALETTE.cyan,    // Electric Cyan — zweiter Akzent, BETina-Glow
+  accentLight: '#8CF2F8',  // Helleres Cyan
+  gold: PALETTE.gold,      // VIP, Premium
+  goldLight: '#FFE666',
   goldDim: '#B8A000',      // Gedämpftes Gold
   silver: '#C9CED8',       // Podest Platz 2 (Tippspiel)
   bronze: '#D08A52',       // Podest Platz 3 (Tippspiel)
 
-  // Text — light lavender-greys
-  textPrimary: '#F2F0F5',
-  textSecondary: '#A29AAF',
-  textMuted: '#6F6780',
+  // Text — neutral greys
+  textPrimary: '#F4F4F5',
+  textSecondary: '#A1A1AA',
+  textMuted: '#62626C',
 
   // Status
   success: '#00FF88',
-  danger: '#FF7A7A',
+  danger: PALETTE.danger,
+  dangerDeep: '#2A0A0A',
   warning: '#FFAA00',
   info: '#00AAFF',
 
   // Overlays
-  overlay: 'rgba(0,0,0,0.7)',
-  overlayLight: 'rgba(0,0,0,0.4)',
-  glowGreen: 'rgba(184,233,38,0.15)',
-  glowPurple: 'rgba(139,92,246,0.2)',
-  glowGold: 'rgba(255,215,0,0.2)',
+  overlay: withAlpha(PALETTE.black, 0.7),
+  overlayLight: withAlpha(PALETTE.black, 0.4),
+  glowGreen: withAlpha(PALETTE.lime, 0.14),
+  glowAccent: withAlpha(PALETTE.cyan, 0.14),
+  glowGold: withAlpha(PALETTE.gold, 0.18),
 
-  // Glassmorphism
-  glass: 'rgba(255,255,255,0.05)',
-  glassBorder: 'rgba(255,255,255,0.08)',
+  // Glass
+  glass: withAlpha(PALETTE.white, 0.04),
+  glassBorder: withAlpha(PALETTE.white, 0.09),
 } as const;
 
 // Font families (Archivo, loaded in app/_layout.tsx). The landing-page
@@ -108,7 +137,7 @@ export const Shadows = {
     shadowRadius: 12,
     elevation: 8,
   },
-  purple: {
+  accent: {
     shadowColor: Colors.accent,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,

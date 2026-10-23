@@ -4,22 +4,46 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withTiming,
 } from 'react-native-reanimated';
-import { Colors } from '../theme';
+import { Colors, withAlpha } from '../theme';
 
 type Props = ViewProps & {
   /** Vertical position of the primary radial glow, 0..1 of screen height */
   glowTop?: number;
-  glowColor?: 'purple' | 'gold' | 'green';
+  glowColor?: 'accent' | 'gold' | 'green';
   glowSize?: number;
   /** Pulsing ambient orbs behind the content (landing-page vibe). */
   orbs?: boolean;
 };
 
+// Urban look: restrained light on true black — the neon does the talking.
 const GLOWS = {
-  purple: ['rgba(139,92,246,0.40)', 'rgba(139,92,246,0.12)', 'rgba(10,10,15,0)'],
-  gold: ['rgba(255,215,0,0.28)', 'rgba(139,92,246,0.25)', 'rgba(10,10,15,0)'],
-  green: ['rgba(184,233,38,0.22)', 'rgba(139,92,246,0.28)', 'rgba(10,10,15,0)'],
+  accent: [withAlpha(Colors.accent, 0.16), withAlpha(Colors.accent, 0.04), withAlpha(Colors.background, 0)],
+  gold: [withAlpha(Colors.gold, 0.22), withAlpha(Colors.primary, 0.06), withAlpha(Colors.background, 0)],
+  green: [withAlpha(Colors.primary, 0.18), withAlpha(Colors.primary, 0.05), withAlpha(Colors.background, 0)],
 } as const;
+
+const GRID = 36;
+
+/** Faint display grid behind every screen — the "technical" texture. */
+function Grid() {
+  const lines = Array.from({ length: 40 }, (_, i) => i);
+  return (
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
+      {lines.map((i) => (
+        <View key={`v${i}`} style={[styles.gridV, { left: i * GRID }]} />
+      ))}
+      {lines.map((i) => (
+        <View key={`h${i}`} style={[styles.gridH, { top: i * GRID }]} />
+      ))}
+      {/* Fade the grid out towards the bottom so content stays calm. */}
+      <LinearGradient
+        colors={[withAlpha(Colors.background, 0), Colors.background]}
+        locations={[0.15, 0.85]}
+        style={StyleSheet.absoluteFill}
+      />
+    </View>
+  );
+}
 
 /** A soft, slowly-pulsing ambient orb (fakes a radial glow with a clipped gradient). */
 function Orb({
@@ -44,7 +68,7 @@ function Orb({
       ]}
     >
       <LinearGradient
-        colors={[color, 'rgba(13,11,17,0)']}
+        colors={[color, withAlpha(Colors.background, 0)]}
         locations={[0, 0.6]}
         start={{ x: 0.5, y: 0.3 }}
         end={{ x: 0.5, y: 1 }}
@@ -55,12 +79,12 @@ function Orb({
 }
 
 /**
- * Near-black, purple-tinted screen background with the soft radial glow +
+ * True-black screen background with a faint display grid, a soft radial glow +
  * pulsing ambient orbs every BETina screen carries (matches the landing page).
  */
 export default function ScreenBg({
   glowTop = 0.14,
-  glowColor = 'purple',
+  glowColor = 'accent',
   glowSize = 460,
   orbs = true,
   style,
@@ -72,10 +96,11 @@ export default function ScreenBg({
       {orbs && (
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
           {/* Centres sit off-screen so only a soft ambient bleed shows (no hard circles). */}
-          <Orb color="rgba(139,92,246,0.16)" size={560} top={-320} left={-240} duration={7000} delay={0} />
-          <Orb color="rgba(184,233,38,0.07)" size={600} top={280} right={-320} duration={9000} delay={800} />
+          <Orb color={withAlpha(Colors.primary, 0.09)} size={560} top={-320} left={-240} duration={7000} delay={0} />
+          <Orb color={withAlpha(Colors.accent, 0.06)} size={600} top={280} right={-320} duration={9000} delay={800} />
         </View>
       )}
+      <Grid />
 
       <View
         pointerEvents="none"
@@ -112,6 +137,8 @@ const styles = StyleSheet.create({
     // triggers horizontal scroll (which flashed a white margin on iOS).
     overflow: 'hidden',
   },
+  gridV: { position: 'absolute', top: 0, bottom: 0, width: StyleSheet.hairlineWidth, backgroundColor: withAlpha(Colors.white, 0.035) },
+  gridH: { position: 'absolute', left: 0, right: 0, height: StyleSheet.hairlineWidth, backgroundColor: withAlpha(Colors.white, 0.035) },
   glowWrap: {
     position: 'absolute',
     left: '50%',

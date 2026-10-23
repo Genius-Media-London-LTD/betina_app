@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 import BETinaAvatar from './BETinaAvatar';
-import { BorderRadius, Colors, Fonts, Spacing, Typography } from '../theme';
+import { BorderRadius, Colors, Fonts, Spacing, Typography, withAlpha } from '../theme';
 
 type Props = {
   role: 'user' | 'assistant';
@@ -46,12 +46,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
   },
   assistant: {
-    backgroundColor: 'rgba(139,92,246,0.16)',
+    backgroundColor: withAlpha(Colors.accent, 0.16),
     borderWidth: 1,
-    borderColor: 'rgba(139,92,246,0.30)',
+    borderColor: withAlpha(Colors.accent, 0.3),
     borderBottomLeftRadius: 4,
     flexShrink: 1,
-    shadowColor: '#000',
+    shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 14,
@@ -60,18 +60,18 @@ const styles = StyleSheet.create({
   user: {
     alignSelf: 'flex-end',
     maxWidth: '78%',
-    backgroundColor: 'rgba(184,233,38,0.14)',
+    backgroundColor: withAlpha(Colors.primary, 0.14),
     borderWidth: 1,
-    borderColor: 'rgba(184,233,38,0.45)',
+    borderColor: withAlpha(Colors.primary, 0.45),
     borderBottomRightRadius: 4,
   },
   text: {
-    color: '#E9E4F2',
+    color: Colors.textPrimary,
     fontSize: Typography.base - 1,
     fontFamily: Fonts.medium,
     lineHeight: 21,
   },
   userText: {
-    color: '#DFF59A',
+    color: Colors.primaryLight,
   },
 });
