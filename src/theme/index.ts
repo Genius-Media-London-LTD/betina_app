@@ -15,6 +15,8 @@ export const Colors = {
   accentLight: '#A78BFA',  // Helleres Violett
   gold: '#FFD700',         // VIP, Premium
   goldDim: '#B8A000',      // Gedämpftes Gold
+  silver: '#C9CED8',       // Podest Platz 2 (Tippspiel)
+  bronze: '#D08A52',       // Podest Platz 3 (Tippspiel)
 
   // Text — light lavender-greys
   textPrimary: '#F2F0F5',

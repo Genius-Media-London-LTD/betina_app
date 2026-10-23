@@ -39,6 +39,8 @@ export type Tip = { match_id: number; home: number; away: number; points: number
 
 export type RankRow = {
   rank: number;
+  /** Rank before the latest round (trend arrow); null when there's nothing to compare. */
+  prev_rank: number | null;
   user_id: string;
   display_name: string;
   points: number;
@@ -47,6 +49,22 @@ export type RankRow = {
   diffs: number;
   tips: number;
   is_me: boolean;
+  /** BETina's own row ("Beat BETina"). */
+  is_betina: boolean;
+};
+
+export type Stats = {
+  tips: number;
+  scored: number;
+  points: number;
+  exact: number;
+  diffs: number;
+  tendency: number;
+  misses: number;
+  best_round: { competition: string; matchday: number; points: number } | null;
+  streak: number;
+  series: { competition: string; matchday: number; points: number }[];
+  duel: { me: number; betina: number; matches: number } | null;
 };
 
 export type TipGroup = { id: string; name: string; code: string; is_owner: boolean; members: number };
@@ -168,6 +186,7 @@ export async function fetchLeaderboard(opts: {
   return ((data ?? []) as RankRow[]).map((r) => ({
     ...r,
     rank: Number(r.rank),
+    prev_rank: r.prev_rank == null ? null : Number(r.prev_rank),
     points: Number(r.points),
     hits: Number(r.hits),
     exact: Number(r.exact),
@@ -239,4 +258,88 @@ export function teamsOf(matches: TipMatch[]): Team[] {
     if (m.away_team_id) teams.set(m.away_team_id, { id: m.away_team_id, name: m.away_short ?? m.away_name, crest: m.away_crest });
   }
   return [...teams.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// ── Beat BETina ──────────────────────────────────────────────────────────────
+/** BETina's tips for these matches; the server only returns kicked-off ones. */
+export async function fetchBetinaTips(matchIds: number[]): Promise<Record<number, Tip>> {
+  const out: Record<number, Tip> = {};
+  for (let i = 0; i < matchIds.length; i += 150) {
+    const { data } = await supabase
+      .from('betina_tips')
+      .select('match_id, home, away, points')
+      .in('match_id', matchIds.slice(i, i + 150));
+    for (const t of (data ?? []) as Tip[]) out[t.match_id] = t;
+  }
+  return out;
+}
+
+// ── Stats ────────────────────────────────────────────────────────────────────
+export async function fetchStats(competition: string | null): Promise<Stats | null> {
+  const { data } = await supabase.rpc('tip_my_stats', { p_competition: competition });
+  return (data as Stats | null) ?? null;
+}
+
+// ── My competitions ──────────────────────────────────────────────────────────
+export async function fetchMyCompetitions(): Promise<string[]> {
+  const { data } = await supabase.from('tip_user_competitions').select('competition');
+  return (data ?? []).map((r: { competition: string }) => r.competition);
+}
+
+export async function setMyCompetitions(codes: string[]): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+  const current = await fetchMyCompetitions();
+  const add = codes.filter((c) => !current.includes(c));
+  const remove = current.filter((c) => !codes.includes(c));
+  if (add.length) {
+    const { error } = await supabase.from('tip_user_competitions').insert(add.map((competition) => ({ user_id: user.id, competition })));
+    if (error) return false;
+  }
+  if (remove.length) {
+    const { error } = await supabase.from('tip_user_competitions').delete().eq('user_id', user.id).in('competition', remove);
+    if (error) return false;
+  }
+  return true;
+}
+
+/** Open (untipped) matches of the next 7 days per competition, plus the next kickoff (up to 30 days ahead). */
+export async function fetchOpenTips(competitions: string[]): Promise<Record<string, { open: number; total: number; next: string | null }>> {
+  const out: Record<string, { open: number; total: number; next: string | null }> = {};
+  for (const c of competitions) out[c] = { open: 0, total: 0, next: null };
+  if (competitions.length === 0) return out;
+  const now = Date.now();
+  const { data } = await supabase
+    .from('tip_matches')
+    .select('id, competition, kickoff')
+    .in('competition', competitions)
+    .in('status', ['SCHEDULED', 'TIMED'])
+    .gt('kickoff', new Date(now).toISOString())
+    .lt('kickoff', new Date(now + 30 * 86_400_000).toISOString())
+    .order('kickoff');
+  const matches = (data ?? []) as { id: number; competition: string; kickoff: string }[];
+  const weekAhead = now + 7 * 86_400_000;
+  const mine = await fetchMyTips(matches.filter((m) => Date.parse(m.kickoff) < weekAhead).map((m) => m.id));
+  for (const m of matches) {
+    const o = out[m.competition];
+    if (!o.next) o.next = m.kickoff;
+    if (Date.parse(m.kickoff) >= weekAhead) continue;
+    o.total++;
+    if (!mine[m.id]) o.open++;
+  }
+  return out;
+}
+
+// ── Tippspiel notifications switch ───────────────────────────────────────────
+export async function fetchNotifyTippspiel(): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return true;
+  const { data } = await supabase.from('profiles').select('notify_tippspiel').eq('id', user.id).maybeSingle();
+  return data?.notify_tippspiel !== false;
+}
+
+export async function setNotifyTippspiel(on: boolean): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase.from('profiles').update({ notify_tippspiel: on }).eq('id', user.id);
 }

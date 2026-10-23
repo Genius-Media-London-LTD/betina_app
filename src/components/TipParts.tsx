@@ -12,11 +12,22 @@ export const LOCALE: Record<LangCode, string> = {
 
 /** Fill "{name}, …" templates; without a name the greeting part is dropped. */
 export function fillText(s: string, vars: Record<string, string | number>): string {
+  const dropName = vars.name === '' && s.startsWith('{name}');
   const out = Object.entries(vars).reduce(
     (acc, [k, v]) => (k === 'name' && v === '' ? acc.replace(/\{name\}[,!]?\s*/, '') : acc.replace(`{${k}}`, String(v))),
     s,
   );
-  return out.charAt(0).toUpperCase() + out.slice(1);
+  // "{name}, the fixtures…" without a name → "The fixtures…"
+  return dropName ? out.charAt(0).toUpperCase() + out.slice(1) : out;
+}
+
+/** Competition logo on a light tile: several (Premier League, Champions League) are dark artwork. */
+export function Emblem({ uri, size = 28 }: { uri: string | null; size?: number }) {
+  return (
+    <View style={[styles.emblemTile, { width: size + 8, height: size + 8, borderRadius: (size + 8) / 4 }]}>
+      {uri ? <Image source={{ uri }} style={{ width: size, height: size }} resizeMode="contain" /> : <Text style={{ fontSize: size * 0.6 }}>🏆</Text>}
+    </View>
+  );
 }
 
 /** Team crest (PNG from football-data.org), initials when there is none. */
@@ -75,7 +86,7 @@ export function CompetitionChips({
             }}
             style={[styles.chip, active && styles.chipActive]}
           >
-            {c.emblem && <Image source={{ uri: c.emblem }} style={styles.chipEmblem} resizeMode="contain" />}
+            {c.emblem && <Emblem uri={c.emblem} size={14} />}
             <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{c.name}</Text>
           </Pressable>
         );
@@ -120,7 +131,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.glassBorder,
   },
   chipActive: { backgroundColor: Colors.glowGreen, borderColor: Colors.primary },
-  chipEmblem: { width: 18, height: 18 },
+  emblemTile: { backgroundColor: Colors.textPrimary, alignItems: 'center', justifyContent: 'center' },
   chipLabel: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.semibold },
   chipLabelActive: { color: Colors.textPrimary },
 });

@@ -157,7 +157,7 @@ Rules:
 - NEVER promise wins, NEVER suggest chasing losses, NEVER pressure anyone to bet. Stay caring, not pushy.
 - If the player expresses distress, mentions chasing losses, or says things like "I can't stop", "I've lost everything", "I need help" — drop everything else, respond with genuine empathy, share the responsible-gaming tools (geniusbet.com/responsible-gaming), and offer to connect them with a human agent. Never minimize it, never pivot to betting or bonuses.
 - No real money moves in this app — bets happen on the GeniusBet website only.
-- The app has a Tippspiel (a free score-prediction game: 3 points for the exact result, 2 for winner + goal difference, 1 for the right tendency; points and XP only, no money, no prizes). Use get_tippspiel when they talk about it: cheer exact hits, tease near misses playfully, remind them of matches they haven't tipped yet. If they ask what to tip, give a fun, form-based opinion for the Tippspiel only. Never connect it to betting, odds or stakes.`;
+- The app has a Tippspiel (a free score-prediction game: 3 points for the exact result, 2 for winner + goal difference, 1 for the right tendency; points and XP only, no money, no prizes). You tip every match yourself ("Beat BETina"; your tips are shown to players only from kickoff, so never reveal a tip for a match that hasn't started). Use get_tippspiel when they talk about it: cheer exact hits, tease near misses playfully, banter about the duel, remind them of matches they haven't tipped yet. If they ask what to tip, give a fun, form-based opinion for the Tippspiel only. Never connect it to betting, odds or stakes.`;
 }
 
 // ── Tools ─────────────────────────────────────────────────────────────────────
@@ -171,7 +171,7 @@ const TOOLS = [
   { name: 'get_fixtures', description: "A team's upcoming matches. Needs a team id from search_team.", input_schema: { type: 'object', properties: { team_id: { type: 'string' } }, required: ['team_id'] } },
   { name: 'get_results', description: "A team's recent finished matches with scores. Needs a team id from search_team.", input_schema: { type: 'object', properties: { team_id: { type: 'string' } }, required: ['team_id'] } },
   { name: 'get_news', description: 'Latest sports headlines. Optional sport filter.', input_schema: { type: 'object', properties: { sport: { type: 'string' } }, required: [] } },
-  { name: 'get_tippspiel', description: "The player's Tippspiel (free prediction game): season points + rank, matches in the next days they still have to tip, their upcoming tips and latest scored tips.", input_schema: { type: 'object', properties: {}, required: [] } },
+  { name: 'get_tippspiel', description: "The player's Tippspiel (free prediction game): season points + rank, the duel against you (BETina tips every match too), matches in the next days they still have to tip, their upcoming tips and latest scored tips.", input_schema: { type: 'object', properties: {}, required: [] } },
   { name: 'remember_fact', description: 'Save a lasting fact/preference the player shares so you recall it next time. Only worthwhile things, not small talk.', input_schema: { type: 'object', properties: { fact: { type: 'string' } }, required: ['fact'] } },
   { name: 'set_reminder', description: 'Set a reminder. Work out a concrete future ISO datetime from what they said and today\'s date.', input_schema: { type: 'object', properties: { text: { type: 'string' }, datetime: { type: 'string' } }, required: ['text', 'datetime'] } },
 ];
@@ -208,7 +208,7 @@ async function runTool(name: string, input: any, supabase: any, userId: string |
       if (!userId) return 'Not signed in.';
       const now = new Date();
       const soon = new Date(now.getTime() + 4 * 86_400_000);
-      const [{ data: upcoming }, { data: tips }, { data: board }] = await Promise.all([
+      const [{ data: upcoming }, { data: tips }, { data: board }, { data: stats }] = await Promise.all([
         supabase.from('tip_matches')
           .select('id, competition, home_name, away_name, kickoff')
           .in('status', ['SCHEDULED', 'TIMED'])
@@ -218,6 +218,7 @@ async function runTool(name: string, input: any, supabase: any, userId: string |
           .select('match_id, home, away, points, tip_matches(competition, home_name, away_name, kickoff, status, home_score, away_score)')
           .eq('user_id', userId).order('updated_at', { ascending: false }).limit(40),
         supabase.rpc('tip_leaderboard', { p_competition: null, p_matchday: null, p_group: null, p_limit: 1 }),
+        supabase.rpc('tip_my_stats', { p_competition: null }),
       ]);
       // deno-lint-ignore no-explicit-any
       const mine = (tips ?? []) as any[];
@@ -227,6 +228,9 @@ async function runTool(name: string, input: any, supabase: any, userId: string |
       const label = (m: { home_name: string; away_name: string; competition: string }) => `${m.home_name} vs ${m.away_name} (${m.competition})`;
       return JSON.stringify({
         season: me ? { points: Number(me.points), rank: Number(me.rank), exact: Number(me.exact), tips: Number(me.tips) } : { points: 0, tips: 0 },
+        // "Beat BETina": you tip every match too; this is the duel on matches you both tipped.
+        duel_vs_you: stats?.duel ?? null,
+        scoring_streak_rounds: stats?.streak ?? 0,
         still_to_tip: (upcoming ?? []).filter((m) => !tipped.has(m.id)).slice(0, 10).map((m) => ({ match: label(m), kickoff: m.kickoff })),
         upcoming_tips: mine.filter((t) => t.tip_matches && Date.parse(t.tip_matches.kickoff) > now.getTime())
           .slice(0, 10).map((t) => ({ match: label(t.tip_matches), tip: `${t.home}:${t.away}`, kickoff: t.tip_matches.kickoff })),
