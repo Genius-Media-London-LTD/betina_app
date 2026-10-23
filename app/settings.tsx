@@ -4,16 +4,16 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import GlowButton from '../../src/components/GlowButton';
-import GlowCard from '../../src/components/GlowCard';
-import ScreenBg from '../../src/components/ScreenBg';
-import SectionLabel from '../../src/components/SectionLabel';
-import Toggle from '../../src/components/Toggle';
-import { useProfile } from '../../src/hooks/useProfile';
-import { useSession } from '../../src/hooks/useSession';
-import { LANGUAGES, LangCode, useI18n } from '../../src/lib/i18n';
-import { supabase } from '../../src/lib/supabase';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
+import GlowButton from '../src/components/GlowButton';
+import GlowCard from '../src/components/GlowCard';
+import ScreenBg from '../src/components/ScreenBg';
+import SectionLabel from '../src/components/SectionLabel';
+import Toggle from '../src/components/Toggle';
+import { useProfile } from '../src/hooks/useProfile';
+import { useSession } from '../src/hooks/useSession';
+import { LANGUAGES, LangCode, useI18n } from '../src/lib/i18n';
+import { supabase } from '../src/lib/supabase';
+import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
 
 
 function Row({
@@ -147,7 +147,7 @@ export default function Settings() {
   return (
     <ScreenBg glowTop={0.12} glowSize={440}>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.lg, paddingBottom: 130 }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}
       >
         <Animated.View entering={FadeInDown.duration(500)}>

@@ -197,6 +197,8 @@ type Translations = {
   sportMma: string;
   // Tippspiel
   tabTipps: string;
+  tabNews: string;
+  tabMenu: string;
   tipTitle: string;
   tipHostOpen: string;
   tipHostDone: string;
@@ -569,6 +571,8 @@ const T: Record<LangCode, Translations> = {
     tipTeamEmpty: 'The first finished round brings the first point. Everyone tip!',
     tipTeamRounds: 'rounds',
     tipTeamPlayers: '{n} tipped',
+    tabNews: 'News',
+    tabMenu: 'Menu',
   },
   de: {
     welcomeTitle: 'Willkommen',
@@ -828,6 +832,8 @@ const T: Record<LangCode, Translations> = {
     tipTeamEmpty: 'Der erste fertige Spieltag bringt den ersten Punkt. Alle tippen!',
     tipTeamRounds: 'Spieltage',
     tipTeamPlayers: '{n} getippt',
+    tabNews: 'News',
+    tabMenu: 'Menü',
   },
   es: {
     welcomeTitle: 'Bienvenido',
@@ -1087,6 +1093,8 @@ const T: Record<LangCode, Translations> = {
     tipTeamEmpty: 'La primera jornada terminada da el primer punto. ¡Todos a pronosticar!',
     tipTeamRounds: 'jornadas',
     tipTeamPlayers: '{n} pronosticaron',
+    tabNews: 'Noticias',
+    tabMenu: 'Menú',
   },
   pt: {
     welcomeTitle: 'Bem-vindo',
@@ -1346,6 +1354,8 @@ const T: Record<LangCode, Translations> = {
     tipTeamEmpty: 'A primeira jornada terminada dá o primeiro ponto. Todos a dar palpites!',
     tipTeamRounds: 'jornadas',
     tipTeamPlayers: '{n} com palpite',
+    tabNews: 'Notícias',
+    tabMenu: 'Menu',
   },
   fr: {
     welcomeTitle: 'Bienvenue',
@@ -1605,6 +1615,8 @@ const T: Record<LangCode, Translations> = {
     tipTeamEmpty: 'La première journée terminée donne le premier point. Tout le monde pronostique !',
     tipTeamRounds: 'journées',
     tipTeamPlayers: '{n} ont pronostiqué',
+    tabNews: 'Actu',
+    tabMenu: 'Menu',
   },
   it: {
     welcomeTitle: 'Benvenuto',
@@ -1864,6 +1876,8 @@ const T: Record<LangCode, Translations> = {
     tipTeamEmpty: 'La prima giornata conclusa assegna il primo punto. Tutti a pronosticare!',
     tipTeamRounds: 'giornate',
     tipTeamPlayers: '{n} hanno pronosticato',
+    tabNews: 'Notizie',
+    tabMenu: 'Menu',
   },
   ro: {
     welcomeTitle: 'Bun venit',
@@ -2123,6 +2137,8 @@ const T: Record<LangCode, Translations> = {
     tipTeamEmpty: 'Prima etapă încheiată aduce primul punct. Toată lumea la pronosticuri!',
     tipTeamRounds: 'etape',
     tipTeamPlayers: '{n} au pronosticat',
+    tabNews: 'Știri',
+    tabMenu: 'Meniu',
   },
 };
 

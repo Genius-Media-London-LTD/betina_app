@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import BETinaAvatar from './BETinaAvatar';
+import { useChrome } from './chrome';
 import GlowButton from './GlowButton';
 import ParticlesBg from './ParticlesBg';
 import ScreenBg from './ScreenBg';
@@ -19,6 +20,8 @@ export default function SignInWall({ body }: { body?: string }) {
   const { t } = useI18n();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  // Inside the swipe pager the shared header sits on top.
+  const chrome = useChrome();
 
   return (
     <ScreenBg glowTop={0.3} glowSize={480}>
@@ -26,7 +29,7 @@ export default function SignInWall({ body }: { body?: string }) {
       <View
         style={[
           styles.content,
-          { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + 130 },
+          { paddingTop: Math.max(insets.top, chrome.top) + Spacing.base, paddingBottom: insets.bottom + Spacing['2xl'] },
         ]}
       >
         <View style={{ flex: 0.9 }} />
