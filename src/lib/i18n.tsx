@@ -286,6 +286,12 @@ type Translations = {
   tipTipsCol: string;
   tipSave: string;
   tipBetinaLocked: string;
+  tipTeamTitle: string;
+  tipTeamWord: string;
+  tipTeamSub: string;
+  tipTeamEmpty: string;
+  tipTeamRounds: string;
+  tipTeamPlayers: string;
 };
 
 /** Sport-ID (app-intern) → Übersetzungs-Key */
@@ -557,6 +563,12 @@ const T: Record<LangCode, Translations> = {
     tipTipsCol: 'Tips',
     tipSave: 'Save',
     tipBetinaLocked: 'BETina has tipped · revealed at kickoff',
+    tipTeamTitle: 'Team vs BETina',
+    tipTeamWord: 'Team',
+    tipTeamSub: 'Each round, your group\'s average points take on BETina.',
+    tipTeamEmpty: 'The first finished round brings the first point. Everyone tip!',
+    tipTeamRounds: 'rounds',
+    tipTeamPlayers: '{n} tipped',
   },
   de: {
     welcomeTitle: 'Willkommen',
@@ -810,6 +822,12 @@ const T: Record<LangCode, Translations> = {
     tipTipsCol: 'Tipps',
     tipSave: 'Speichern',
     tipBetinaLocked: 'BETina hat getippt · sichtbar ab Anpfiff',
+    tipTeamTitle: 'Team vs. BETina',
+    tipTeamWord: 'Team',
+    tipTeamSub: 'Pro Spieltag tritt der Punkteschnitt eurer Runde gegen BETina an.',
+    tipTeamEmpty: 'Der erste fertige Spieltag bringt den ersten Punkt. Alle tippen!',
+    tipTeamRounds: 'Spieltage',
+    tipTeamPlayers: '{n} getippt',
   },
   es: {
     welcomeTitle: 'Bienvenido',
@@ -1063,6 +1081,12 @@ const T: Record<LangCode, Translations> = {
     tipTipsCol: 'Pron.',
     tipSave: 'Guardar',
     tipBetinaLocked: 'BETina ya pronosticó · se ve al empezar',
+    tipTeamTitle: 'Equipo vs BETina',
+    tipTeamWord: 'Equipo',
+    tipTeamSub: 'En cada jornada, la media de puntos del grupo se enfrenta a BETina.',
+    tipTeamEmpty: 'La primera jornada terminada da el primer punto. ¡Todos a pronosticar!',
+    tipTeamRounds: 'jornadas',
+    tipTeamPlayers: '{n} pronosticaron',
   },
   pt: {
     welcomeTitle: 'Bem-vindo',
@@ -1316,6 +1340,12 @@ const T: Record<LangCode, Translations> = {
     tipTipsCol: 'Palp.',
     tipSave: 'Guardar',
     tipBetinaLocked: 'A BETina já deu palpite · visível no apito inicial',
+    tipTeamTitle: 'Equipa vs BETina',
+    tipTeamWord: 'Equipa',
+    tipTeamSub: 'Em cada jornada, a média de pontos do grupo enfrenta a BETina.',
+    tipTeamEmpty: 'A primeira jornada terminada dá o primeiro ponto. Todos a dar palpites!',
+    tipTeamRounds: 'jornadas',
+    tipTeamPlayers: '{n} com palpite',
   },
   fr: {
     welcomeTitle: 'Bienvenue',
@@ -1569,6 +1599,12 @@ const T: Record<LangCode, Translations> = {
     tipTipsCol: 'Pronos',
     tipSave: 'Enregistrer',
     tipBetinaLocked: 'BETina a pronostiqué · visible au coup d\'envoi',
+    tipTeamTitle: 'Équipe vs BETina',
+    tipTeamWord: 'Équipe',
+    tipTeamSub: 'À chaque journée, la moyenne de points du groupe affronte BETina.',
+    tipTeamEmpty: 'La première journée terminée donne le premier point. Tout le monde pronostique !',
+    tipTeamRounds: 'journées',
+    tipTeamPlayers: '{n} ont pronostiqué',
   },
   it: {
     welcomeTitle: 'Benvenuto',
@@ -1822,6 +1858,12 @@ const T: Record<LangCode, Translations> = {
     tipTipsCol: 'Pron.',
     tipSave: 'Salva',
     tipBetinaLocked: 'BETina ha pronosticato · visibile al fischio d\'inizio',
+    tipTeamTitle: 'Squadra vs BETina',
+    tipTeamWord: 'Squadra',
+    tipTeamSub: 'A ogni giornata la media punti del gruppo sfida BETina.',
+    tipTeamEmpty: 'La prima giornata conclusa assegna il primo punto. Tutti a pronosticare!',
+    tipTeamRounds: 'giornate',
+    tipTeamPlayers: '{n} hanno pronosticato',
   },
   ro: {
     welcomeTitle: 'Bun venit',
@@ -2075,6 +2117,12 @@ const T: Record<LangCode, Translations> = {
     tipTipsCol: 'Pron.',
     tipSave: 'Salvează',
     tipBetinaLocked: 'BETina a pronosticat · vizibil la start',
+    tipTeamTitle: 'Echipa vs BETina',
+    tipTeamWord: 'Echipa',
+    tipTeamSub: 'În fiecare etapă, media de puncte a grupului o înfruntă pe BETina.',
+    tipTeamEmpty: 'Prima etapă încheiată aduce primul punct. Toată lumea la pronosticuri!',
+    tipTeamRounds: 'etape',
+    tipTeamPlayers: '{n} au pronosticat',
   },
 };
 

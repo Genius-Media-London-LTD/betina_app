@@ -245,9 +245,42 @@ async function deliver(
   }
 }
 
+// Team vs BETina: a Tipprunde's round is decided (016_tippspiel_team_duel.sql).
+const TEAM: Record<Lang, { title: string; locale: string; body: (group: string, md: number, team: string, betina: number, result: string) => string }> = {
+  en: {
+    title: 'Team vs BETina', locale: 'en-GB',
+    body: (g, md, t, b, r) => `${g} ${t} : ${b} BETina on matchday ${md}. ${r === 'W' ? 'The round goes to you! 🎉' : r === 'L' ? 'BETina takes this one. Rematch?' : 'All square.'}`,
+  },
+  de: {
+    title: 'Team vs. BETina', locale: 'de-DE',
+    body: (g, md, t, b, r) => `${g} ${t} : ${b} BETina am ${md}. Spieltag. ${r === 'W' ? 'Der Spieltag geht an euch! 🎉' : r === 'L' ? 'Diesmal hat BETina die Nase vorn. Revanche?' : 'Unentschieden.'}`,
+  },
+  es: {
+    title: 'Equipo vs BETina', locale: 'es-ES',
+    body: (g, md, t, b, r) => `${g} ${t} : ${b} BETina en la jornada ${md}. ${r === 'W' ? '¡La jornada es vuestra! 🎉' : r === 'L' ? 'Esta vez gana BETina. ¿Revancha?' : 'Empate.'}`,
+  },
+  pt: {
+    title: 'Equipa vs BETina', locale: 'pt-PT',
+    body: (g, md, t, b, r) => `${g} ${t} : ${b} BETina na jornada ${md}. ${r === 'W' ? 'A jornada é vossa! 🎉' : r === 'L' ? 'Desta vez ganha a BETina. Desforra?' : 'Empate.'}`,
+  },
+  fr: {
+    title: 'Équipe vs BETina', locale: 'fr-FR',
+    body: (g, md, t, b, r) => `${g} ${t} : ${b} BETina sur la journée ${md}. ${r === 'W' ? 'La journée est pour vous ! 🎉' : r === 'L' ? 'Cette fois, BETina gagne. Revanche ?' : 'Égalité.'}`,
+  },
+  it: {
+    title: 'Squadra vs BETina', locale: 'it-IT',
+    body: (g, md, t, b, r) => `${g} ${t} : ${b} BETina nella giornata ${md}. ${r === 'W' ? 'La giornata è vostra! 🎉' : r === 'L' ? 'Stavolta vince BETina. Rivincita?' : 'Pareggio.'}`,
+  },
+  ro: {
+    title: 'Echipa vs BETina', locale: 'ro-RO',
+    body: (g, md, t, b, r) => `${g} ${t} : ${b} BETina în etapa ${md}. ${r === 'W' ? 'Etapa e a voastră! 🎉' : r === 'L' ? 'De data asta câștigă BETina. Revanșa?' : 'Egalitate.'}`,
+  },
+};
+
 async function hostMessages(db: Db) {
   let reminders = 0;
   let recaps = 0;
+  let teams = 0;
 
   const { data: remind, error: e1 } = await db.rpc('tippspiel_reminder_targets');
   if (e1) console.error('reminder targets:', e1.message);
@@ -266,7 +299,20 @@ async function hostMessages(db: Db) {
     await deliver(db, t, `tip_recap:${t.day}`, m.recapTitle, body);
     recaps++;
   }
-  return { reminders, recaps };
+
+  const { data: team, error: e3 } = await db.rpc('tippspiel_team_results');
+  if (e3) console.error('team results:', e3.message);
+  const pushed = new Set<string>();
+  for (const r of team ?? []) {
+    const msg = TEAM[(String(r.language ?? 'en').slice(0, 2) as Lang)] ?? TEAM.en;
+    const avg = new Intl.NumberFormat(msg.locale, { maximumFractionDigits: 1 }).format(Number(r.team_avg));
+    // One push per player per run; results of further groups land in the in-app list only.
+    await deliver(db, { ...r, notify_push: r.notify_push && !pushed.has(r.user_id) }, r.log_key, msg.title,
+      msg.body(r.group_name, Number(r.matchday), avg, Number(r.betina), r.result));
+    pushed.add(r.user_id);
+    teams++;
+  }
+  return { reminders, recaps, teams };
 }
 
 // ── Entry ────────────────────────────────────────────────────────────────────

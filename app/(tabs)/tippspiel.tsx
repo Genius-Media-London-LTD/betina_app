@@ -16,8 +16,8 @@ import { useProfile } from '../../src/hooks/useProfile';
 import { useSession } from '../../src/hooks/useSession';
 import { useI18n } from '../../src/lib/i18n';
 import {
-  Competition, RankRow, Stats, TipGroup,
-  defaultCompetition, fetchCompetitions, fetchLeaderboard, fetchMyCompetitions, fetchMyGroups,
+  Competition, GroupDuel, RankRow, Stats, TipGroup,
+  defaultCompetition, fetchCompetitions, fetchGroupDuel, fetchLeaderboard, fetchMyCompetitions, fetchMyGroups,
   fetchNotifyTippspiel, fetchOpenTips, fetchStats, setMyCompetitions, setNotifyTippspiel,
 } from '../../src/lib/tippspiel';
 import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
@@ -45,7 +45,7 @@ function Hub() {
   const [open, setOpen] = useState<Open>({});
   const [me, setMe] = useState<RankRow | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
-  const [groups, setGroups] = useState<(TipGroup & { rank: number | null })[]>([]);
+  const [groups, setGroups] = useState<(TipGroup & { rank: number | null; duel: GroupDuel | null })[]>([]);
   const [notify, setNotify] = useState(true);
   const [menu, setMenu] = useState(false);
   const [rules, setRules] = useState(false);
@@ -56,16 +56,17 @@ function Hub() {
       fetchCompetitions(), fetchMyCompetitions(), fetchMyGroups(), fetchStats(null),
       fetchLeaderboard({ limit: 1 }), fetchNotifyTippspiel(),
     ]);
-    const [openTips, ranks] = await Promise.all([
+    const [openTips, ranks, duels] = await Promise.all([
       fetchOpenTips(myComps),
       Promise.all(myGroups.map((g) => fetchLeaderboard({ group: g.id, limit: 1 }).then((rows) => rows.find((r) => r.is_me)?.rank ?? null))),
+      Promise.all(myGroups.map((g) => fetchGroupDuel(g.id))),
     ]);
     setCompetitions(comps);
     setMine(myComps);
     setOpen(openTips);
     setStats(myStats);
     setMe(board.find((r) => r.is_me) ?? null);
-    setGroups(myGroups.map((g, i) => ({ ...g, rank: ranks[i] })));
+    setGroups(myGroups.map((g, i) => ({ ...g, rank: ranks[i], duel: duels[i] })));
     setNotify(push);
   }, []);
 
@@ -219,6 +220,12 @@ function Hub() {
                     <Text style={styles.compName} numberOfLines={1}>{g.name}</Text>
                     <Text style={styles.compMeta}>{g.members} {t.tipMembers}</Text>
                   </View>
+                  {g.duel && g.duel.won + g.duel.lost + g.duel.drawn > 0 && (
+                    <View style={styles.teamTag}>
+                      <Text style={styles.teamTagText}>{g.duel.won}:{g.duel.lost}</Text>
+                      <BETinaAvatar size={14} />
+                    </View>
+                  )}
                   {g.rank != null && <Text style={styles.groupRank}>#{g.rank}</Text>}
                   <Text style={styles.chevron}>›</Text>
                 </GlowCard>
@@ -417,6 +424,11 @@ const styles = StyleSheet.create({
   groupCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
   groupEmoji: { fontSize: 22 },
   groupRank: { color: Colors.textPrimary, fontSize: Typography.lg, fontFamily: Fonts.black },
+  teamTag: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 999, backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
+  },
+  teamTagText: { color: Colors.textPrimary, fontSize: Typography.xs, fontFamily: Fonts.extrabold },
   dashed: {
     borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: Colors.glassBorder,
     padding: 16, alignItems: 'center', gap: 4,

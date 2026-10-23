@@ -350,3 +350,20 @@ export async function fetchBetinaTipped(matchIds: number[]): Promise<Set<number>
   const { data } = await supabase.rpc('betina_tipped', { p_matches: matchIds });
   return new Set(((data ?? []) as (number | string)[]).map(Number));
 }
+
+// ── Team vs BETina ───────────────────────────────────────────────────────────
+export type GroupDuel = {
+  won: number;
+  lost: number;
+  drawn: number;
+  team_points: number;
+  betina_points: number;
+  /** Last 8 decided rounds, newest first. */
+  rounds: { competition: string; matchday: number; team: number; betina: number; players: number; result: 'W' | 'L' | 'D' }[];
+};
+
+/** A Tipprunde's team score against BETina (caller must be a member). */
+export async function fetchGroupDuel(groupId: string): Promise<GroupDuel | null> {
+  const { data, error } = await supabase.rpc('tip_group_duel', { p_group: groupId });
+  return error ? null : (data as GroupDuel);
+}

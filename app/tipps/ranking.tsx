@@ -8,9 +8,11 @@ import BackButton from '../../src/components/BackButton';
 import BETinaAvatar from '../../src/components/BETinaAvatar';
 import GlowCard from '../../src/components/GlowCard';
 import ScreenBg from '../../src/components/ScreenBg';
-import { CompetitionChips } from '../../src/components/TipParts';
+import { CompetitionChips, LOCALE } from '../../src/components/TipParts';
 import { useI18n } from '../../src/lib/i18n';
-import { Competition, RankRow, fetchCompetitions, fetchLeaderboard, fetchMyCompetitions } from '../../src/lib/tippspiel';
+import {
+  Competition, GroupDuel, RankRow, fetchCompetitions, fetchGroupDuel, fetchLeaderboard, fetchMyCompetitions,
+} from '../../src/lib/tippspiel';
 import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
 
 const PODIUM = [
@@ -29,6 +31,7 @@ export default function RankingScreen() {
   const [comp, setComp] = useState<string | null>(group ? null : (params.competition || null));
   const [period, setPeriod] = useState<'season' | 'matchday'>('season');
   const [rows, setRows] = useState<RankRow[]>([]);
+  const [duel, setDuel] = useState<GroupDuel | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -42,12 +45,16 @@ export default function RankingScreen() {
   const canMatchday = comp != null && matchday != null;
 
   const load = useCallback(async () => {
-    const data = await fetchLeaderboard({
-      competition: comp,
-      matchday: period === 'matchday' && canMatchday ? matchday : null,
-      group,
-    });
+    const [data, teamDuel] = await Promise.all([
+      fetchLeaderboard({
+        competition: comp,
+        matchday: period === 'matchday' && canMatchday ? matchday : null,
+        group,
+      }),
+      group ? fetchGroupDuel(group) : Promise.resolve(null),
+    ]);
     setRows(data);
+    setDuel(teamDuel);
     setLoading(false);
   }, [comp, period, canMatchday, matchday, group]);
 
@@ -99,6 +106,8 @@ export default function RankingScreen() {
             <Text style={styles.inviteText}>📨 {t.tipInvite}</Text>
           </Pressable>
         ) : null}
+
+        {group && <TeamCard duel={duel} />}
 
         <CompetitionChips competitions={competitions} value={comp} onChange={setComp} allLabel={t.tipAllComps} />
 
@@ -187,6 +196,56 @@ export default function RankingScreen() {
         )}
       </ScrollView>
     </ScreenBg>
+  );
+}
+
+const SHORT: Record<string, string> = { BL1: 'BL', PL: 'PL', PD: 'LL', SA: 'SA', CL: 'CL' };
+
+/** The Tipprunde as a team against BETina: rounds won : lost, latest rounds. */
+function TeamCard({ duel }: { duel: GroupDuel | null }) {
+  const { t, lang } = useI18n();
+  const num = new Intl.NumberFormat(LOCALE[lang], { maximumFractionDigits: 1 });
+  const decided = duel ? duel.won + duel.lost + duel.drawn : 0;
+  return (
+    <Animated.View entering={FadeInDown.duration(400)}>
+      <GlowCard variant="purple" style={styles.team}>
+        <Text style={styles.teamTitle}>{t.tipTeamTitle}</Text>
+        {decided === 0 ? (
+          <Text style={styles.teamSub}>{t.tipTeamEmpty}</Text>
+        ) : (
+          <>
+            <View style={styles.teamScore}>
+              <View style={styles.teamSide}>
+                <Text style={[styles.teamNum, { color: Colors.primary }]}>{duel!.won}</Text>
+                <Text style={styles.teamWho}>{t.tipTeamWord}</Text>
+              </View>
+              <Text style={styles.teamColon}>:</Text>
+              <View style={styles.teamSide}>
+                <Text style={[styles.teamNum, { color: Colors.accentLight }]}>{duel!.lost}</Text>
+                <View style={styles.teamBetina}>
+                  <BETinaAvatar size={16} />
+                  <Text style={styles.teamWho}>BETina</Text>
+                </View>
+              </View>
+            </View>
+            <Text style={styles.teamSub}>
+              {decided} {t.tipTeamRounds}{duel!.drawn > 0 ? ` · ${duel!.drawn}× =` : ''} · {t.tipTeamSub}
+            </Text>
+            <View style={styles.teamRounds}>
+              {duel!.rounds.slice(0, 5).map((r) => (
+                <View
+                  key={`${r.competition}-${r.matchday}`}
+                  style={[styles.roundChip, r.result === 'W' ? styles.roundWin : r.result === 'L' ? styles.roundLoss : null]}
+                >
+                  <Text style={styles.roundChipLabel}>{SHORT[r.competition] ?? r.competition} {r.matchday}</Text>
+                  <Text style={styles.roundChipScore}>{num.format(r.team)} : {r.betina}</Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+      </GlowCard>
+    </Animated.View>
   );
 }
 
@@ -283,6 +342,24 @@ const styles = StyleSheet.create({
   countText: { color: Colors.textSecondary, fontSize: Typography.xs, fontFamily: Fonts.semibold },
   tipsN: { width: 30, color: Colors.textMuted, fontSize: Typography.sm, fontFamily: Fonts.semibold, textAlign: 'right' },
   pts: { width: 40, color: Colors.textPrimary, fontSize: Typography.md, fontFamily: Fonts.black, textAlign: 'right' },
+  team: { padding: 16, gap: 10, alignItems: 'center' },
+  teamTitle: { color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.extrabold, letterSpacing: 0.5 },
+  teamScore: { flexDirection: 'row', alignItems: 'center', gap: 18 },
+  teamSide: { alignItems: 'center', gap: 2, minWidth: 80 },
+  teamNum: { fontSize: Typography['3xl'], fontFamily: Fonts.black },
+  teamColon: { color: Colors.textMuted, fontSize: Typography['2xl'], fontFamily: Fonts.black },
+  teamWho: { color: Colors.textPrimary, fontSize: Typography.xs + 1, fontFamily: Fonts.extrabold, letterSpacing: 1 },
+  teamBetina: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  teamSub: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, textAlign: 'center' },
+  teamRounds: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 },
+  roundChip: {
+    alignItems: 'center', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10,
+    borderWidth: 1, borderColor: Colors.glassBorder, backgroundColor: Colors.glass,
+  },
+  roundWin: { borderColor: Colors.primary, backgroundColor: Colors.glowGreen },
+  roundLoss: { borderColor: Colors.danger },
+  roundChipLabel: { color: Colors.textMuted, fontSize: Typography.xs - 1, fontFamily: Fonts.bold },
+  roundChipScore: { color: Colors.textPrimary, fontSize: Typography.xs + 1, fontFamily: Fonts.extrabold },
   emptyCard: { padding: 20, alignItems: 'center' },
   emptyText: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center' },
 });

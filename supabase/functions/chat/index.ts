@@ -226,7 +226,15 @@ async function runTool(name: string, input: any, supabase: any, userId: string |
       // deno-lint-ignore no-explicit-any
       const me = ((board ?? []) as any[]).find((r) => r.is_me);
       const label = (m: { home_name: string; away_name: string; competition: string }) => `${m.home_name} vs ${m.away_name} (${m.competition})`;
+      // Team vs BETina: each Tipprunde's rounds won/lost against you.
+      const { data: groups } = await supabase.rpc('my_tip_groups');
+      // deno-lint-ignore no-explicit-any
+      const teams = await Promise.all(((groups ?? []) as any[]).slice(0, 5).map(async (g) => {
+        const { data: d } = await supabase.rpc('tip_group_duel', { p_group: g.id });
+        return { group: g.name, members: Number(g.members), rounds_won_vs_you: d?.won ?? 0, rounds_lost_vs_you: d?.lost ?? 0, last_round: d?.rounds?.[0] ?? null };
+      }));
       return JSON.stringify({
+        teams_vs_you: teams,
         season: me ? { points: Number(me.points), rank: Number(me.rank), exact: Number(me.exact), tips: Number(me.tips) } : { points: 0, tips: 0 },
         // "Beat BETina": you tip every match too; this is the duel on matches you both tipped.
         duel_vs_you: stats?.duel ?? null,
