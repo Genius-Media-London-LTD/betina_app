@@ -1,32 +1,25 @@
 // BETina's XP economy — thin client over the server-side award RPCs
-// (see supabase/migrations/005_xp_system.sql). Every award is atomic and
-// scoped to the signed-in user server-side; these helpers just call the RPC
-// and hand back the new total so the UI can update instantly.
+// (see supabase/migrations/005_xp_system.sql and 013_lock_down_xp.sql). Every
+// award is atomic and scoped to the signed-in user server-side, and the amounts
+// are fixed there; these helpers just call the RPC and hand back the new total
+// so the UI can update instantly. Tippspiel XP is booked by the server alone.
 
 import { supabase } from './supabase';
 
 export const XP_REWARDS = {
   chatMessage: 1,
   dailyLogin: 5,
-  prediction: 10,
   profileCompleted: 20,
 } as const;
 
-/** +1 XP for sending a chat message. Returns the new XP total, or null if it failed / logged out. */
+/**
+ * +1 XP for sending a chat message (the server caps this at 50 per day).
+ * Returns the new XP total, or null if it failed / logged out.
+ */
 export async function awardChatXp(): Promise<number | null> {
-  const { data, error } = await supabase.rpc('award_xp', { p_amount: XP_REWARDS.chatMessage });
+  const { data, error } = await supabase.rpc('award_chat_xp');
   if (error) {
     console.warn('awardChatXp failed:', error.message);
-    return null;
-  }
-  return typeof data === 'number' ? data : null;
-}
-
-/** +10 XP for a correct match prediction. Returns the new XP total, or null. */
-export async function awardPredictionXp(): Promise<number | null> {
-  const { data, error } = await supabase.rpc('award_xp', { p_amount: XP_REWARDS.prediction });
-  if (error) {
-    console.warn('awardPredictionXp failed:', error.message);
     return null;
   }
   return typeof data === 'number' ? data : null;
