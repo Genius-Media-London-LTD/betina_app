@@ -12,9 +12,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getPlayerByPhone } from '../_shared/crm-client.ts';
 import { normalizePhone } from '../_shared/phone.ts';
+import {
+  CRMData, Ctx, MatchEvent, NewsItem, TIPPSPIEL_LIVE, systemPrompt,
+} from '../_shared/betina-persona.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
-const MODEL = 'claude-haiku-4-5';
+const MODEL = 'claude-haiku-5-5';
 const MAX_TOOL_ROUNDS = 5;
 const SPORTS_API = 'https://intelligence.geniusbet.com';
 // BETina's own news gateway (betina-server): fresh news in the player's language.
@@ -27,139 +30,6 @@ const CORS = {
 };
 
 type Turn = { role: 'user' | 'assistant'; content: string };
-type MatchEvent = {
-  id: string; home: string; away: string; homeScore: string | null; awayScore: string | null;
-  date: string; time: string; league: string;
-};
-type NewsItem = { title: string; description: string; link: string; pubDate: string; image?: string };
-type LiveContext = { next: MatchEvent[]; last: MatchEvent[]; news: NewsItem[] };
-type Ctx = {
-  name: string; lang: string;
-  team?: string | null; teamSport?: string | null; teamLeague?: string | null;
-  sports?: string[]; tier?: string | null; xp?: number | null; streakDays?: number | null;
-  live?: LiveContext | null; memories?: string[];
-};
-
-// Real-time CRM account data injected for Reactive Answers (RA-001–020).
-type CRMData = {
-  balance: number; bonus_balance: number; kyc_status: string; vip_tier: string;
-  total_deposits: number; total_withdrawals: number; total_wins: number; total_losses: number;
-  total_bets: number; last_bet_result: string | null; last_win_amount: number; last_loss_amount: number;
-  active_bonus_name: string | null; bonus_expiry: string | null;
-  wagering_requirement: number; wagering_done: number; free_spins_available: number;
-  cashback_balance: number; loyalty_points: number;
-  last_withdrawal_status: string | null; last_withdrawal_pending_hours: number;
-  deposit_limit_daily: number; deposit_limit_usage_pct: number; loss_limit_usage_pct: number;
-  self_exclusion: boolean; country: string; registration_date: string; last_active: string;
-  inactivity_days: number; win_streak: number; loss_streak: number;
-  open_bet_slips: number; cashout_available: boolean;
-};
-
-function crmDataBlock(crm: CRMData | null): string {
-  if (!crm) return '';
-  const wPct = crm.wagering_requirement > 0
-    ? Math.min(100, Math.round((crm.wagering_done / crm.wagering_requirement) * 100))
-    : 100;
-  const bonusExpiryStr = crm.bonus_expiry ? new Date(crm.bonus_expiry).toISOString().slice(0, 10) : null;
-  const lines = [
-    `\n\nPLAYER ACCOUNT DATA (real-time from GeniusBet — use these exact numbers for account questions, never say you don't have access):`,
-    `Balance: ${crm.balance.toFixed(2)}`,
-    `Bonus balance: ${crm.bonus_balance.toFixed(2)}`,
-    `Cashback available: ${crm.cashback_balance.toFixed(2)}`,
-    `Loyalty points: ${crm.loyalty_points}`,
-    `Free spins: ${crm.free_spins_available}`,
-    `VIP tier: ${crm.vip_tier}`,
-    `KYC status: ${crm.kyc_status}`,
-    `Total deposits: ${crm.total_deposits.toFixed(2)}`,
-    `Total withdrawals: ${crm.total_withdrawals.toFixed(2)}`,
-    `Total bets placed: ${crm.total_bets}`,
-    `Total wins: ${crm.total_wins.toFixed(2)}`,
-    `Total losses: ${crm.total_losses.toFixed(2)}`,
-    crm.last_bet_result ? `Last bet result: ${crm.last_bet_result} (amount: ${crm.last_bet_result === 'win' ? crm.last_win_amount : crm.last_loss_amount})` : null,
-    crm.win_streak > 1 ? `Current win streak: ${crm.win_streak}` : null,
-    crm.open_bet_slips > 0 ? `Open bet slips: ${crm.open_bet_slips}` : null,
-    crm.cashout_available ? `Cashout available on active bet: yes` : null,
-    crm.active_bonus_name
-      ? `Active bonus: "${crm.active_bonus_name}" — wagering progress: ${wPct}%${bonusExpiryStr ? `, expires ${bonusExpiryStr}` : ''}`
-      : `Active bonus: none`,
-    crm.last_withdrawal_status === 'pending'
-      ? `Withdrawal pending: yes (${crm.last_withdrawal_pending_hours.toFixed(0)}h waiting)`
-      : `Last withdrawal status: ${crm.last_withdrawal_status ?? 'none'}`,
-    crm.deposit_limit_daily > 0 ? `Daily deposit limit: ${crm.deposit_limit_daily} (${crm.deposit_limit_usage_pct.toFixed(0)}% used)` : null,
-    crm.loss_limit_usage_pct > 0 ? `Loss limit usage today: ${crm.loss_limit_usage_pct.toFixed(0)}%` : null,
-    `Member since: ${crm.registration_date ? new Date(crm.registration_date).toISOString().slice(0, 10) : 'unknown'}`,
-    crm.inactivity_days > 0 ? `Days since last activity: ${crm.inactivity_days}` : null,
-    crm.self_exclusion ? `⚠️ Self-exclusion active — do NOT discuss betting or bonuses` : null,
-  ].filter(Boolean);
-  return lines.join('\n');
-}
-
-const LANG_NAMES: Record<string, string> = {
-  en: 'English', de: 'German', es: 'Spanish', pt: 'Portuguese', fr: 'French', it: 'Italian', ro: 'Romanian',
-};
-
-// ── System prompt (kept in sync with the app's persona) ───────────────────────
-
-function matchLine(e: MatchEvent): string {
-  const score = e.homeScore != null && e.awayScore != null ? ` (${e.homeScore}–${e.awayScore})` : '';
-  return `${e.home} vs ${e.away}${score} — ${e.date}${e.time ? ` ${e.time.slice(0, 5)}` : ''}, ${e.league}`;
-}
-function liveDataBlock(live?: LiveContext | null): string {
-  if (!live) return '';
-  const parts: string[] = [];
-  if (live.next?.length) parts.push('Upcoming fixtures:\n' + live.next.map((e) => `  • ${matchLine(e)}`).join('\n'));
-  if (live.last?.length) parts.push('Recent results:\n' + live.last.map((e) => `  • ${matchLine(e)}`).join('\n'));
-  if (live.news?.length) parts.push('Latest headlines (BBC Sport):\n' + live.news.map((n) => `  • ${n.title}`).join('\n'));
-  if (!parts.length) return '';
-  const today = new Date().toISOString().slice(0, 10);
-  return `\n\nLIVE DATA (from the app's sports feed, today is ${today}) — reference this to answer accurately, don't say you can't see data:\n${parts.join('\n')}`;
-}
-function memoryBlock(memories?: string[]): string {
-  if (!memories?.length) return '';
-  return `\n\nWHAT YOU REMEMBER about them (weave in naturally, don't recite):\n${memories.map((m) => `  • ${m}`).join('\n')}`;
-}
-function notificationsBlock(notes?: string[]): string {
-  if (!notes?.length) return '';
-  return `\n\nNOTIFICATIONS YOU RECENTLY SENT them (newest first) — you know what you already told them, so don't repeat it as if it's new; you can naturally follow up on it:\n${notes.map((n) => `  • ${n}`).join('\n')}`;
-}
-function systemPrompt(ctx: Ctx, recentNotes?: string[], crm?: CRMData | null): string {
-  const facts = [
-    `- Name: ${ctx.name}`,
-    ctx.team ? `- Favourite team: ${ctx.team}${ctx.teamLeague ? ` (${ctx.teamLeague}${ctx.teamSport ? `, ${ctx.teamSport}` : ''})` : ''}` : null,
-    ctx.sports?.length ? `- Follows these sports: ${ctx.sports.join(', ')}` : null,
-    ctx.tier ? `- VIP tier: ${ctx.tier} (earned through activity, never spending)` : null,
-    ctx.xp != null ? `- XP: ${ctx.xp}` : null,
-    ctx.streakDays != null ? `- Daily streak: ${ctx.streakDays} days` : null,
-  ].filter(Boolean).join('\n');
-  const lang = LANG_NAMES[ctx.lang] ?? 'English';
-
-  return `You are BETina, a charming, playful and lightly flirty companion inside the BETina app for GeniusBet players — like a close friend who's always there for them and happens to know everything about sport.
-
-Tone & style:
-- Warm, charming, a little flirty and teasing 😊 — a fun friend who's clearly happy to hear from them, not a formal assistant. Classy and friendly, never crude.
-- Short and punchy — WhatsApp style, a line or two, never essays.
-- Emojis naturally but sparingly (1-2 max).
-- Address the player by name now and then, warmly — not in every message.
-
-About the player you're talking to:
-${facts}${memoryBlock(ctx.memories)}${notificationsBlock(recentNotes)}${liveDataBlock(ctx.live)}${crmDataBlock(crm ?? null)}
-
-Rules:
-- Respond in ${lang} by default; if the player clearly writes in another language, match theirs.
-- Center the chat on their favourite team${ctx.team ? ` (${ctx.team})` : ''}: fixtures, form, players, rivals and league news; default to talking about them when the player is vague.
-- Use the LIVE DATA above for their favourite team — answer instantly without a lookup.
-- For a specific team's fixtures/results, use search_team then get_fixtures / get_results (most precise). For app headlines use get_news.
-- You also have full web_search: use it for ANYTHING live or specific the app feed doesn't cover — standings, tournament brackets, who's in a final, transfers, injuries, other sports, records, breaking news. You genuinely know sport across the board; when you're not certain of a current fact, search instead of hedging or saying you can't find it. Never guess scores, dates or standings from memory.
-- The only thing you truly can't get is minute-by-minute in-play scores right now — point them to the Live tab.
-- You have full access to the player's real GeniusBet account data (balance, bonus, history, KYC, withdrawal status, etc.) in PLAYER ACCOUNT DATA above — always answer account questions with those exact numbers. Never say "I don't have access to your account" — you do. If PLAYER ACCOUNT DATA is absent, they aren't linked to a GeniusBet account yet — say so warmly and point them to the website.
-- You have a memory: when the player shares a lasting fact/preference, quietly save it with remember_fact. Use what you remember to stay personal.
-- When they ask to be reminded of something, use set_reminder with a concrete future datetime, then confirm warmly. If timing is unclear, ask.
-- NEVER promise wins, NEVER suggest chasing losses, NEVER pressure anyone to bet. Stay caring, not pushy.
-- If the player expresses distress, mentions chasing losses, or says things like "I can't stop", "I've lost everything", "I need help" — drop everything else, respond with genuine empathy, share the responsible-gaming tools (geniusbet.com/responsible-gaming), and offer to connect them with a human agent. Never minimize it, never pivot to betting or bonuses.
-- No real money moves in this app — bets happen on the GeniusBet website only.
-- The app has a Tippspiel (a free score-prediction game: 3 points for the exact result, 2 for winner + goal difference, 1 for the right tendency; points and XP only, no money, no prizes). You tip every match yourself ("Beat BETina"; your tips are shown to players only from kickoff, so never reveal a tip for a match that hasn't started). Use get_tippspiel when they talk about it: cheer exact hits, tease near misses playfully, banter about the duel, remind them of matches they haven't tipped yet. If they ask what to tip, give a fun, form-based opinion for the Tippspiel only. Never connect it to betting, odds or stakes.`;
-}
-
 // ── Tools ─────────────────────────────────────────────────────────────────────
 
 const TOOLS = [
@@ -171,7 +41,9 @@ const TOOLS = [
   { name: 'get_fixtures', description: "A team's upcoming matches. Needs a team id from search_team.", input_schema: { type: 'object', properties: { team_id: { type: 'string' } }, required: ['team_id'] } },
   { name: 'get_results', description: "A team's recent finished matches with scores. Needs a team id from search_team.", input_schema: { type: 'object', properties: { team_id: { type: 'string' } }, required: ['team_id'] } },
   { name: 'get_news', description: 'Latest sports headlines. Optional sport filter.', input_schema: { type: 'object', properties: { sport: { type: 'string' } }, required: [] } },
-  { name: 'get_tippspiel', description: "The player's Tippspiel (free prediction game): season points + rank, the duel against you (BETina tips every match too), matches in the next days they still have to tip, their upcoming tips and latest scored tips.", input_schema: { type: 'object', properties: {}, required: [] } },
+  ...(TIPPSPIEL_LIVE
+    ? [{ name: 'get_tippspiel', description: "The player's Tippspiel (free prediction game): season points + rank, the duel against you (BETina tips every match too), matches in the next days they still have to tip, their upcoming tips and latest scored tips.", input_schema: { type: 'object', properties: {}, required: [] } }]
+    : []),
   { name: 'remember_fact', description: 'Save a lasting fact/preference the player shares so you recall it next time. Only worthwhile things, not small talk.', input_schema: { type: 'object', properties: { fact: { type: 'string' } }, required: ['fact'] } },
   { name: 'set_reminder', description: 'Set a reminder. Work out a concrete future ISO datetime from what they said and today\'s date.', input_schema: { type: 'object', properties: { text: { type: 'string' }, datetime: { type: 'string' } }, required: ['text', 'datetime'] } },
 ];
@@ -265,12 +137,24 @@ async function runTool(name: string, input: any, supabase: any, userId: string |
   }
 }
 
+const DECLINED: Record<string, string> = {
+  en: "Ha, that one's not for me 🙈 Ask me something else!",
+  de: 'Haha, da bin ich raus 🙈 Frag mich was anderes!',
+  es: 'Jaja, eso no es lo mío 🙈 ¡Pregúntame otra cosa!',
+  pt: 'Haha, nisso não entro 🙈 Pergunta-me outra coisa!',
+  fr: 'Haha, là je passe 🙈 Demande-moi autre chose !',
+  it: 'Ahah, su questo passo 🙈 Chiedimi altro!',
+  ro: 'Haha, aici nu mă bag 🙈 Întreabă-mă altceva!',
+};
+
 // deno-lint-ignore no-explicit-any
 async function callClaude(system: string, messages: any[]) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL, max_tokens: 1024, system, tools: TOOLS, messages }),
+    // Haiku 5.5 thinks adaptively by default (thinking counts towards max_tokens);
+    // low effort keeps chat replies quick.
+    body: JSON.stringify({ model: MODEL, max_tokens: 4096, output_config: { effort: 'low' }, system, tools: TOOLS, messages }),
   });
   if (!res.ok) throw new Error(`Anthropic ${res.status}`);
   return await res.json();
@@ -378,7 +262,9 @@ Deno.serve(async (req) => {
       }
       // deno-lint-ignore no-explicit-any
       const text = (response.content ?? []).filter((b: any) => b.type === 'text').map((b: any) => b.text).join('').trim();
-      return new Response(JSON.stringify({ reply: text }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
+      // A declined request comes back as stop_reason "refusal" without usable text.
+      const reply = response.stop_reason === 'refusal' || !text ? (DECLINED[ctx.lang] ?? DECLINED.en) : text;
+      return new Response(JSON.stringify({ reply }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
     return new Response(JSON.stringify({ reply: '' }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
   } catch (e) {
