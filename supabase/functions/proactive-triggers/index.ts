@@ -27,7 +27,8 @@ import { normalizePhone } from '../_shared/phone.ts';
 import { sendSms } from '../_shared/sms.ts';
 
 const EXPO_PUSH = 'https://exp.host/--/api/v2/push/send';
-const SPORTS_API = 'https://intelligence.geniusbet.com';
+// BETina's own server (TheSportsDB proxy, see server/api/src/sportsdb.js).
+const SPORTS_API = 'https://api.betina.geniusbet.com';
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 const MODEL = 'claude-haiku-4-5';
 
@@ -429,7 +430,7 @@ Deno.serve(async () => {
         fxLoaded = true;
         if (!pf.favourite_team_id) return null;
         try {
-          const r = await fetch(`${SPORTS_API}/api/sports/team/${pf.favourite_team_id}/next`);
+          const r = await fetch(`${SPORTS_API}/v1/sports/team/${pf.favourite_team_id}/next`);
           const d = await r.json();
           fxCache = (d.events ?? [])[0] ?? null;
         } catch { fxCache = null; }

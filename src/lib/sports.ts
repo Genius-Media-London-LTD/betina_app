@@ -1,6 +1,6 @@
-// Shared sports data layer. News + article full text come from BETina's own
-// news gateway (fresh outlet feeds per language); fixtures still come from the
-// GeniusBet intelligence API (TheSportsDB). Used by both the Home and Live tabs.
+// Shared sports data layer. News, article full text and team data (TheSportsDB
+// proxy) come from BETina's own server (api.betina.geniusbet.com); the GeniusBet
+// intelligence API is the fallback.
 
 export const SPORTS_API = 'https://intelligence.geniusbet.com';
 export const NEWS_API = 'https://api.betina.geniusbet.com';
@@ -63,27 +63,24 @@ export function cleanFeedText(s: string | null | undefined): string {
     .trim();
 }
 
-/** Upcoming fixtures for a team (TheSportsDB team id). Empty array on any error. */
-export async function fetchTeamNext(teamId: string): Promise<MatchEvent[]> {
+/** A team's next or last matches from BETina's server, the intelligence API as fallback. */
+async function teamEvents(teamId: string, which: 'next' | 'last'): Promise<MatchEvent[]> {
   try {
-    const r = await fetch(`${SPORTS_API}/api/sports/team/${teamId}/next`);
-    const d = await r.json();
-    return d.events ?? [];
+    return (await getJson(`${NEWS_API}/v1/sports/team/${teamId}/${which}`)).events ?? [];
   } catch {
-    return [];
+    try {
+      return (await getJson(`${SPORTS_API}/api/sports/team/${teamId}/${which}`)).events ?? [];
+    } catch {
+      return [];
+    }
   }
 }
 
+/** Upcoming fixtures for a team (TheSportsDB team id). Empty array on any error. */
+export const fetchTeamNext = (teamId: string) => teamEvents(teamId, 'next');
+
 /** Recent results for a team. Empty array on any error. */
-export async function fetchTeamLast(teamId: string): Promise<MatchEvent[]> {
-  try {
-    const r = await fetch(`${SPORTS_API}/api/sports/team/${teamId}/last`);
-    const d = await r.json();
-    return d.events ?? [];
-  } catch {
-    return [];
-  }
-}
+export const fetchTeamLast = (teamId: string) => teamEvents(teamId, 'last');
 
 /** Latest news for a sport in the player's language. Empty array on any error. */
 export async function fetchNews(sport: string, count = 10, lang = 'en'): Promise<NewsItem[]> {
@@ -113,7 +110,7 @@ export async function searchTeams(query: string): Promise<TeamSearchResult[]> {
   if (!query.trim()) return [];
   try {
     const r = await fetch(
-      `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(query)}`,
+      `${NEWS_API}/v1/sports/teams?t=${encodeURIComponent(query)}`,
     );
     const d = await r.json();
     return (d.teams ?? []).slice(0, 5).map((t: any) => ({
@@ -136,7 +133,7 @@ const badgeCache = new Map<string, string | null>();
 export async function fetchTeamBadge(teamId: string): Promise<string | null> {
   if (badgeCache.has(teamId)) return badgeCache.get(teamId) ?? null;
   try {
-    const r = await fetch(`https://www.thesportsdb.com/api/v1/json/3/lookupteam.php?id=${teamId}`);
+    const r = await fetch(`${NEWS_API}/v1/sports/team/${teamId}`);
     const d = await r.json();
     const badge: string | null = d.teams?.[0]?.strBadge ?? d.teams?.[0]?.strLogo ?? null;
     badgeCache.set(teamId, badge);

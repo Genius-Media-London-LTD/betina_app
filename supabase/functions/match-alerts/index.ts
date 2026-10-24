@@ -19,7 +19,8 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SPORTS_API = 'https://intelligence.geniusbet.com';
+// BETina's own server (TheSportsDB proxy, see server/api/src/sportsdb.js).
+const SPORTS_API = 'https://api.betina.geniusbet.com';
 const EXPO_PUSH = 'https://exp.host/--/api/v2/push/send';
 
 type MatchEvent = {
@@ -87,7 +88,7 @@ Deno.serve(async () => {
 
   for (const p of (profiles ?? []) as Profile[]) {
     try {
-      const r = await fetch(`${SPORTS_API}/api/sports/team/${p.favourite_team_id}/last`);
+      const r = await fetch(`${SPORTS_API}/v1/sports/team/${p.favourite_team_id}/last`);
       const d = await r.json();
       const last: MatchEvent | undefined = (d.events ?? [])[0];
       if (!last) continue;

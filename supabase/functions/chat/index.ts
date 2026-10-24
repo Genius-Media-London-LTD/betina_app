@@ -19,7 +19,8 @@ import {
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 const MODEL = 'claude-haiku-5-5';
 const MAX_TOOL_ROUNDS = 5;
-const SPORTS_API = 'https://intelligence.geniusbet.com';
+// BETina's own server (TheSportsDB proxy, see server/api/src/sportsdb.js).
+const SPORTS_API = 'https://api.betina.geniusbet.com';
 // BETina's own news gateway (betina-server): fresh news in the player's language.
 const NEWS_API = 'https://api.betina.geniusbet.com';
 
@@ -56,18 +57,18 @@ function compactMatch(e: MatchEvent) {
 async function runTool(name: string, input: any, supabase: any, userId: string | null, lang: string): Promise<string> {
   try {
     if (name === 'search_team') {
-      const r = await fetch(`https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(String(input.query ?? ''))}`);
+      const r = await fetch(`${SPORTS_API}/v1/sports/teams?t=${encodeURIComponent(String(input.query ?? ''))}`);
       const d = await r.json();
       // deno-lint-ignore no-explicit-any
       return JSON.stringify((d.teams ?? []).slice(0, 5).map((t: any) => ({ id: t.idTeam, name: t.strTeam, sport: t.strSport, league: t.strLeague })));
     }
     if (name === 'get_fixtures') {
-      const r = await fetch(`${SPORTS_API}/api/sports/team/${input.team_id}/next`);
+      const r = await fetch(`${SPORTS_API}/v1/sports/team/${input.team_id}/next`);
       const d = await r.json();
       return JSON.stringify((d.events ?? []).slice(0, 5).map(compactMatch));
     }
     if (name === 'get_results') {
-      const r = await fetch(`${SPORTS_API}/api/sports/team/${input.team_id}/last`);
+      const r = await fetch(`${SPORTS_API}/v1/sports/team/${input.team_id}/last`);
       const d = await r.json();
       return JSON.stringify((d.events ?? []).slice(0, 5).map(compactMatch));
     }

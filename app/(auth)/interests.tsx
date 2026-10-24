@@ -23,6 +23,7 @@ import ScreenBg from '../../src/components/ScreenBg';
 import { sports } from '../../src/lib/demo';
 import { SPORT_KEYS, useI18n } from '../../src/lib/i18n';
 import { supabase } from '../../src/lib/supabase';
+import { NEWS_API } from '../../src/lib/sports';
 import { claimProfileCompleted } from '../../src/lib/xp';
 import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
 
@@ -67,7 +68,7 @@ export default function Interests() {
     setSearching(true);
     try {
       const res = await fetch(
-        `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(q)}`
+        `${NEWS_API}/v1/sports/teams?t=${encodeURIComponent(q)}`
       );
       const data = await res.json();
       setTeamResults(data.teams ?? []);

@@ -5,6 +5,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { G2PError } from './g2p.js';
 import { newsArticle, newsList, newsPool } from './news.js';
+import { lookupTeam, searchTeams, teamLast, teamNext } from './sportsdb.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const VERSION = process.env.BETINA_API_VERSION ?? 'dev';
@@ -46,9 +47,15 @@ app.get('/v1/article', async (c) => {
   return send(c, await newsArticle({ url }), 3600);
 });
 
+// --- Sports data (TheSportsDB) ---------------------------------------------------
+app.get('/v1/sports/team/:id/next', async (c) => send(c, await teamNext(c.req.param('id')), 600));
+app.get('/v1/sports/team/:id/last', async (c) => send(c, await teamLast(c.req.param('id')), 600));
+app.get('/v1/sports/team/:id', async (c) => send(c, await lookupTeam(c.req.param('id')), 86400));
+app.get('/v1/sports/teams', async (c) => send(c, await searchTeams(c.req.query('t')), 3600));
+
 app.notFound((c) => c.json({ error: 'not_found' }, 404));
 app.onError((err, c) => {
-  const upstream = /^(article|feed) \d+|too_many_redirects|host_not_allowed|fetch failed/.test(err?.message ?? '');
+  const upstream = /^(article|feed|sportsdb) \d+|too_many_redirects|host_not_allowed|fetch failed/.test(err?.message ?? '');
   if (err instanceof G2PError || err?.name === 'TimeoutError' || upstream) {
     console.error('upstream:', err.message);
     return c.json({ error: 'upstream_unavailable' }, 502);
