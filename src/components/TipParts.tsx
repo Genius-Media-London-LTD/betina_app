@@ -7,7 +7,7 @@ import type { Competition, Round } from '../lib/tippspiel';
 import { Colors, Fonts } from '../theme';
 
 export const LOCALE: Record<LangCode, string> = {
-  en: 'en-GB', de: 'de-DE', es: 'es-ES', pt: 'pt-PT', fr: 'fr-FR', it: 'it-IT', ro: 'ro-RO',
+  en: 'en-GB', de: 'de-DE', es: 'es-ES', pt: 'pt-PT', fr: 'fr-FR', it: 'it-IT', ro: 'ro-RO', tr: 'tr-TR', hr: 'hr-HR',
 };
 
 /** Fill "{name}, …" templates; without a name the greeting part is dropped. */

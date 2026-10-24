@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: Colors.line,
   },
   rowActive: { backgroundColor: Colors.primary, borderBottomColor: Colors.primary },
-  flag: { fontSize: 24 },
+  flag: { fontSize: 24, width: 32, textAlign: 'center' },
   name: { color: Colors.white, fontSize: 22, fontFamily: Fonts.display },
   nameActive: { color: Colors.black },
   check: { color: Colors.primary, fontSize: 20, fontFamily: Fonts.label },

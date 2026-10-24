@@ -75,6 +75,7 @@ function crmDataBlock(crm: CRMData | null): string {
 
 const LANG_NAMES: Record<string, string> = {
   en: 'English', de: 'German', es: 'Spanish', pt: 'Portuguese', fr: 'French', it: 'Italian', ro: 'Romanian',
+  tr: 'Turkish', hr: 'Croatian',
 };
 
 // ── System prompt (kept in sync with the app's persona) ───────────────────────

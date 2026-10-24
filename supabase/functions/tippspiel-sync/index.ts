@@ -164,7 +164,7 @@ async function resolveBonusQuestions(db: Db, code: string, season: number, match
 }
 
 // ── 3. BETina as host ────────────────────────────────────────────────────────
-type Lang = 'en' | 'de' | 'es' | 'pt' | 'fr' | 'it' | 'ro';
+type Lang = 'en' | 'de' | 'es' | 'pt' | 'fr' | 'it' | 'ro' | 'tr' | 'hr';
 const MSG: Record<Lang, {
   remindTitle: string; remind: (name: string, n: number) => string;
   recapTitle: string; recap: (name: string, pts: number, scored: number, exact: number, best: string | null) => string;
@@ -218,6 +218,20 @@ const MSG: Record<Lang, {
     recapTitle: 'Bilanțul zilei',
     recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'punct' : 'puncte'} din ${s} ${s === 1 ? 'pronostic' : 'pronosticuri'}${e > 0 ? `, ${e}× scor exact${b ? ` (${b})` : ''} 🎯` : ''}.`,
     duel: (p, b) => (p > b ? `Ai bătut-o pe BETina (${b}) 😏` : p < b ? `BETina a făcut ${b}, revanșa data viitoare?` : `Egal cu BETina (${b}).`),
+  },
+  tr: {
+    remindTitle: 'Tahminler ⏰',
+    remind: (n, c) => `${n}, bir saatten kısa süre içinde ${c === 1 ? '1 maç başlıyor' : `${c} maç başlıyor`} ve tahminin hâlâ eksik. Çabuk!`,
+    recapTitle: 'Günün özeti',
+    recap: (n, p, s, e, b) => `${n}, ${s} tahminden ${p} puan${e > 0 ? `, ${e}× tam skor${b ? ` (${b})` : ''} 🎯` : ''}.`,
+    duel: (p, b) => (p > b ? `BETina'yı yendin (${b}) 😏` : p < b ? `BETina ${b} yaptı, bir dahaki sefere rövanş?` : `BETina ile berabere (${b}).`),
+  },
+  hr: {
+    remindTitle: 'Prognoze ⏰',
+    remind: (n, c) => `${n}, za manje od sat vremena ${c === 1 ? 'počinje 1 utakmica' : `počinje ${c} utakmica`}, a tvoja prognoza još fali. Brzo!`,
+    recapTitle: 'Tvoj sažetak',
+    recap: (n, p, s, e, b) => `${n}, ${p} ${p === 1 ? 'bod' : 'bodova'} iz ${s} ${s === 1 ? 'prognoze' : 'prognoza'}${e > 0 ? `, ${e}× točan rezultat${b ? ` (${b})` : ''} 🎯` : ''}.`,
+    duel: (p, b) => (p > b ? `Pobijedio si BETinu (${b}) 😏` : p < b ? `BETina je skupila ${b}, revanš sljedeći put?` : `Neriješeno s BETinom (${b}).`),
   },
 };
 
@@ -274,6 +288,14 @@ const TEAM: Record<Lang, { title: string; locale: string; body: (group: string, 
   ro: {
     title: 'Echipa vs BETina', locale: 'ro-RO',
     body: (g, md, t, b, r) => `${g} ${t} : ${b} BETina în etapa ${md}. ${r === 'W' ? 'Etapa e a voastră! 🎉' : r === 'L' ? 'De data asta câștigă BETina. Revanșa?' : 'Egalitate.'}`,
+  },
+  tr: {
+    title: 'Takım vs BETina', locale: 'tr-TR',
+    body: (g, md, t, b, r) => `${g} ${t} : ${b} BETina, ${md}. hafta. ${r === 'W' ? 'Bu hafta sizin! 🎉' : r === 'L' ? 'Bu sefer BETina kazandı. Rövanş?' : 'Berabere.'}`,
+  },
+  hr: {
+    title: 'Ekipa vs BETina', locale: 'hr-HR',
+    body: (g, md, t, b, r) => `${g} ${t} : ${b} BETina u ${md}. kolu. ${r === 'W' ? 'Kolo je vaše! 🎉' : r === 'L' ? 'Ovaj put pobjeđuje BETina. Revanš?' : 'Neriješeno.'}`,
   },
 };
 

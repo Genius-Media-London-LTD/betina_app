@@ -146,6 +146,8 @@ const DECLINED: Record<string, string> = {
   fr: 'Haha, là je passe 🙈 Demande-moi autre chose !',
   it: 'Ahah, su questo passo 🙈 Chiedimi altro!',
   ro: 'Haha, aici nu mă bag 🙈 Întreabă-mă altceva!',
+  tr: 'Haha, o konu bana göre değil 🙈 Bana başka bir şey sor!',
+  hr: 'Haha, tu se ne miješam 🙈 Pitaj me nešto drugo!',
 };
 
 // deno-lint-ignore no-explicit-any

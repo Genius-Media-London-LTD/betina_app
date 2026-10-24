@@ -64,6 +64,16 @@ const FALLBACK_REPLIES: Record<LangCode, Array<(n: string) => string>> = {
     (n) => `Îmi place energia, ${n}! 🔥 Ține-ți seria — fiecare conversație te apropie de nivelul următor.`,
     (n) => `Bună întrebare, ${n}! Sap în statistici și revin imediat. 🎯`,
   ],
+  tr: [
+    (n) => `Hallediyorum, ${n}! ⚡ Maçlarını takip ediyorum, bir şey olunca hemen haber veririm.`,
+    (n) => `Bu enerjiye bayıldım, ${n}! 🔥 Serini koru, her sohbet seni bir sonraki seviyeye yaklaştırıyor.`,
+    (n) => `Güzel soru, ${n}! İstatistiklere bakıp hemen dönüyorum. 🎯`,
+  ],
+  hr: [
+    (n) => `Na tome sam, ${n}! ⚡ Pratim tvoje utakmice i javim ti čim se nešto dogodi.`,
+    (n) => `Obožavam tu energiju, ${n}! 🔥 Čuvaj svoj niz, svaki chat te približava sljedećoj razini.`,
+    (n) => `Dobro pitanje, ${n}! Kopam po statistici i javim se odmah. 🎯`,
+  ],
 };
 
 const NETWORK_ERROR: Record<LangCode, (n: string) => string> = {
@@ -74,6 +84,8 @@ const NETWORK_ERROR: Record<LangCode, (n: string) => string> = {
   fr: (n) => `Hmm, ma connexion a eu un raté, ${n} — redemandez-moi dans une seconde ? 📡`,
   it: (n) => `Hmm, la mia connessione ha avuto un intoppo, ${n} — richiedimelo tra un attimo? 📡`,
   ro: (n) => `Hmm, conexiunea mea a avut o problemă, ${n} — mă întrebi din nou imediat? 📡`,
+  tr: (n) => `Hmm, bağlantım bir an gitti, ${n}. Bir saniye sonra tekrar sorar mısın? 📡`,
+  hr: (n) => `Hmm, veza mi je zakazala, ${n}. Pitaš me ponovno za sekundu? 📡`,
 };
 
 let fallbackIndex = 0;

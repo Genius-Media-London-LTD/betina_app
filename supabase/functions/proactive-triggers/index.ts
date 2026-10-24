@@ -37,6 +37,7 @@ const MARKETING_MAX_PER_WEEK = 3;
 
 const LANG_NAMES: Record<string, string> = {
   en: 'English', de: 'German', es: 'Spanish', pt: 'Portuguese', fr: 'French', it: 'Italian', ro: 'Romanian',
+  tr: 'Turkish', hr: 'Croatian',
 };
 
 type ProfileRow = {
