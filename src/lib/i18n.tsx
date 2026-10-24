@@ -199,6 +199,7 @@ type Translations = {
   tabTipps: string;
   tabNews: string;
   tabMenu: string;
+  chatTopic: string;
   homeYo: string;
   homeReply: string;
   homeYourGame: string;
@@ -617,6 +618,7 @@ const T: Record<LangCode, Translations> = {
     homeStreakDays: "{n} day streak",
     homeStreakXp: "+{n} XP today",
     homeMaxTier: "Top tier",
+    chatTopic: "Topic",
   },
   de: {
     welcomeTitle: 'Willkommen',
@@ -900,6 +902,7 @@ const T: Record<LangCode, Translations> = {
     homeStreakDays: "{n} Tage Streak",
     homeStreakXp: "+{n} XP heute",
     homeMaxTier: "Höchste Stufe",
+    chatTopic: "Thema",
   },
   es: {
     welcomeTitle: 'Bienvenido',
@@ -1183,6 +1186,7 @@ const T: Record<LangCode, Translations> = {
     homeStreakDays: "Racha de {n} días",
     homeStreakXp: "+{n} XP hoy",
     homeMaxTier: "Nivel máximo",
+    chatTopic: "Tema",
   },
   pt: {
     welcomeTitle: 'Bem-vindo',
@@ -1466,6 +1470,7 @@ const T: Record<LangCode, Translations> = {
     homeStreakDays: "Sequência de {n} dias",
     homeStreakXp: "+{n} XP hoje",
     homeMaxTier: "Nível máximo",
+    chatTopic: "Tema",
   },
   fr: {
     welcomeTitle: 'Bienvenue',
@@ -1749,6 +1754,7 @@ const T: Record<LangCode, Translations> = {
     homeStreakDays: "Série de {n} jours",
     homeStreakXp: "+{n} XP aujourd'hui",
     homeMaxTier: "Niveau max",
+    chatTopic: "Sujet",
   },
   it: {
     welcomeTitle: 'Benvenuto',
@@ -2032,6 +2038,7 @@ const T: Record<LangCode, Translations> = {
     homeStreakDays: "Serie di {n} giorni",
     homeStreakXp: "+{n} XP oggi",
     homeMaxTier: "Livello max",
+    chatTopic: "Tema",
   },
   ro: {
     welcomeTitle: 'Bun venit',
@@ -2315,6 +2322,7 @@ const T: Record<LangCode, Translations> = {
     homeStreakDays: "Serie de {n} zile",
     homeStreakXp: "+{n} XP azi",
     homeMaxTier: "Nivel maxim",
+    chatTopic: "Subiect",
   },
 };
 

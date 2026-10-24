@@ -23,26 +23,26 @@ import Animated, {
 } from 'react-native-reanimated';
 import BETinaAvatar from '../components/BETinaAvatar';
 import ChatBubble from '../components/ChatBubble';
-import GlowCard from '../components/GlowCard';
 import ScreenBg from '../components/ScreenBg';
+import { Blink, Meta } from '../components/Urban';
 import { askBetina } from '../lib/claude';
 import { fetchMemories } from '../lib/memory';
 import { XP_REWARDS, awardChatXp } from '../lib/xp';
-import { LiveContext, fetchLiveContext, parseSports } from '../lib/sports';
+import { LiveContext, fetchLiveContext, formatKickoff, parseSports } from '../lib/sports';
 import { supabase } from '../lib/supabase';
 import { useProfile } from '../hooks/useProfile';
 import { useSession } from '../hooks/useSession';
 import SignInWall from '../components/SignInWall';
 import { useI18n } from '../lib/i18n';
 import { useChrome } from '../components/chrome';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../theme';
+import { Colors, Fonts } from '../theme';
 
 type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  statCard?: { goals: number; assists: number; rating: number };
-  xpNote?: string;
+  at: string; // ISO time
+  xp?: boolean;
 };
 
 function TypingDot({ delay }: { delay: number }) {
@@ -82,7 +82,7 @@ export default function Chat() {
         if (user) {
           const { data } = await supabase
             .from('chat_messages')
-            .select('id, role, content')
+            .select('id, role, content, created_at')
             .eq('user_id', user.id)
             .order('created_at', { ascending: true })
             .limit(50);
@@ -92,6 +92,7 @@ export default function Chat() {
                 id: r.id,
                 role: r.role as 'user' | 'assistant',
                 content: r.content,
+                at: r.created_at,
               })),
             );
           }
@@ -110,7 +111,7 @@ export default function Chat() {
     if (!historyLoaded) return;
     setMessages((prev) =>
       prev.length === 0 || (prev.length === 1 && prev[0].id === 'm1')
-        ? [{ id: 'm1', role: 'assistant', content: t.chatWelcome.replace('{name}', userName) }]
+        ? [{ id: 'm1', role: 'assistant', content: t.chatWelcome.replace('{name}', userName), at: new Date().toISOString() }]
         : prev,
     );
   }, [historyLoaded, userName, t]);
@@ -161,7 +162,7 @@ export default function Chat() {
     if (!trimmed || typing) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setInput('');
-    const userMsg: Message = { id: `u${Date.now()}`, role: 'user', content: trimmed };
+    const userMsg: Message = { id: `u${Date.now()}`, role: 'user', content: trimmed, at: new Date().toISOString() };
     setMessages((prev) => [...prev, userMsg]);
     setTyping(true);
 
@@ -191,7 +192,7 @@ export default function Chat() {
     setTyping(false);
     setMessages((prev) => [
       ...prev,
-      { id: `a${Date.now()}`, role: 'assistant', content: reply, xpNote: t.chatXp },
+      { id: `a${Date.now()}`, role: 'assistant', content: reply, at: new Date().toISOString(), xp: true },
     ]);
   };
 
@@ -201,27 +202,37 @@ export default function Chat() {
   }, [messages, typing]);
 
   // Guest → chatting needs an account; gate it. (Apple 5.1.1(v))
-  if (session === undefined) return <ScreenBg glowTop={0.3} glowSize={460} />;
+  if (session === undefined) return <ScreenBg />;
   if (session === null) return <SignInWall />;
 
+  const time = (iso: string) => new Date(iso).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
+  // The topic bar names the favourite team's next match, if there is one.
+  const next = live?.next?.[0];
+  const topic = next
+    ? `${t.chatTopic}: ${next.home} – ${next.away} · ${formatKickoff(next.date, next.time, lang, { today: t.homeToday, tomorrow: t.homeTomorrow })}`
+    : null;
+
   return (
-    <ScreenBg glowTop={0.3} glowSize={460}>
+    <ScreenBg>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.flex}
       >
-        {/* chat header */}
-        <View style={[styles.header, { paddingTop: chrome.top }]}>
-          <BETinaAvatar size={46} online />
-          <View style={styles.headerText}>
-            <Text style={styles.headerName}>
-              BET<Text style={styles.headerNameAccent}>ina</Text>
-            </Text>
-            <Text style={styles.headerStatus}>{t.chatStatus}</Text>
+        {/* Status bar: BETina online / topic + tier & XP */}
+        <View style={[styles.bar, { marginTop: chrome.top }]}>
+          <View style={styles.barLeft}>
+            {topic ? (
+              <Text style={styles.barText} numberOfLines={1}>{topic.toUpperCase()}</Text>
+            ) : (
+              <>
+                <Blink color={Colors.black} size={7} />
+                <Text style={styles.barText}>BETINA · ONLINE</Text>
+              </>
+            )}
           </View>
-          <Pressable style={styles.headerMore}>
-            <Text style={styles.headerMoreLabel}>⋯</Text>
-          </Pressable>
+          {profile && (
+            <Text style={styles.barMeta} numberOfLines={1}>{`${(profile.xp_points ?? 0).toLocaleString(lang)} XP`}</Text>
+          )}
         </View>
 
         {/* messages */}
@@ -230,43 +241,25 @@ export default function Chat() {
           contentContainerStyle={styles.messages}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.timestamp}>{t.chatToday}</Text>
+          <View style={styles.day}>
+            <BETinaAvatar size={64} online />
+            <Meta>{`— ${t.chatToday} —`}</Meta>
+          </View>
           {messages.map((msg) => (
             <Animated.View
               key={msg.id}
               entering={FadeInDown.duration(300)}
-              style={msg.role === 'user' ? styles.userWrap : undefined}
+              style={msg.role === 'user' ? styles.userWrap : styles.betinaWrap}
             >
               <ChatBubble role={msg.role}>{msg.content}</ChatBubble>
-              {msg.statCard && (
-                <View style={styles.statCardWrap}>
-                  <GlowCard style={styles.statCard}>
-                    <View style={styles.stat}>
-                      <Text style={styles.statValueGreen}>{msg.statCard.goals}</Text>
-                      <Text style={styles.statLabel}>Goals</Text>
-                    </View>
-                    <View style={styles.stat}>
-                      <Text style={styles.statValue}>{msg.statCard.assists}</Text>
-                      <Text style={styles.statLabel}>Assists</Text>
-                    </View>
-                    <View style={styles.stat}>
-                      <Text style={styles.statValue}>{msg.statCard.rating}</Text>
-                      <Text style={styles.statLabel}>Avg rating</Text>
-                    </View>
-                  </GlowCard>
-                </View>
-              )}
-              {msg.xpNote && (
-                <Text style={styles.xpNote}>
-                  {msg.xpNote} <Text style={styles.xpDot}>●</Text>
-                </Text>
-              )}
+              <Meta style={styles.stamp} color={msg.xp ? Colors.primary : Colors.textMuted}>
+                {msg.role === 'user' ? time(msg.at) : `BETINA · ${time(msg.at)}${msg.xp ? ` · +${XP_REWARDS.chatMessage} XP` : ''}`}
+              </Meta>
             </Animated.View>
           ))}
 
           {typing && (
-            <Animated.View entering={FadeInDown.duration(300)} style={styles.typingRow}>
-              <BETinaAvatar size={30} />
+            <Animated.View entering={FadeInDown.duration(300)} style={styles.betinaWrap}>
               <View style={styles.typingBubble}>
                 <TypingDot delay={0} />
                 <TypingDot delay={200} />
@@ -284,8 +277,12 @@ export default function Chat() {
             contentContainerStyle={styles.quickReplies}
           >
             {quickReplies.map((qr) => (
-              <Pressable key={qr} onPress={() => send(qr)} style={styles.quickReply}>
-                <Text style={styles.quickReplyLabel}>{qr}</Text>
+              <Pressable
+                key={qr}
+                onPress={() => send(qr)}
+                style={({ pressed }) => [styles.quickReply, pressed && styles.quickReplyPressed]}
+              >
+                <Text style={styles.quickReplyLabel}>{qr.toUpperCase()}</Text>
               </Pressable>
             ))}
           </ScrollView>
@@ -299,8 +296,11 @@ export default function Chat() {
               onSubmitEditing={() => send(input)}
               returnKeyType="send"
             />
-            <Pressable onPress={() => send(input)} style={styles.sendButton}>
-              <Text style={styles.sendLabel}>↑</Text>
+            <Pressable
+              onPress={() => send(input)}
+              style={({ pressed }) => [styles.sendButton, (pressed || typing) && styles.sendPressed]}
+            >
+              <Text style={styles.sendLabel}>→</Text>
             </Pressable>
           </View>
         </View>
@@ -311,182 +311,39 @@ export default function Chat() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: withAlpha(Colors.white, 0.06),
-    backgroundColor: withAlpha(Colors.background, 0.7),
+
+  bar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+    backgroundColor: Colors.primary, paddingHorizontal: 16, height: 32,
   },
-  headerText: {
-    flex: 1,
-    gap: 1,
-  },
-  headerName: {
-    color: Colors.primary,
-    fontSize: Typography.md + 2,
-    fontFamily: Fonts.blackItalic,
-    letterSpacing: -0.5,
-    textShadowColor: withAlpha(Colors.primary, 0.45),
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 16,
-  },
-  headerNameAccent: {
-    color: Colors.white,
-    textShadowColor: 'transparent',
-  },
-  headerStatus: {
-    color: Colors.primary,
-    fontSize: Typography.xs + 1,
-    fontFamily: Fonts.medium,
-  },
-  headerMore: {
-    width: 38,
-    height: 38,
-    borderRadius: 0,
-    backgroundColor: Colors.glass,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerMoreLabel: {
-    color: Colors.textSecondary,
-    fontSize: 15,
-  },
-  messages: {
-    gap: 14,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: 18,
-    paddingBottom: Spacing.sm,
-  },
-  timestamp: {
-    alignSelf: 'center',
-    color: Colors.textMuted,
-    fontSize: Typography.xs,
-    fontFamily: Fonts.semibold,
-    letterSpacing: 0.9,
-  },
-  userWrap: {
-    alignItems: 'flex-end',
-  },
-  statCardWrap: {
-    paddingLeft: 38,
-    paddingTop: Spacing.sm,
-  },
-  statCard: {
-    flexDirection: 'row',
-    gap: 18,
-    paddingVertical: 14,
-    paddingHorizontal: Spacing.base,
-    alignSelf: 'flex-start',
-  },
-  stat: { gap: 2 },
-  statValueGreen: {
-    color: Colors.primary,
-    fontSize: Typography.lg,
-    fontFamily: Fonts.bold,
-  },
-  statValue: {
-    color: Colors.white,
-    fontSize: Typography.lg,
-    fontFamily: Fonts.bold,
-  },
-  statLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.xs,
-    fontFamily: Fonts.semibold,
-  },
-  xpNote: {
-    color: Colors.textMuted,
-    fontSize: Typography.xs,
-    fontFamily: Fonts.semibold,
-    paddingLeft: 38,
-    paddingTop: 6,
-  },
-  xpDot: {
-    color: Colors.primary,
-  },
-  typingRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: Spacing.sm,
-  },
+  barLeft: { flexDirection: 'row', alignItems: 'center', gap: 7, flexShrink: 1 },
+  barText: { color: Colors.black, fontSize: 13, fontFamily: Fonts.label, letterSpacing: 0.5, flexShrink: 1 },
+  barMeta: { color: Colors.black, fontSize: 10, fontFamily: Fonts.monoBold, letterSpacing: 0.6, flexShrink: 0 },
+
+  messages: { gap: 14, paddingHorizontal: 16, paddingTop: 18, paddingBottom: 8 },
+  day: { alignItems: 'center', gap: 10, paddingBottom: 6 },
+  betinaWrap: { alignItems: 'flex-start', gap: 5 },
+  userWrap: { alignItems: 'flex-end', gap: 5 },
+  stamp: { fontSize: 9 },
+
   typingBubble: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: withAlpha(Colors.accent, 0.25),
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.accent, 0.45),
-    borderRadius: 0,
-    borderBottomLeftRadius: 0,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: Colors.card, borderWidth: 1.5, borderColor: Colors.border,
+    paddingVertical: 15, paddingHorizontal: 16,
   },
-  typingDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 0,
-    backgroundColor: Colors.primary,
-  },
-  inputBlock: {
-    gap: Spacing.sm + 2,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
-  },
-  quickReplies: {
-    gap: Spacing.sm,
-  },
-  quickReply: {
-    backgroundColor: Colors.glass,
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.white, 0.1),
-    borderRadius: 0,
-    paddingVertical: 7,
-    paddingHorizontal: 13,
-  },
-  quickReplyLabel: {
-    color: Colors.textPrimary,
-    fontSize: Typography.xs + 1,
-    fontFamily: Fonts.semibold,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm + 2,
-  },
+  typingDot: { width: 7, height: 7, backgroundColor: Colors.primary },
+
+  inputBlock: { gap: 10, paddingHorizontal: 16, paddingTop: 10, borderTopWidth: 1, borderTopColor: Colors.line },
+  quickReplies: { gap: 6 },
+  quickReply: { borderWidth: 1.5, borderColor: Colors.borderStrong, paddingVertical: 8, paddingHorizontal: 12 },
+  quickReplyPressed: { borderColor: Colors.primary, backgroundColor: Colors.card },
+  quickReplyLabel: { color: Colors.white, fontSize: 14, fontFamily: Fonts.label, letterSpacing: 0.5 },
+  inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   input: {
-    flex: 1,
-    backgroundColor: Colors.glass,
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.white, 0.1),
-    borderRadius: 0,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    color: Colors.white,
-    fontSize: Typography.sm + 1,
-    fontFamily: Fonts.medium,
+    flex: 1, height: 50, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface,
+    paddingHorizontal: 14, color: Colors.white, fontSize: 16, fontFamily: Fonts.medium,
   },
-  sendButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 0,
-    backgroundColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 8,
-  },
-  sendLabel: {
-    color: Colors.background,
-    fontSize: Typography.md + 1,
-    fontFamily: Fonts.bold,
-  },
+  sendButton: { width: 50, height: 50, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
+  sendPressed: { opacity: 0.7 },
+  sendLabel: { color: Colors.black, fontSize: 24, fontFamily: Fonts.display },
 });
