@@ -7,6 +7,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import BackButton from '../../src/components/BackButton';
 import GlowButton from '../../src/components/GlowButton';
 import ScreenBg from '../../src/components/ScreenBg';
+import { Headline } from '../../src/components/Urban';
 import { Emblem } from '../../src/components/TipParts';
 import { useI18n } from '../../src/lib/i18n';
 import { Competition, fetchCompetitions, fetchMyCompetitions, setMyCompetitions } from '../../src/lib/tippspiel';
@@ -45,14 +46,14 @@ export default function CompetitionsScreen() {
   };
 
   return (
-    <ScreenBg glowTop={0.14} glowSize={460}>
+    <ScreenBg>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing.xl }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <BackButton />
-          <Text style={styles.title}>{t.tipMyCompetitions}</Text>
+          <Headline text={t.tipMyCompetitions} size={34} accent="last" />
         </View>
         <Text style={styles.body}>{t.tipPickBody}</Text>
 
@@ -86,21 +87,20 @@ export default function CompetitionsScreen() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.lg, gap: 12 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  title: { color: Colors.textPrimary, fontSize: Typography.xl, fontFamily: Fonts.extrabold },
   body: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, marginBottom: 4 },
   row: {
     flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 0,
     backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.glassBorder,
   },
-  rowOn: { borderColor: Colors.primary, backgroundColor: Colors.glowGreen },
-  name: { flex: 1, color: Colors.textSecondary, fontSize: Typography.md, fontFamily: Fonts.bold },
-  nameOn: { color: Colors.textPrimary },
+  rowOn: { borderColor: Colors.primary },
+  name: { flex: 1, color: Colors.textSecondary, fontSize: 20, fontFamily: Fonts.label, textTransform: 'uppercase', letterSpacing: 0.4 },
+  nameOn: { color: Colors.white },
   check: {
     width: 28, height: 28, borderRadius: 0, alignItems: 'center', justifyContent: 'center',
     borderWidth: 1.5, borderColor: Colors.glassBorder,
   },
   checkOn: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  checkText: { color: Colors.background, fontSize: Typography.sm, fontFamily: Fonts.black },
+  checkText: { color: Colors.black, fontSize: 16, fontFamily: Fonts.label },
   checkTextOn: { color: Colors.background },
   error: { color: Colors.danger, fontSize: Typography.sm, fontFamily: Fonts.semibold, textAlign: 'center' },
 });

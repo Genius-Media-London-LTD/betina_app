@@ -4,7 +4,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import * as Haptics from 'expo-haptics';
 import type { LangCode } from '../lib/i18n';
 import type { Competition, Round } from '../lib/tippspiel';
-import { Colors, Fonts, Typography } from '../theme';
+import { Colors, Fonts } from '../theme';
 
 export const LOCALE: Record<LangCode, string> = {
   en: 'en-GB', de: 'de-DE', es: 'es-ES', pt: 'pt-PT', fr: 'fr-FR', it: 'it-IT', ro: 'ro-RO',
@@ -24,7 +24,7 @@ export function fillText(s: string, vars: Record<string, string | number>): stri
 /** Competition logo on a light tile: several (Premier League, Champions League) are dark artwork. */
 export function Emblem({ uri, size = 28 }: { uri: string | null; size?: number }) {
   return (
-    <View style={[styles.emblemTile, { width: size + 8, height: size + 8, borderRadius: (size + 8) / 4 }]}>
+    <View style={[styles.emblemTile, { width: size + 8, height: size + 8 }]}>
       {uri ? <Image source={{ uri }} style={{ width: size, height: size }} resizeMode="contain" /> : <Text style={{ fontSize: size * 0.6 }}>🏆</Text>}
     </View>
   );
@@ -37,17 +37,18 @@ export function Crest({ uri, name, size = 26 }: { uri: string | null; name: stri
   }
   const initials = name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
   return (
-    <View style={[styles.initials, { width: size, height: size, borderRadius: size / 2 }]}>
+    <View style={[styles.initials, { width: size, height: size }]}>
       <Text style={[styles.initialsText, { fontSize: size * 0.38 }]}>{initials}</Text>
     </View>
   );
 }
 
+// Exact hit = lime block, right difference = lime outline, right outcome = white outline.
 const BADGE: Record<number, { bg: string; border: string; text: string }> = {
-  3: { bg: Colors.glowGold, border: Colors.gold, text: Colors.gold },
-  2: { bg: Colors.glowGreen, border: Colors.primary, text: Colors.primary },
-  1: { bg: Colors.glowAccent, border: Colors.accentLight, text: Colors.accentLight },
-  0: { bg: Colors.glass, border: Colors.glassBorder, text: Colors.textMuted },
+  3: { bg: Colors.primary, border: Colors.primary, text: Colors.black },
+  2: { bg: 'transparent', border: Colors.primary, text: Colors.primary },
+  1: { bg: 'transparent', border: Colors.white, text: Colors.white },
+  0: { bg: 'transparent', border: Colors.borderStrong, text: Colors.textMuted },
 };
 
 /** "+3" / "+2" / "+1" / "0" pill for a scored tip (bonus answers: +10 / +5 in gold). */
@@ -87,7 +88,7 @@ export function CompetitionChips({
             style={[styles.chip, active && styles.chipActive]}
           >
             {c.emblem && <Emblem uri={c.emblem} size={14} />}
-            <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{c.name}</Text>
+            <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{c.name.toUpperCase()}</Text>
           </Pressable>
         );
       })}
@@ -114,24 +115,20 @@ export function roundLabel(round: Pick<Round, 'matchday' | 'stage'>, t: StageLab
 
 const styles = StyleSheet.create({
   initials: {
-    backgroundColor: Colors.cardElevated, borderWidth: 1, borderColor: Colors.glassBorder,
+    backgroundColor: Colors.card, borderWidth: 1.5, borderColor: Colors.border,
     alignItems: 'center', justifyContent: 'center',
   },
-  initialsText: { color: Colors.textSecondary, fontFamily: Fonts.bold },
-  badge: {
-    minWidth: 34, paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 0, borderWidth: 1, alignItems: 'center',
-  },
-  badgeText: { fontSize: Typography.xs + 1, fontFamily: Fonts.extrabold },
-  chips: { gap: 8, paddingVertical: 2 },
+  initialsText: { color: Colors.textSecondary, fontFamily: Fonts.label },
+  badge: { minWidth: 34, paddingHorizontal: 7, paddingVertical: 2, borderWidth: 1.5, alignItems: 'center' },
+  badgeText: { fontSize: 16, fontFamily: Fonts.display },
+  chips: { gap: 6, paddingVertical: 2 },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 14, paddingVertical: 8,
-    borderRadius: 0, backgroundColor: Colors.glass,
-    borderWidth: 1, borderColor: Colors.glassBorder,
+    paddingHorizontal: 12, paddingVertical: 7,
+    borderWidth: 1.5, borderColor: Colors.borderStrong,
   },
-  chipActive: { backgroundColor: Colors.glowGreen, borderColor: Colors.primary },
-  emblemTile: { backgroundColor: Colors.textPrimary, alignItems: 'center', justifyContent: 'center' },
-  chipLabel: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.semibold },
-  chipLabelActive: { color: Colors.textPrimary },
+  chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  emblemTile: { backgroundColor: Colors.white, alignItems: 'center', justifyContent: 'center' },
+  chipLabel: { color: Colors.textSecondary, fontSize: 14, fontFamily: Fonts.label, letterSpacing: 0.5 },
+  chipLabelActive: { color: Colors.black },
 });

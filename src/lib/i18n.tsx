@@ -199,6 +199,11 @@ type Translations = {
   tabTipps: string;
   tabNews: string;
   tabMenu: string;
+  tipBoomTitle: string;
+  tipBoomExact: string;
+  tipBoomQuote: string;
+  tipBoomMore: string;
+  tipBoomCelebrate: string;
   chatTopic: string;
   homeYo: string;
   homeReply: string;
@@ -619,6 +624,11 @@ const T: Record<LangCode, Translations> = {
     homeStreakXp: "+{n} XP today",
     homeMaxTier: "Top tier",
     chatTopic: "Topic",
+    tipBoomTitle: "Your tip was spot on!",
+    tipBoomExact: "Exact score",
+    tipBoomQuote: "Told you, {name}. Exact score — I might have to take notes from you.",
+    tipBoomMore: "Keep tipping",
+    tipBoomCelebrate: "Celebrate with BETina",
   },
   de: {
     welcomeTitle: 'Willkommen',
@@ -903,6 +913,11 @@ const T: Record<LangCode, Translations> = {
     homeStreakXp: "+{n} XP heute",
     homeMaxTier: "Höchste Stufe",
     chatTopic: "Thema",
+    tipBoomTitle: "Dein Tipp saß!",
+    tipBoomExact: "Exaktes Ergebnis",
+    tipBoomQuote: "Hab ich doch gesagt, {name}. Exakt getroffen – ich glaub, ich nehm bei dir Nachhilfe.",
+    tipBoomMore: "Weiter tippen",
+    tipBoomCelebrate: "Mit BETina feiern",
   },
   es: {
     welcomeTitle: 'Bienvenido',
@@ -1187,6 +1202,11 @@ const T: Record<LangCode, Translations> = {
     homeStreakXp: "+{n} XP hoy",
     homeMaxTier: "Nivel máximo",
     chatTopic: "Tema",
+    tipBoomTitle: "¡Tu pronóstico, clavado!",
+    tipBoomExact: "Resultado exacto",
+    tipBoomQuote: "Te lo dije, {name}. Resultado exacto: voy a tener que tomar apuntes de ti.",
+    tipBoomMore: "Seguir",
+    tipBoomCelebrate: "Celebrar con BETina",
   },
   pt: {
     welcomeTitle: 'Bem-vindo',
@@ -1471,6 +1491,11 @@ const T: Record<LangCode, Translations> = {
     homeStreakXp: "+{n} XP hoje",
     homeMaxTier: "Nível máximo",
     chatTopic: "Tema",
+    tipBoomTitle: "O teu palpite foi certeiro!",
+    tipBoomExact: "Resultado exato",
+    tipBoomQuote: "Eu disse, {name}. Resultado exato — vou ter de tirar apontamentos contigo.",
+    tipBoomMore: "Continuar",
+    tipBoomCelebrate: "Celebrar com a BETina",
   },
   fr: {
     welcomeTitle: 'Bienvenue',
@@ -1755,6 +1780,11 @@ const T: Record<LangCode, Translations> = {
     homeStreakXp: "+{n} XP aujourd'hui",
     homeMaxTier: "Niveau max",
     chatTopic: "Sujet",
+    tipBoomTitle: "Ton prono était parfait !",
+    tipBoomExact: "Score exact",
+    tipBoomQuote: "Je te l’avais dit, {name}. Score exact — je vais prendre des notes avec toi.",
+    tipBoomMore: "Continuer",
+    tipBoomCelebrate: "Fêter avec BETina",
   },
   it: {
     welcomeTitle: 'Benvenuto',
@@ -2039,6 +2069,11 @@ const T: Record<LangCode, Translations> = {
     homeStreakXp: "+{n} XP oggi",
     homeMaxTier: "Livello max",
     chatTopic: "Tema",
+    tipBoomTitle: "Pronostico centrato!",
+    tipBoomExact: "Risultato esatto",
+    tipBoomQuote: "Te l’avevo detto, {name}. Risultato esatto: quasi quasi prendo appunti da te.",
+    tipBoomMore: "Continua",
+    tipBoomCelebrate: "Festeggia con BETina",
   },
   ro: {
     welcomeTitle: 'Bun venit',
@@ -2323,6 +2358,11 @@ const T: Record<LangCode, Translations> = {
     homeStreakXp: "+{n} XP azi",
     homeMaxTier: "Nivel maxim",
     chatTopic: "Subiect",
+    tipBoomTitle: "Pronostic perfect!",
+    tipBoomExact: "Scor exact",
+    tipBoomQuote: "Ți-am zis, {name}. Scor exact — cred că iau notițe de la tine.",
+    tipBoomMore: "Continuă",
+    tipBoomCelebrate: "Sărbătorește cu BETina",
   },
 };
 

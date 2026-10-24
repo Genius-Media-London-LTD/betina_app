@@ -7,6 +7,7 @@ import BackButton from '../../src/components/BackButton';
 import BETinaAvatar from '../../src/components/BETinaAvatar';
 import GlowCard from '../../src/components/GlowCard';
 import ScreenBg from '../../src/components/ScreenBg';
+import { Headline } from '../../src/components/Urban';
 import { CompetitionChips, fillText as fill } from '../../src/components/TipParts';
 import { useI18n } from '../../src/lib/i18n';
 import { Competition, Stats, fetchCompetitions, fetchMyCompetitions, fetchStats } from '../../src/lib/tippspiel';
@@ -41,21 +42,21 @@ export default function StatsScreen() {
   const rate = s && s.scored > 0 ? Math.round((hits / s.scored) * 100) : 0;
   const maxPts = Math.max(1, ...(s?.series ?? []).map((r) => r.points));
   const parts = s ? [
-    { n: s.exact, color: Colors.gold, label: t.tipExactShort },
+    { n: s.exact, color: Colors.primary, label: t.tipExactShort },
     { n: s.diffs, color: Colors.primary, label: t.tipDiffShort },
-    { n: s.tendency, color: Colors.accentLight, label: t.tipTendencyShort },
+    { n: s.tendency, color: Colors.white, label: t.tipTendencyShort },
     { n: s.misses, color: Colors.textMuted, label: t.tipMissShort },
   ] : [];
 
   return (
-    <ScreenBg glowTop={0.14} glowSize={460}>
+    <ScreenBg>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing.xl }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <BackButton />
-          <Text style={styles.title}>{t.tipStats}</Text>
+          <Headline text={t.tipStats} size={34} accent="last" />
         </View>
 
         <CompetitionChips competitions={competitions} value={comp} onChange={setComp} allLabel={t.tipAllComps} />
@@ -71,7 +72,7 @@ export default function StatsScreen() {
           <>
             {/* Duel */}
             <Animated.View entering={FadeInDown.duration(400)}>
-              <GlowCard variant="accent" style={styles.duelCard}>
+              <GlowCard style={styles.duelCard}>
                 <Text style={styles.cardTitle}>{t.tipDuelTitle}</Text>
                 <View style={styles.duelRow}>
                   <View style={styles.duelSide}>
@@ -80,7 +81,7 @@ export default function StatsScreen() {
                   </View>
                   <Text style={styles.duelColon}>:</Text>
                   <View style={styles.duelSide}>
-                    <AnimatedNumber value={s.duel?.betina ?? 0} style={[styles.duelPts, { color: Colors.accentLight }]} />
+                    <AnimatedNumber value={s.duel?.betina ?? 0} style={[styles.duelPts, { color: Colors.white }]} />
                     <View style={styles.duelName}>
                       <BETinaAvatar size={18} />
                       <Text style={styles.duelWho}>BETina</Text>
@@ -104,7 +105,7 @@ export default function StatsScreen() {
                 <Text style={styles.tileLabel}>{t.tipHitRate}</Text>
               </GlowCard>
               <GlowCard style={styles.tile}>
-                <Text style={styles.tileValue}>{s.streak > 0 ? `🔥${s.streak}` : '0'}</Text>
+                <Text style={styles.tileValue}>{s.streak}</Text>
                 <Text style={styles.tileLabel}>{t.tipStreak}</Text>
               </GlowCard>
             </Animated.View>
@@ -155,7 +156,7 @@ export default function StatsScreen() {
                   </View>
                   {s.best_round && (
                     <Text style={styles.cardSub}>
-                      🏅 {t.tipBestRound}: {SHORT[s.best_round.competition] ?? s.best_round.competition} · {t.tipMatchday} {s.best_round.matchday} · {s.best_round.points} {t.tipPts}
+                      {t.tipBestRound}: {SHORT[s.best_round.competition] ?? s.best_round.competition} · {t.tipMatchday} {s.best_round.matchday} · {s.best_round.points} {t.tipPts}
                     </Text>
                   )}
                 </GlowCard>
@@ -171,33 +172,32 @@ export default function StatsScreen() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.lg, gap: 14 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  title: { color: Colors.textPrimary, fontSize: Typography.xl, fontFamily: Fonts.extrabold },
   emptyCard: { padding: 24, alignItems: 'center', gap: 12 },
   emptyText: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center' },
   card: { padding: 16, gap: 12 },
-  cardTitle: { color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.extrabold },
+  cardTitle: { color: Colors.white, fontSize: 24, fontFamily: Fonts.display, textTransform: 'uppercase' },
   cardSub: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, textAlign: 'center' },
   duelCard: { padding: 16, gap: 8, alignItems: 'center' },
   duelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18 },
   duelSide: { alignItems: 'center', gap: 4, minWidth: 90 },
-  duelPts: { fontSize: Typography['3xl'], fontFamily: Fonts.black },
-  duelColon: { color: Colors.textMuted, fontSize: Typography['2xl'], fontFamily: Fonts.black },
-  duelWho: { color: Colors.textPrimary, fontSize: Typography.xs + 1, fontFamily: Fonts.extrabold, letterSpacing: 1 },
+  duelPts: { fontSize: 56, lineHeight: 58, fontFamily: Fonts.display },
+  duelColon: { color: Colors.textMuted, fontSize: Typography['2xl'], fontFamily: Fonts.display },
+  duelWho: { color: Colors.white, fontSize: 13, fontFamily: Fonts.label, textTransform: 'uppercase', letterSpacing: 0.4 },
   duelName: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   tiles: { flexDirection: 'row', gap: 8 },
   tile: { flex: 1, alignItems: 'center', paddingVertical: 12, gap: 2 },
-  tileValue: { color: Colors.textPrimary, fontSize: Typography.xl, fontFamily: Fonts.black },
-  tileLabel: { color: Colors.textSecondary, fontSize: Typography.xs, fontFamily: Fonts.semibold, textAlign: 'center' },
+  tileValue: { color: Colors.white, fontSize: 34, lineHeight: 38, fontFamily: Fonts.display },
+  tileLabel: { color: Colors.textMuted, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.8, textTransform: 'uppercase', textAlign: 'center' },
   streakSub: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, textAlign: 'center', marginTop: -6 },
   stack: { flexDirection: 'row', height: 14, borderRadius: 0, overflow: 'hidden', backgroundColor: Colors.glass },
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   dot: { width: 10, height: 10, borderRadius: 0 },
-  legendText: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.semibold },
+  legendText: { color: Colors.textSecondary, fontSize: 11, fontFamily: Fonts.mono, letterSpacing: 0.6, textTransform: 'uppercase' },
   chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: CHART_H + 40 },
   barCol: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 4 },
-  bar: { width: '70%', borderRadius: 0, backgroundColor: Colors.primaryDim },
-  barBest: { backgroundColor: Colors.gold },
-  barValue: { color: Colors.textSecondary, fontSize: Typography.xs, fontFamily: Fonts.bold },
-  barLabel: { color: Colors.textMuted, fontSize: Typography.xs - 1, fontFamily: Fonts.semibold },
+  bar: { width: '70%', backgroundColor: Colors.borderStrong },
+  barBest: { backgroundColor: Colors.primary },
+  barValue: { color: Colors.white, fontSize: 14, fontFamily: Fonts.display },
+  barLabel: { color: Colors.textMuted, fontSize: 9, fontFamily: Fonts.mono },
 });

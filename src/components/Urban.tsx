@@ -7,10 +7,10 @@ import Animated, { Easing, cancelAnimation, useAnimatedStyle, useSharedValue, wi
 import { Colors, Fonts, Shadows } from '../theme';
 
 /** Rotated lime label with a hard black shadow ("EXKLUSIV", "+100 XP", tier names). */
-export function Sticker({ text, rotate = -3, style, dark }: { text: string; rotate?: number; style?: ViewStyle; dark?: boolean }) {
+export function Sticker({ text, rotate = -3, style, dark, size = 14 }: { text: string; rotate?: number; style?: ViewStyle; dark?: boolean; size?: number }) {
   return (
     <View style={[styles.sticker, dark && styles.stickerDark, Shadows.hard, { transform: [{ rotate: `${rotate}deg` }] }, style]}>
-      <Text style={[styles.stickerText, dark && styles.stickerTextDark]}>{text.toUpperCase()}</Text>
+      <Text style={[styles.stickerText, dark && styles.stickerTextDark, size !== 14 && { fontSize: size, fontFamily: Fonts.display }]}>{text.toUpperCase()}</Text>
     </View>
   );
 }

@@ -6,14 +6,14 @@ import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import BackButton from '../../src/components/BackButton';
 import BETinaAvatar from '../../src/components/BETinaAvatar';
-import GlowCard from '../../src/components/GlowCard';
 import ScreenBg from '../../src/components/ScreenBg';
 import { CompetitionChips, LOCALE } from '../../src/components/TipParts';
+import { Headline, Meta } from '../../src/components/Urban';
 import { useI18n } from '../../src/lib/i18n';
 import {
   Competition, GroupDuel, RankRow, fetchCompetitions, fetchGroupDuel, fetchLeaderboard, fetchMyCompetitions,
 } from '../../src/lib/tippspiel';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts } from '../../src/theme';
 
 const PODIUM = [
   { place: 2, color: Colors.silver, height: 64 },
@@ -87,23 +87,24 @@ export default function RankingScreen() {
   const rest = hasPoints ? list.slice(3) : list;
 
   return (
-    <ScreenBg glowTop={0.14} glowSize={460}>
+    <ScreenBg>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing.xl }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
       >
         <View style={styles.header}>
           <BackButton />
           <View style={{ flex: 1 }}>
-            <Text style={styles.title} numberOfLines={1}>{group ? params.groupName ?? t.tipGroups : t.tipRanking}</Text>
-            {group && params.code ? <Text style={styles.subtitle}>{t.tipCodePlaceholder}: {params.code}</Text> : null}
+            <Headline text={group ? params.groupName ?? t.tipGroups : t.tipRanking} size={34} accent="last" numberOfLines={1} />
+            {group && params.code ? <Meta color={Colors.primary}>{`${t.tipCodePlaceholder}: ${params.code}`}</Meta> : null}
           </View>
         </View>
 
         {group && params.code ? (
           <Pressable onPress={invite} style={({ pressed }) => [styles.invite, pressed && styles.invitePressed]}>
-            <Text style={styles.inviteText}>📨 {t.tipInvite}</Text>
+            <Text style={styles.inviteText}>{t.tipInvite.toUpperCase()}</Text>
+            <Text style={styles.inviteText}>→</Text>
           </Pressable>
         ) : null}
 
@@ -123,7 +124,7 @@ export default function RankingScreen() {
                 style={[styles.segmentBtn, active && styles.segmentBtnActive, disabled && styles.segmentBtnOff]}
               >
                 <Text style={[styles.segmentText, active && styles.segmentTextActive]}>
-                  {p === 'season' ? t.tipSeason : `${t.tipMatchday}${matchday != null ? ` ${matchday}` : ''}`}
+                  {(p === 'season' ? t.tipSeason : `${t.tipMatchday}${matchday != null ? ` ${matchday}` : ''}`).toUpperCase()}
                 </Text>
               </Pressable>
             );
@@ -133,9 +134,9 @@ export default function RankingScreen() {
         {loading ? (
           <ActivityIndicator color={Colors.primary} style={{ marginTop: 24 }} />
         ) : list.length === 0 ? (
-          <GlowCard style={styles.emptyCard}>
+          <View style={styles.emptyCard}>
             <Text style={styles.emptyText}>{t.tipNoRanking}</Text>
-          </GlowCard>
+          </View>
         ) : (
           <>
             {/* Podium */}
@@ -147,8 +148,8 @@ export default function RankingScreen() {
                   return (
                     <Animated.View key={step.place} entering={FadeInUp.delay(120 + i * 90).duration(450)} style={styles.podiumCol}>
                       <PlayerBadge row={r} size={step.place === 1 ? 54 : 44} ring={step.color} />
-                      <Text style={[styles.podiumName, r.is_me && styles.nameMe]} numberOfLines={1}>{r.is_me ? t.tipYou : r.display_name}</Text>
-                      <Text style={styles.podiumPts}>{r.points} {t.tipPts}</Text>
+                      <Text style={[styles.podiumName, r.is_me && styles.nameMe]} numberOfLines={1}>{(r.is_me ? t.tipYou : r.display_name).toUpperCase()}</Text>
+                      <Meta>{`${r.points} ${t.tipPts}`}</Meta>
                       <View style={[styles.step, { height: step.height, borderColor: step.color }]}>
                         <Text style={[styles.stepPlace, { color: step.color }]}>{r.rank}</Text>
                       </View>
@@ -160,11 +161,11 @@ export default function RankingScreen() {
 
             {/* Everyone else */}
             {rest.length > 0 && (
-              <GlowCard style={styles.table}>
+              <View style={styles.table}>
                 <View style={styles.legend}>
-                  <Legend color={Colors.gold} label="3" />
-                  <Legend color={Colors.primary} label="2" />
-                  <Legend color={Colors.accentLight} label="1" />
+                  <Legend color={Colors.primary} label="3" />
+                  <Legend color={Colors.white} label="2" />
+                  <Legend color={Colors.textMuted} label="1" />
                   <Text style={[styles.legendText, { marginLeft: 'auto' }]}>{t.tipTipsCol} · {t.tipPts}</Text>
                 </View>
                 {rest.map((r, i) => (
@@ -181,16 +182,16 @@ export default function RankingScreen() {
                         {r.is_me ? `${r.display_name} · ${t.tipYou}` : r.display_name}
                       </Text>
                       <View style={styles.counts}>
-                        <Count color={Colors.gold} n={r.exact} />
-                        <Count color={Colors.primary} n={r.diffs} />
-                        <Count color={Colors.accentLight} n={Math.max(0, r.hits - r.exact - r.diffs)} />
+                        <Count color={Colors.primary} n={r.exact} />
+                        <Count color={Colors.white} n={r.diffs} />
+                        <Count color={Colors.textMuted} n={Math.max(0, r.hits - r.exact - r.diffs)} />
                       </View>
                     </View>
                     <Text style={styles.tipsN}>{r.tips}</Text>
                     <Text style={styles.pts}>{r.points}</Text>
                   </Animated.View>
                 ))}
-              </GlowCard>
+              </View>
             )}
           </>
         )}
@@ -208,8 +209,8 @@ function TeamCard({ duel }: { duel: GroupDuel | null }) {
   const decided = duel ? duel.won + duel.lost + duel.drawn : 0;
   return (
     <Animated.View entering={FadeInDown.duration(400)}>
-      <GlowCard variant="accent" style={styles.team}>
-        <Text style={styles.teamTitle}>{t.tipTeamTitle}</Text>
+      <View style={styles.team}>
+        <Text style={styles.teamTitle}>{t.tipTeamTitle.toUpperCase()}</Text>
         {decided === 0 ? (
           <Text style={styles.teamSub}>{t.tipTeamEmpty}</Text>
         ) : (
@@ -221,7 +222,7 @@ function TeamCard({ duel }: { duel: GroupDuel | null }) {
               </View>
               <Text style={styles.teamColon}>:</Text>
               <View style={styles.teamSide}>
-                <Text style={[styles.teamNum, { color: Colors.accentLight }]}>{duel!.lost}</Text>
+                <Text style={[styles.teamNum, { color: Colors.white }]}>{duel!.lost}</Text>
                 <View style={styles.teamBetina}>
                   <BETinaAvatar size={16} />
                   <Text style={styles.teamWho}>BETina</Text>
@@ -244,7 +245,7 @@ function TeamCard({ duel }: { duel: GroupDuel | null }) {
             </View>
           </>
         )}
-      </GlowCard>
+      </View>
     </Animated.View>
   );
 }
@@ -257,7 +258,7 @@ function PlayerBadge({ row, size, ring }: { row: RankRow; size: number; ring?: s
     <View
       style={[
         styles.badge,
-        { width: size, height: size, borderRadius: size / 2, borderColor: ring ?? (row.is_me ? Colors.primary : Colors.glassBorder) },
+        { width: size, height: size, borderColor: ring ?? (row.is_me ? Colors.primary : Colors.border) },
       ]}
     >
       <Text style={[styles.badgeText, { fontSize: size * 0.36 }]}>{initials}</Text>
@@ -295,71 +296,67 @@ function Legend({ color, label }: { color: string; label: string }) {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: Spacing.lg, gap: 14 },
+  content: { paddingHorizontal: 16, gap: 14 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  title: { color: Colors.textPrimary, fontSize: Typography.xl, fontFamily: Fonts.extrabold },
-  subtitle: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.semibold, letterSpacing: 1 },
   invite: {
-    alignItems: 'center', paddingVertical: 12, borderRadius: 0,
-    backgroundColor: Colors.glowGreen, borderWidth: 1, borderColor: Colors.primary,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 14, paddingHorizontal: 16, backgroundColor: Colors.primary,
   },
   invitePressed: { backgroundColor: Colors.primaryDim },
-  inviteText: { color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.bold },
-  segment: {
-    flexDirection: 'row', padding: 4, borderRadius: 0,
-    backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-  },
-  segmentBtn: { flex: 1, paddingVertical: 9, borderRadius: 0, alignItems: 'center' },
-  segmentBtnActive: { backgroundColor: Colors.glowGreen },
+  inviteText: { color: Colors.black, fontSize: 20, fontFamily: Fonts.display, letterSpacing: 0.4 },
+  segment: { flexDirection: 'row', borderWidth: 1.5, borderColor: Colors.borderStrong },
+  segmentBtn: { flex: 1, paddingVertical: 10, alignItems: 'center' },
+  segmentBtnActive: { backgroundColor: Colors.primary },
   segmentBtnOff: { opacity: 0.4 },
-  segmentText: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.semibold },
-  segmentTextActive: { color: Colors.textPrimary },
-  podium: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingTop: 8 },
+  segmentText: { color: Colors.textSecondary, fontSize: 15, fontFamily: Fonts.label, letterSpacing: 0.5 },
+  segmentTextActive: { color: Colors.black },
+  podium: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingTop: 8 },
   podiumCol: { flex: 1, alignItems: 'center', gap: 4 },
-  podiumName: { color: Colors.textPrimary, fontSize: Typography.sm, fontFamily: Fonts.bold, maxWidth: '100%' },
-  podiumPts: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.semibold },
+  podiumName: { color: Colors.white, fontSize: 15, fontFamily: Fonts.label, maxWidth: '100%' },
   step: {
-    alignSelf: 'stretch', marginTop: 6, borderTopLeftRadius: 0, borderTopRightRadius: 0,
-    borderWidth: 1, borderBottomWidth: 0, backgroundColor: Colors.card,
+    alignSelf: 'stretch', marginTop: 6, borderWidth: 1.5, borderBottomWidth: 0, backgroundColor: Colors.surface,
     alignItems: 'center', justifyContent: 'center',
   },
-  stepPlace: { fontSize: Typography['2xl'], fontFamily: Fonts.blackItalic },
-  badge: { alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.cardElevated, borderWidth: 2 },
-  badgeText: { color: Colors.textPrimary, fontFamily: Fonts.extrabold },
-  table: { paddingVertical: 8, paddingHorizontal: 6, gap: 2 },
-  legend: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 10, paddingVertical: 6 },
-  legendText: { color: Colors.textMuted, fontSize: Typography.xs, fontFamily: Fonts.bold },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 10, paddingVertical: 10, borderRadius: 0 },
-  rowMe: { backgroundColor: Colors.glowGreen },
-  rowBetina: { backgroundColor: Colors.glowAccent },
-  rank: { width: 26, color: Colors.textSecondary, fontSize: Typography.base, fontFamily: Fonts.bold, textAlign: 'right' },
-  trend: { width: 26, fontSize: Typography.xs, fontFamily: Fonts.extrabold, textAlign: 'center' },
-  name: { color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.semibold },
+  stepPlace: { fontSize: 40, fontFamily: Fonts.display },
+  badge: { alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.card, borderWidth: 2 },
+  badgeText: { color: Colors.white, fontFamily: Fonts.label },
+  table: { borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface },
+  legend: {
+    flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8,
+    borderBottomWidth: 1, borderBottomColor: Colors.line,
+  },
+  legendText: { color: Colors.textMuted, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.8 },
+  row: {
+    flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 11,
+    borderBottomWidth: 1, borderBottomColor: Colors.line,
+  },
+  rowMe: { backgroundColor: Colors.glowGreen, borderLeftWidth: 3, borderLeftColor: Colors.primary },
+  rowBetina: { backgroundColor: Colors.card },
+  rank: { width: 28, color: Colors.white, fontSize: 20, fontFamily: Fonts.display, textAlign: 'right' },
+  trend: { width: 28, fontSize: 10, fontFamily: Fonts.monoBold, textAlign: 'center' },
+  name: { color: Colors.white, fontSize: 16, fontFamily: Fonts.label },
   nameMe: { color: Colors.primary },
   counts: { flexDirection: 'row', gap: 10 },
   count: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  dot: { width: 7, height: 7, borderRadius: 0 },
-  countText: { color: Colors.textSecondary, fontSize: Typography.xs, fontFamily: Fonts.semibold },
-  tipsN: { width: 30, color: Colors.textMuted, fontSize: Typography.sm, fontFamily: Fonts.semibold, textAlign: 'right' },
-  pts: { width: 40, color: Colors.textPrimary, fontSize: Typography.md, fontFamily: Fonts.black, textAlign: 'right' },
-  team: { padding: 16, gap: 10, alignItems: 'center' },
-  teamTitle: { color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.extrabold, letterSpacing: 0.5 },
+  dot: { width: 7, height: 7 },
+  countText: { color: Colors.textSecondary, fontSize: 10, fontFamily: Fonts.mono },
+  tipsN: { width: 30, color: Colors.textMuted, fontSize: 12, fontFamily: Fonts.mono, textAlign: 'right' },
+  pts: { width: 44, color: Colors.white, fontSize: 24, fontFamily: Fonts.display, textAlign: 'right' },
+  team: { padding: 16, gap: 10, alignItems: 'center', borderWidth: 1.5, borderColor: Colors.primary, backgroundColor: Colors.surface },
+  teamTitle: { color: Colors.primary, fontSize: 20, fontFamily: Fonts.display, letterSpacing: 0.5 },
   teamScore: { flexDirection: 'row', alignItems: 'center', gap: 18 },
   teamSide: { alignItems: 'center', gap: 2, minWidth: 80 },
-  teamNum: { fontSize: Typography['3xl'], fontFamily: Fonts.black },
-  teamColon: { color: Colors.textMuted, fontSize: Typography['2xl'], fontFamily: Fonts.black },
-  teamWho: { color: Colors.textPrimary, fontSize: Typography.xs + 1, fontFamily: Fonts.extrabold, letterSpacing: 1 },
+  teamNum: { fontSize: 56, lineHeight: 58, fontFamily: Fonts.display },
+  teamColon: { color: Colors.textMuted, fontSize: 40, fontFamily: Fonts.display },
+  teamWho: { color: Colors.white, fontSize: 13, fontFamily: Fonts.label, letterSpacing: 1 },
   teamBetina: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  teamSub: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, textAlign: 'center' },
+  teamSub: { color: Colors.textSecondary, fontSize: 13, fontFamily: Fonts.medium, textAlign: 'center' },
   teamRounds: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 },
-  roundChip: {
-    alignItems: 'center', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 0,
-    borderWidth: 1, borderColor: Colors.glassBorder, backgroundColor: Colors.glass,
-  },
+  roundChip: { alignItems: 'center', paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1.5, borderColor: Colors.borderStrong },
   roundWin: { borderColor: Colors.primary, backgroundColor: Colors.glowGreen },
   roundLoss: { borderColor: Colors.danger },
-  roundChipLabel: { color: Colors.textMuted, fontSize: Typography.xs - 1, fontFamily: Fonts.bold },
-  roundChipScore: { color: Colors.textPrimary, fontSize: Typography.xs + 1, fontFamily: Fonts.extrabold },
-  emptyCard: { padding: 20, alignItems: 'center' },
-  emptyText: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center' },
+  roundChipLabel: { color: Colors.textMuted, fontSize: 9, fontFamily: Fonts.mono, letterSpacing: 0.6 },
+  roundChipScore: { color: Colors.white, fontSize: 15, fontFamily: Fonts.display },
+  emptyCard: { padding: 20, alignItems: 'center', borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface },
+  emptyText: { color: Colors.textSecondary, fontSize: 15, fontFamily: Fonts.medium, textAlign: 'center', lineHeight: 21 },
 });

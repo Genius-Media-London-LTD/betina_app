@@ -6,10 +6,10 @@ import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import BackButton from '../../src/components/BackButton';
 import BETinaAvatar from '../../src/components/BETinaAvatar';
-import GlowCard from '../../src/components/GlowCard';
 import ScreenBg from '../../src/components/ScreenBg';
 import SignInWall from '../../src/components/SignInWall';
 import { CompetitionChips, Crest, LOCALE, PointsBadge, fillText as fill, roundLabel } from '../../src/components/TipParts';
+import { Blink, Headline, Meta } from '../../src/components/Urban';
 import { useProfile } from '../../src/hooks/useProfile';
 import { useSession } from '../../src/hooks/useSession';
 import { useI18n } from '../../src/lib/i18n';
@@ -18,7 +18,7 @@ import {
   currentRoundIndex, defaultCompetition, fetchBetinaTipped, fetchBetinaTips, fetchCompetitions, fetchMatches, fetchMyCompetitions, fetchMyTips,
   isFinished, isLive, isOpen, isVoid, placeTip, toRounds,
 } from '../../src/lib/tippspiel';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts } from '../../src/theme';
 
 type Draft = { home: number; away: number };
 type SaveState = 'saving' | 'saved' | 'error' | 'closed';
@@ -27,7 +27,7 @@ type SaveState = 'saving' | 'saved' | 'error' | 'closed';
 export default function PlayScreen() {
   const session = useSession();
   const { t } = useI18n();
-  if (session === undefined) return <ScreenBg glowTop={0.14} glowSize={460} />;
+  if (session === undefined) return <ScreenBg />;
   if (session === null) return <SignInWall body={t.tipGuestBody} />;
   return <Play />;
 }
@@ -178,15 +178,15 @@ function Play() {
   const timeFmt = useMemo(() => new Intl.DateTimeFormat(LOCALE[lang], { hour: '2-digit', minute: '2-digit' }), [lang]);
 
   return (
-    <ScreenBg glowTop={0.14} glowSize={460}>
+    <ScreenBg>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing.xl }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
       >
         <View style={styles.header}>
           <BackButton />
-          <Text style={styles.title} numberOfLines={1}>{competition?.name ?? t.tipTitle}</Text>
+          <Headline text={competition?.name ?? t.tipTitle} size={34} accent="last" numberOfLines={1} style={{ flex: 1 }} />
         </View>
 
         {/* BETina hosts */}
@@ -206,9 +206,9 @@ function Play() {
         {loading ? (
           <ActivityIndicator color={Colors.primary} style={{ marginTop: 24 }} />
         ) : !round ? (
-          <GlowCard style={styles.emptyCard}>
+          <View style={styles.emptyCard}>
             <Text style={styles.emptyText}>{competition?.current_season ? t.tipEmpty : fill(t.tipWarmingUp, { name: firstName })}</Text>
-          </GlowCard>
+          </View>
         ) : (
           <>
             {/* Round navigation */}
@@ -219,22 +219,22 @@ function Play() {
                 style={[styles.roundArrow, roundIdx === 0 && styles.roundArrowOff]}
                 hitSlop={8}
               >
-                <Text style={styles.roundArrowText}>‹</Text>
+                <Text style={styles.roundArrowText}>←</Text>
               </Pressable>
-              <Text style={styles.roundTitle}>{roundLabel(round, t)}</Text>
+              <Text style={styles.roundTitle}>{roundLabel(round, t).toUpperCase()}</Text>
               <Pressable
                 onPress={() => { Haptics.selectionAsync(); setRoundIdx((i) => Math.min(rounds.length - 1, i + 1)); }}
                 disabled={roundIdx >= rounds.length - 1}
                 style={[styles.roundArrow, roundIdx >= rounds.length - 1 && styles.roundArrowOff]}
                 hitSlop={8}
               >
-                <Text style={styles.roundArrowText}>›</Text>
+                <Text style={styles.roundArrowText}>→</Text>
               </Pressable>
             </View>
 
             {days.map((day) => (
               <View key={day.label} style={styles.day}>
-                <Text style={styles.dayLabel}>{day.label}</Text>
+                <Meta color={Colors.primary} size={11}>{day.label}</Meta>
                 {day.matches.map((m) => (
                   <MatchCard
                     key={m.id}
@@ -284,7 +284,7 @@ function MatchCard({ match: m, score, tip, betina, betinaHasTipped, state, time,
       : state === 'error' ? <Text style={styles.metaError}>{t.tipError}</Text>
       : null;
   } else if (live) {
-    status = <View style={styles.livePill}><Text style={styles.livePillText}>{t.tipLive}</Text></View>;
+    status = <View style={styles.livePill}><Blink color={Colors.white} size={5} /><Text style={styles.livePillText}>{t.tipLive.toUpperCase()}</Text></View>;
   } else if (voided) {
     status = <Text style={styles.metaMuted}>{t.tipVoid}</Text>;
   } else if (finished && tip?.points != null) {
@@ -296,7 +296,7 @@ function MatchCard({ match: m, score, tip, betina, betinaHasTipped, state, time,
   const showResult = (live || finished) && m.home_score != null && m.away_score != null;
 
   return (
-    <GlowCard style={[styles.card, open && score && styles.cardTipped]}>
+    <View style={[styles.card, open && score && styles.cardTipped]}>
       <View style={styles.cardHead}>
         <Text style={styles.metaTime}>{time}</Text>
         {status}
@@ -308,7 +308,7 @@ function MatchCard({ match: m, score, tip, betina, betinaHasTipped, state, time,
         return (
           <View key={side} style={styles.teamRow}>
             <Crest uri={crest} name={name} />
-            <Text style={styles.teamName} numberOfLines={1}>{name}</Text>
+            <Text style={styles.teamName} numberOfLines={1}>{name.toUpperCase()}</Text>
             {open ? (
               <View style={styles.stepper}>
                 <StepButton label="−" onPress={() => onChange(m, side, -1)} disabled={!score || score[side] === 0} />
@@ -326,12 +326,12 @@ function MatchCard({ match: m, score, tip, betina, betinaHasTipped, state, time,
       {open && betinaHasTipped && (
         <View style={styles.betinaLocked}>
           <BETinaAvatar size={16} />
-          <Text style={styles.betinaLockedText}>🔒 {t.tipBetinaLocked}</Text>
+          <Meta>{t.tipBetinaLocked}</Meta>
         </View>
       )}
       {!open && (tip || betina) && (
         <View style={styles.tipsRow}>
-          {tip && <Text style={styles.yourTip}>{t.tipYourTip}: {tip.home}:{tip.away}</Text>}
+          {tip && <Meta color={Colors.white}>{`${t.tipYourTip}: ${tip.home}:${tip.away}`}</Meta>}
           {betina && (
             <View style={styles.betinaTip}>
               <BETinaAvatar size={18} />
@@ -341,7 +341,7 @@ function MatchCard({ match: m, score, tip, betina, betinaHasTipped, state, time,
           )}
         </View>
       )}
-    </GlowCard>
+    </View>
   );
 }
 
@@ -359,62 +359,40 @@ function StepButton({ label, onPress, disabled }: { label: string; onPress: () =
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: Spacing.lg, gap: 14 },
+  content: { paddingHorizontal: 16, gap: 14 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  title: { flex: 1, color: Colors.textPrimary, fontSize: Typography.xl, fontFamily: Fonts.extrabold },
   host: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  bubble: {
-    flex: 1, backgroundColor: Colors.card, borderRadius: 0, borderTopLeftRadius: 0,
-    borderWidth: 1, borderColor: Colors.glassBorder, paddingHorizontal: 14, paddingVertical: 10,
-  },
-  bubbleText: { color: Colors.textPrimary, fontSize: Typography.sm, fontFamily: Fonts.medium, lineHeight: 19 },
-  roundNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 },
-  roundArrow: {
-    width: 38, height: 38, borderRadius: 0, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-  },
+  bubble: { flex: 1, backgroundColor: Colors.card, borderWidth: 1.5, borderColor: Colors.border, paddingHorizontal: 14, paddingVertical: 10 },
+  bubbleText: { color: Colors.white, fontSize: 15, fontFamily: Fonts.medium, lineHeight: 21 },
+  roundNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
+  roundArrow: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: Colors.borderStrong },
   roundArrowOff: { opacity: 0.3 },
-  roundArrowText: { color: Colors.textPrimary, fontSize: Typography.lg, fontFamily: Fonts.bold, marginTop: -2 },
-  roundTitle: { color: Colors.textPrimary, fontSize: Typography.md, fontFamily: Fonts.extrabold },
-  day: { gap: 8 },
-  dayLabel: {
-    color: Colors.primary, fontSize: Typography.xs, fontFamily: Fonts.bold,
-    letterSpacing: 1.2, textTransform: 'uppercase', paddingLeft: 2, marginTop: 4,
-  },
-  card: { padding: 14, gap: 10 },
-  cardTipped: { borderColor: Colors.primaryDim },
+  roundArrowText: { color: Colors.primary, fontSize: 18, fontFamily: Fonts.label },
+  roundTitle: { color: Colors.white, fontSize: 30, fontFamily: Fonts.display },
+  day: { gap: 8, marginTop: 4 },
+  card: { padding: 14, gap: 10, backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border },
+  cardTipped: { borderColor: Colors.primary },
   cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 22 },
-  metaTime: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.semibold },
-  metaMuted: { color: Colors.textMuted, fontSize: Typography.xs + 1, fontFamily: Fonts.semibold },
-  metaSaved: { color: Colors.primary, fontSize: Typography.xs + 1, fontFamily: Fonts.semibold },
-  metaError: { color: Colors.danger, fontSize: Typography.xs + 1, fontFamily: Fonts.semibold, flexShrink: 1, textAlign: 'right' },
-  livePill: { backgroundColor: Colors.danger, borderRadius: 0, paddingHorizontal: 8, paddingVertical: 2 },
-  livePillText: { color: Colors.background, fontSize: Typography.xs - 1, fontFamily: Fonts.extrabold, letterSpacing: 0.8 },
+  metaTime: { color: Colors.textSecondary, fontSize: 12, fontFamily: Fonts.monoBold, letterSpacing: 0.8 },
+  metaMuted: { color: Colors.textMuted, fontSize: 11, fontFamily: Fonts.mono, letterSpacing: 0.8 },
+  metaSaved: { color: Colors.primary, fontSize: 11, fontFamily: Fonts.monoBold, letterSpacing: 0.8 },
+  metaError: { color: Colors.danger, fontSize: 11, fontFamily: Fonts.monoBold, flexShrink: 1, textAlign: 'right' },
+  livePill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: Colors.live, paddingHorizontal: 7, paddingVertical: 2 },
+  livePillText: { color: Colors.white, fontSize: 12, fontFamily: Fonts.label, letterSpacing: 0.8 },
   teamRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  teamName: { flex: 1, color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.semibold },
+  teamName: { flex: 1, color: Colors.white, fontSize: 18, fontFamily: Fonts.label, letterSpacing: 0.3 },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  stepBtn: {
-    width: 34, height: 34, borderRadius: 0, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: Colors.cardElevated, borderWidth: 1, borderColor: Colors.glassBorder,
-  },
-  stepBtnPressed: { backgroundColor: Colors.glowGreen, borderColor: Colors.primary },
-  stepBtnOff: { opacity: 0.35 },
-  stepBtnText: { color: Colors.textPrimary, fontSize: Typography.lg, fontFamily: Fonts.bold, marginTop: -2 },
-  stepValue: {
-    width: 30, textAlign: 'center', color: Colors.textPrimary,
-    fontSize: Typography.xl, fontFamily: Fonts.black,
-  },
+  stepBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: Colors.borderStrong },
+  stepBtnPressed: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  stepBtnOff: { opacity: 0.3 },
+  stepBtnText: { color: Colors.white, fontSize: 20, fontFamily: Fonts.label },
+  stepValue: { width: 34, textAlign: 'center', color: Colors.primary, fontSize: 32, lineHeight: 36, fontFamily: Fonts.display },
   stepValueEmpty: { color: Colors.textMuted },
-  resultValue: {
-    minWidth: 40, textAlign: 'right', color: Colors.textPrimary,
-    fontSize: Typography.xl, fontFamily: Fonts.black,
-  },
-  tipsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  yourTip: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
+  resultValue: { minWidth: 40, textAlign: 'right', color: Colors.white, fontSize: 32, lineHeight: 36, fontFamily: Fonts.display },
+  tipsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderTopWidth: 1, borderTopColor: Colors.line, paddingTop: 10 },
   betinaTip: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 'auto' },
-  betinaTipText: { color: Colors.accentLight, fontSize: Typography.xs + 1, fontFamily: Fonts.bold },
-  betinaLocked: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  betinaLockedText: { color: Colors.textMuted, fontSize: Typography.xs, fontFamily: Fonts.semibold },
-  emptyCard: { padding: 20, alignItems: 'center' },
-  emptyText: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center' },
+  betinaTipText: { color: Colors.white, fontSize: 16, fontFamily: Fonts.display },
+  betinaLocked: { flexDirection: 'row', alignItems: 'center', gap: 6, borderTopWidth: 1, borderTopColor: Colors.line, paddingTop: 10 },
+  emptyCard: { padding: 20, alignItems: 'center', borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface },
+  emptyText: { color: Colors.textSecondary, fontSize: 15, fontFamily: Fonts.medium, textAlign: 'center', lineHeight: 21 },
 });

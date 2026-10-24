@@ -4,6 +4,7 @@
 // scoring, XP) is enforced in Postgres — see supabase/migrations/010_tippspiel.sql.
 // No money and no prizes: points, rankings and XP only.
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
 import type { LangCode } from './i18n';
 
@@ -366,4 +367,56 @@ export type GroupDuel = {
 export async function fetchGroupDuel(groupId: string): Promise<GroupDuel | null> {
   const { data, error } = await supabase.rpc('tip_group_duel', { p_group: groupId });
   return error ? null : (data as GroupDuel);
+}
+
+// ── "BOOM" moments: exact hits the player hasn't celebrated yet ─────────────
+export type ExactHit = {
+  match_id: number;
+  home: number;
+  away: number;
+  home_name: string;
+  away_name: string;
+  competition: string;
+};
+
+const BOOM_SEEN_KEY = 'tip_boom_seen';
+
+/**
+ * The latest exact hit (3 points) of the last 3 days that hasn't been shown
+ * yet. Every hit returned is marked as seen, so each one pops up only once.
+ */
+export async function takeUnseenExactHit(): Promise<ExactHit | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const since = new Date(Date.now() - 3 * 86_400_000).toISOString();
+  const { data } = await supabase
+    .from('tips')
+    .select('match_id, home, away, tip_matches!inner(home_short, home_name, away_short, away_name, competition, kickoff)')
+    .eq('user_id', user.id)
+    .eq('points', 3)
+    .gte('tip_matches.kickoff', since)
+    .limit(20);
+  type Row = { match_id: number; home: number; away: number; tip_matches: { home_short: string | null; home_name: string; away_short: string | null; away_name: string; competition: string; kickoff: string } | { home_short: string | null; home_name: string; away_short: string | null; away_name: string; competition: string; kickoff: string }[] };
+  const rows = ((data ?? []) as Row[]).map((r) => ({ ...r, m: Array.isArray(r.tip_matches) ? r.tip_matches[0] : r.tip_matches }));
+  if (rows.length === 0) return null;
+
+  let seen: number[] = [];
+  try {
+    seen = JSON.parse((await AsyncStorage.getItem(BOOM_SEEN_KEY)) ?? '[]');
+  } catch {
+    // storage unavailable: show nothing rather than repeat the moment
+    return null;
+  }
+  const fresh = rows.filter((r) => !seen.includes(r.match_id)).sort((a, b) => b.m.kickoff.localeCompare(a.m.kickoff));
+  if (fresh.length === 0) return null;
+  await AsyncStorage.setItem(BOOM_SEEN_KEY, JSON.stringify([...seen, ...fresh.map((r) => r.match_id)].slice(-200))).catch(() => {});
+  const top = fresh[0];
+  return {
+    match_id: top.match_id,
+    home: top.home,
+    away: top.away,
+    home_name: top.m.home_short ?? top.m.home_name,
+    away_name: top.m.away_short ?? top.m.away_name,
+    competition: top.m.competition,
+  };
 }

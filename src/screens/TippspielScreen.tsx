@@ -6,29 +6,30 @@ import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown, SlideInDown } from 'react-native-reanimated';
 import AnimatedNumber from '../components/AnimatedNumber';
 import BETinaAvatar from '../components/BETinaAvatar';
+import BoomMoment from '../components/BoomMoment';
 import GlowButton from '../components/GlowButton';
-import GlowCard from '../components/GlowCard';
 import ScreenBg from '../components/ScreenBg';
 import SignInWall from '../components/SignInWall';
 import Toggle from '../components/Toggle';
 import { Emblem, LOCALE, fillText as fill } from '../components/TipParts';
+import { Headline, Meta } from '../components/Urban';
 import { useProfile } from '../hooks/useProfile';
 import { useSession } from '../hooks/useSession';
 import { useI18n } from '../lib/i18n';
 import {
-  Competition, GroupDuel, RankRow, Stats, TipGroup,
+  Competition, ExactHit, GroupDuel, RankRow, Stats, TipGroup,
   defaultCompetition, fetchCompetitions, fetchGroupDuel, fetchLeaderboard, fetchMyCompetitions, fetchMyGroups,
-  fetchNotifyTippspiel, fetchOpenTips, fetchStats, setMyCompetitions, setNotifyTippspiel,
+  fetchNotifyTippspiel, fetchOpenTips, fetchStats, setMyCompetitions, setNotifyTippspiel, takeUnseenExactHit,
 } from '../lib/tippspiel';
 import { useChrome } from '../components/chrome';
-import { Colors, Fonts, Spacing, Typography } from '../theme';
+import { Colors, Fonts } from '../theme';
 
 type Open = Record<string, { open: number; total: number; next: string | null }>;
 
 export default function TippspielTab() {
   const session = useSession();
   const { t } = useI18n();
-  if (session === undefined) return <ScreenBg glowTop={0.14} glowSize={460} />;
+  if (session === undefined) return <ScreenBg />;
   if (session === null) return <SignInWall body={t.tipGuestBody} />;
   return <Hub />;
 }
@@ -52,6 +53,7 @@ function Hub() {
   const [menu, setMenu] = useState(false);
   const [rules, setRules] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [boom, setBoom] = useState<ExactHit | null>(null);
 
   const load = useCallback(async () => {
     const [comps, myComps, myGroups, myStats, board, push] = await Promise.all([
@@ -70,6 +72,9 @@ function Hub() {
     setMe(board.find((r) => r.is_me) ?? null);
     setGroups(myGroups.map((g, i) => ({ ...g, rank: ranks[i], duel: duels[i] })));
     setNotify(push);
+    // A fresh exact hit gets its BOOM moment once.
+    const hit = await takeUnseenExactHit();
+    if (hit) setBoom(hit);
   }, []);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -105,16 +110,18 @@ function Hub() {
   };
 
   const myComps = competitions.filter((c) => mine?.includes(c.code));
+  const segments = 20;
+  const doneSegs = totals.total ? Math.round((totals.done / totals.total) * segments) : 0;
 
   return (
-    <ScreenBg glowTop={0.14} glowSize={460}>
+    <ScreenBg>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: chrome.top + Spacing.xs, paddingBottom: insets.bottom + Spacing['2xl'] }]}
+        contentContainerStyle={[styles.content, { paddingTop: chrome.top + 18, paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} progressViewOffset={chrome.top} />}
       >
-        <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
-          <View />
+        <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
+          <Headline text={`${t.tabTipps}.`} size={58} accent="last" />
           <Pressable onPress={() => { Haptics.selectionAsync(); setMenu(true); }} style={styles.iconBtn} hitSlop={8}>
             <Text style={styles.iconBtnText}>⋯</Text>
           </Pressable>
@@ -127,57 +134,61 @@ function Hub() {
         ) : (
           <>
             {/* What's open */}
-            <Animated.View entering={FadeInDown.delay(60).duration(500)}>
-              <GlowCard variant="green" style={styles.hero}>
-                <View style={styles.heroTop}>
-                  <BETinaAvatar size={56} online pulse={totals.open > 0} />
-                  <Text style={styles.heroLine}>{hostLine}</Text>
-                </View>
-                {totals.total > 0 && (
-                  <View style={styles.progressWrap}>
-                    <View style={styles.progressHead}>
-                      <Text style={styles.progressLabel}>
-                        {totals.open === 0 ? t.tipAllDone : fill(t.tipProgress, { done: totals.done, total: totals.total })}
-                      </Text>
-                    </View>
-                    <View style={styles.progressTrack}>
-                      <View style={[styles.progressFill, { width: `${Math.round((totals.done / totals.total) * 100)}%` }]} />
-                    </View>
+            <Animated.View entering={FadeInDown.delay(60).duration(450)} style={styles.hero}>
+              <View style={styles.heroTop}>
+                <BETinaAvatar size={52} online pulse={totals.open > 0} />
+                <Text style={styles.heroLine}>{hostLine}</Text>
+              </View>
+              {totals.total > 0 && (
+                <View style={styles.progressWrap}>
+                  <Meta color={Colors.black} style={{ fontFamily: Fonts.monoBold }}>
+                    {totals.open === 0 ? t.tipAllDone : fill(t.tipProgress, { done: totals.done, total: totals.total })}
+                  </Meta>
+                  <View style={styles.segs}>
+                    {Array.from({ length: segments }, (_, i) => (
+                      <View key={i} style={[styles.seg, i < doneSegs && styles.segOn]} />
+                    ))}
                   </View>
-                )}
-                {totals.first && (
-                  <GlowButton label={`🎯 ${t.tipNow}`} onPress={() => go('/tipps/play', { competition: totals.first! })} />
-                )}
-              </GlowCard>
+                </View>
+              )}
+              {totals.first && (
+                <Pressable
+                  onPress={() => go('/tipps/play', { competition: totals.first! })}
+                  style={({ pressed }) => [styles.heroBtn, pressed && { opacity: 0.85 }]}
+                >
+                  <Text style={styles.heroBtnText}>{t.tipNow.toUpperCase()}</Text>
+                  <Text style={styles.heroBtnArrow}>→</Text>
+                </Pressable>
+              )}
             </Animated.View>
 
             {/* Beat BETina */}
-            <Animated.View entering={FadeInDown.delay(110).duration(500)}>
+            <Animated.View entering={FadeInDown.delay(110).duration(450)}>
               <Pressable onPress={() => go('/tipps/stats')}>
                 <View style={styles.duel}>
                   <View style={[styles.duelSide, styles.duelYou]}>
-                    <Text style={styles.duelWho}>{t.tipYouShort}</Text>
-                    <AnimatedNumber value={stats?.duel?.me ?? 0} style={styles.duelPts} />
+                    <Text style={[styles.duelWho, { color: Colors.black }]}>{t.tipYouShort}</Text>
+                    <AnimatedNumber value={stats?.duel?.me ?? 0} style={[styles.duelPts, { color: Colors.black }]} />
                   </View>
                   <View style={styles.duelMid}>
                     <Text style={styles.duelVs}>VS</Text>
                   </View>
                   <View style={[styles.duelSide, styles.duelBetina]}>
-                    <AnimatedNumber value={stats?.duel?.betina ?? 0} style={styles.duelPts} />
                     <View style={styles.duelBetinaName}>
+                      <Text style={styles.duelWho}>BETINA</Text>
                       <BETinaAvatar size={22} />
-                      <Text style={styles.duelWho}>BETina</Text>
                     </View>
+                    <AnimatedNumber value={stats?.duel?.betina ?? 0} style={[styles.duelPts, { color: Colors.primary }]} />
                   </View>
                 </View>
-                <Text style={styles.duelSub}>
+                <Meta style={styles.duelSub}>
                   {stats?.duel?.matches ? `${t.tipDuelTitle} · ${fill(t.tipDuelSub, { n: stats.duel.matches })}` : t.tipDuelEmpty}
-                </Text>
+                </Meta>
               </Pressable>
             </Animated.View>
 
             {/* Season at a glance */}
-            <Animated.View entering={FadeInDown.delay(150).duration(500)} style={styles.tiles}>
+            <Animated.View entering={FadeInDown.delay(150).duration(450)} style={styles.tiles}>
               <Tile value={me?.points ?? 0} label={t.tipSeasonPoints} />
               <Tile text={me ? `#${me.rank}` : '–'} label={t.tipRank} />
               <Tile value={me?.exact ?? 0} label={t.tipExactShort} />
@@ -189,24 +200,20 @@ function Hub() {
               const o = open[c.code];
               return (
                 <Animated.View key={c.code} entering={FadeInDown.delay(180 + i * 40).duration(400)}>
-                  <Pressable onPress={() => go('/tipps/play', { competition: c.code })}>
-                    <GlowCard style={styles.compCard}>
-                      <Emblem uri={c.emblem} size={26} />
-                      <View style={{ flex: 1, gap: 2 }}>
-                        <Text style={styles.compName}>{c.name}</Text>
-                        {o?.next && (
-                          <Text style={styles.compMeta}>{t.tipNextKickoff}: {kickoffFmt.format(new Date(o.next))}</Text>
-                        )}
+                  <Pressable onPress={() => go('/tipps/play', { competition: c.code })} style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
+                    <Emblem uri={c.emblem} size={24} />
+                    <View style={{ flex: 1, gap: 4 }}>
+                      <Text style={styles.rowName}>{c.name.toUpperCase()}</Text>
+                      {o?.next && <Meta>{`${t.tipNextKickoff}: ${kickoffFmt.format(new Date(o.next))}`}</Meta>}
+                    </View>
+                    {o && o.total > 0 && (
+                      <View style={[styles.chip, o.open > 0 ? styles.chipOpen : styles.chipDone]}>
+                        <Text style={[styles.chipText, o.open > 0 ? styles.chipTextOpen : styles.chipTextDone]}>
+                          {(o.open > 0 ? fill(t.tipOpenChip, { n: o.open }) : `✓ ${t.tipAllTipped}`).toUpperCase()}
+                        </Text>
                       </View>
-                      {o && o.total > 0 && (
-                        <View style={[styles.chip, o.open > 0 ? styles.chipOpen : styles.chipDone]}>
-                          <Text style={[styles.chipText, o.open > 0 ? styles.chipTextOpen : styles.chipTextDone]}>
-                            {o.open > 0 ? fill(t.tipOpenChip, { n: o.open }) : `✓ ${t.tipAllTipped}`}
-                          </Text>
-                        </View>
-                      )}
-                      <Text style={styles.chevron}>›</Text>
-                    </GlowCard>
+                    )}
+                    <Text style={styles.chevron}>→</Text>
                   </Pressable>
                 </Animated.View>
               );
@@ -215,42 +222,49 @@ function Hub() {
             {/* Tipprunden */}
             <SectionHead title={t.tipGroups} action="+" onAction={() => go('/tipps/groups')} />
             {groups.map((g) => (
-              <Pressable key={g.id} onPress={() => go('/tipps/ranking', { group: g.id, groupName: g.name, code: g.code })}>
-                <GlowCard variant="accent" style={styles.groupCard}>
-                  <Text style={styles.groupEmoji}>👥</Text>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <Text style={styles.compName} numberOfLines={1}>{g.name}</Text>
-                    <Text style={styles.compMeta}>{g.members} {t.tipMembers}</Text>
+              <Pressable
+                key={g.id}
+                onPress={() => go('/tipps/ranking', { group: g.id, groupName: g.name, code: g.code })}
+                style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+              >
+                <View style={{ flex: 1, gap: 4 }}>
+                  <Text style={styles.rowName} numberOfLines={1}>{g.name.toUpperCase()}</Text>
+                  <Meta>{`${g.members} ${t.tipMembers}`}</Meta>
+                </View>
+                {g.duel && g.duel.won + g.duel.lost + g.duel.drawn > 0 && (
+                  <View style={styles.teamTag}>
+                    <Text style={styles.teamTagText}>{g.duel.won}:{g.duel.lost}</Text>
+                    <BETinaAvatar size={16} />
                   </View>
-                  {g.duel && g.duel.won + g.duel.lost + g.duel.drawn > 0 && (
-                    <View style={styles.teamTag}>
-                      <Text style={styles.teamTagText}>{g.duel.won}:{g.duel.lost}</Text>
-                      <BETinaAvatar size={14} />
-                    </View>
-                  )}
-                  {g.rank != null && <Text style={styles.groupRank}>#{g.rank}</Text>}
-                  <Text style={styles.chevron}>›</Text>
-                </GlowCard>
+                )}
+                {g.rank != null && <Text style={styles.groupRank}>#{g.rank}</Text>}
+                <Text style={styles.chevron}>→</Text>
               </Pressable>
             ))}
             {groups.length === 0 && (
-              <Pressable onPress={() => go('/tipps/groups')}>
-                <View style={styles.dashed}>
-                  <Text style={styles.dashedText}>＋ {t.tipNewGroup}</Text>
-                  <Text style={styles.compMeta}>{t.tipNoGroups}</Text>
-                </View>
+              <Pressable onPress={() => go('/tipps/groups')} style={({ pressed }) => [styles.dashed, pressed && styles.rowPressed]}>
+                <Text style={styles.dashedText}>+ {t.tipNewGroup.toUpperCase()}</Text>
+                <Meta>{t.tipNoGroups}</Meta>
               </Pressable>
             )}
 
             {/* Shortcuts */}
             <View style={styles.shortcuts}>
-              <Shortcut emoji="🏆" label={t.tipRanking} onPress={() => go('/tipps/ranking', { competition: myComps[0]?.code ?? '' })} />
-              <Shortcut emoji="📊" label={t.tipStats} onPress={() => go('/tipps/stats')} />
-              <Shortcut emoji="⭐" label={t.tipBonus} onPress={() => go('/tipps/bonus', { competition: myComps[0]?.code ?? defaultCompetition(lang) })} />
+              <Shortcut label={t.tipRanking} onPress={() => go('/tipps/ranking', { competition: myComps[0]?.code ?? '' })} />
+              <Shortcut label={t.tipStats} onPress={() => go('/tipps/stats')} />
+              <Shortcut label={t.tipBonus} onPress={() => go('/tipps/bonus', { competition: myComps[0]?.code ?? defaultCompetition(lang) })} />
             </View>
           </>
         )}
       </ScrollView>
+
+      <BoomMoment
+        hit={boom}
+        name={firstName}
+        onClose={() => setBoom(null)}
+        onMore={() => { const c = boom?.competition; setBoom(null); if (c) go('/tipps/play', { competition: c }); }}
+        onCelebrate={() => { setBoom(null); router.push('/(tabs)/chat'); }}
+      />
 
       {/* Menu */}
       <Modal visible={menu} transparent animationType="none" onRequestClose={() => setMenu(false)}>
@@ -258,24 +272,22 @@ function Hub() {
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setMenu(false)} />
         </Animated.View>
         <Animated.View entering={SlideInDown.duration(260)} style={[styles.sheet, { paddingBottom: insets.bottom + 20 }]}>
-          <View style={styles.sheetHandle} />
-          <MenuRow emoji="📖" label={t.tipRules} onPress={() => setRules((v) => !v)} chevron={rules ? '⌃' : '⌄'} />
+          <MenuRow label={t.tipRules} onPress={() => setRules((v) => !v)} chevron={rules ? '−' : '+'} />
           {rules && <Text style={styles.rulesBody}>{t.tipRulesBody}</Text>}
           <View style={styles.menuRow}>
-            <Text style={styles.menuEmoji}>🔔</Text>
             <View style={{ flex: 1 }}>
-              <Text style={styles.menuLabel}>{t.tipNotifications}</Text>
-              <Text style={styles.menuSub}>{t.tipNotificationsSub}</Text>
+              <Text style={styles.menuLabel}>{t.tipNotifications.toUpperCase()}</Text>
+              <Meta style={{ marginTop: 4 }}>{t.tipNotificationsSub}</Meta>
             </View>
             <Toggle
               value={notify}
               onValueChange={(v: boolean) => { setNotify(v); setNotifyTippspiel(v); }}
             />
           </View>
-          <MenuRow emoji="🏟" label={t.tipMyCompetitions} onPress={() => go('/tipps/competitions')} />
-          <MenuRow emoji="👥" label={t.tipGroups} onPress={() => go('/tipps/groups')} />
-          <MenuRow emoji="⭐" label={t.tipBonusTitle} onPress={() => go('/tipps/bonus', { competition: myComps[0]?.code ?? defaultCompetition(lang) })} />
-          <MenuRow emoji="📊" label={t.tipStats} onPress={() => go('/tipps/stats')} />
+          <MenuRow label={t.tipMyCompetitions} onPress={() => go('/tipps/competitions')} />
+          <MenuRow label={t.tipGroups} onPress={() => go('/tipps/groups')} />
+          <MenuRow label={t.tipBonusTitle} onPress={() => go('/tipps/bonus', { competition: myComps[0]?.code ?? defaultCompetition(lang) })} />
+          <MenuRow label={t.tipStats} onPress={() => go('/tipps/stats')} />
         </Animated.View>
       </Modal>
     </ScreenBg>
@@ -292,180 +304,186 @@ function Onboarding({ competitions, lang, onDone }: { competitions: Competition[
     setPicked((p) => (p.includes(code) ? p.filter((c) => c !== code) : [...p, code]));
   };
   return (
-    <Animated.View entering={FadeInDown.delay(60).duration(500)}>
-      <GlowCard variant="green" style={styles.hero}>
-        <View style={styles.heroTop}>
-          <BETinaAvatar size={56} online pulse />
-          <View style={{ flex: 1, gap: 4 }}>
-            <Text style={styles.onbTitle}>{t.tipPickTitle}</Text>
-            <Text style={styles.heroLine}>{t.tipPickBody}</Text>
-          </View>
+    <Animated.View entering={FadeInDown.delay(60).duration(450)} style={{ gap: 14 }}>
+      <View style={styles.onbHead}>
+        <BETinaAvatar size={52} online pulse />
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text style={styles.onbTitle}>{t.tipPickTitle.toUpperCase()}</Text>
+          <Text style={styles.onbBody}>{t.tipPickBody}</Text>
         </View>
-        <View style={styles.onbGrid}>
-          {competitions.map((c) => {
-            const on = picked.includes(c.code);
-            return (
-              <Pressable key={c.code} onPress={() => toggle(c.code)} style={[styles.onbTile, on && styles.onbTileOn]}>
-                <Emblem uri={c.emblem} size={22} />
-                <Text style={[styles.onbName, on && styles.onbNameOn]} numberOfLines={1}>{c.name}</Text>
-                <Text style={[styles.onbCheck, on && styles.onbCheckOn]}>{on ? '✓' : '+'}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-        <GlowButton
-          label={t.tipLetsGo}
-          loading={saving}
-          disabled={picked.length === 0}
-          onPress={async () => {
-            setSaving(true);
-            await setMyCompetitions(picked);
-            setSaving(false);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            onDone();
-          }}
-        />
-      </GlowCard>
+      </View>
+      <View style={styles.onbGrid}>
+        {competitions.map((c) => {
+          const on = picked.includes(c.code);
+          return (
+            <Pressable key={c.code} onPress={() => toggle(c.code)} style={[styles.onbTile, on && styles.onbTileOn]}>
+              <Emblem uri={c.emblem} size={22} />
+              <Text style={[styles.onbName, on && styles.onbNameOn]} numberOfLines={1}>{c.name.toUpperCase()}</Text>
+              <Text style={[styles.onbCheck, on && styles.onbCheckOn]}>{on ? '✓' : '+'}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <GlowButton
+        label={t.tipLetsGo}
+        loading={saving}
+        disabled={picked.length === 0}
+        onPress={async () => {
+          setSaving(true);
+          await setMyCompetitions(picked);
+          setSaving(false);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          onDone();
+        }}
+      />
     </Animated.View>
   );
 }
 
 function Tile({ value, text, label }: { value?: number; text?: string; label: string }) {
   return (
-    <GlowCard style={styles.tile}>
+    <View style={styles.tile}>
       {text != null ? <Text style={styles.tileValue}>{text}</Text> : <AnimatedNumber value={value ?? 0} style={styles.tileValue} />}
-      <Text style={styles.tileLabel} numberOfLines={1}>{label}</Text>
-    </GlowCard>
+      <Meta numberOfLines={1}>{label}</Meta>
+    </View>
   );
 }
 
 function SectionHead({ title, action, onAction }: { title: string; action: string; onAction: () => void }) {
   return (
     <View style={styles.sectionHead}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <Pressable onPress={onAction} hitSlop={10} style={styles.sectionAction}>
+      <Headline text={title} size={30} accent="last" />
+      <Pressable onPress={onAction} hitSlop={10} style={({ pressed }) => [styles.sectionAction, pressed && styles.rowPressed]}>
         <Text style={styles.sectionActionText}>{action}</Text>
       </Pressable>
     </View>
   );
 }
 
-function Shortcut({ emoji, label, onPress }: { emoji: string; label: string; onPress: () => void }) {
+function Shortcut({ label, onPress }: { label: string; onPress: () => void }) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.shortcut, pressed && styles.shortcutPressed]}>
-      <Text style={styles.shortcutEmoji}>{emoji}</Text>
-      <Text style={styles.shortcutLabel} numberOfLines={1}>{label}</Text>
+      <Text style={styles.shortcutLabel} numberOfLines={1} adjustsFontSizeToFit>{label.toUpperCase()}</Text>
+      <Text style={styles.shortcutArrow}>→</Text>
     </Pressable>
   );
 }
 
-function MenuRow({ emoji, label, onPress, chevron = '›' }: { emoji: string; label: string; onPress: () => void; chevron?: string }) {
+function MenuRow({ label, onPress, chevron = '→' }: { label: string; onPress: () => void; chevron?: string }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.menuRow, pressed && styles.menuRowPressed]}>
-      <Text style={styles.menuEmoji}>{emoji}</Text>
-      <Text style={[styles.menuLabel, { flex: 1 }]}>{label}</Text>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.menuRow, pressed && styles.rowPressed]}>
+      <Text style={[styles.menuLabel, { flex: 1 }]}>{label.toUpperCase()}</Text>
       <Text style={styles.chevron}>{chevron}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: Spacing.lg, gap: 14 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: {
-    color: Colors.textPrimary, fontSize: Typography.xl + 2, fontFamily: Fonts.blackItalic,
-    textTransform: 'uppercase', letterSpacing: 0.5,
-  },
+  content: { paddingHorizontal: 16, gap: 14 },
+  header: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' },
   iconBtn: {
-    width: 38, height: 38, borderRadius: 0, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
+    width: 38, height: 38, alignItems: 'center', justifyContent: 'center', marginBottom: 8,
+    borderWidth: 1.5, borderColor: Colors.borderStrong,
   },
-  iconBtnText: { color: Colors.textPrimary, fontSize: Typography.md, fontFamily: Fonts.bold },
-  hero: { padding: 18, gap: 14 },
+  iconBtnText: { color: Colors.white, fontSize: 18, fontFamily: Fonts.label },
+
+  hero: { backgroundColor: Colors.primary, padding: 16, gap: 14 },
   heroTop: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  heroLine: { flex: 1, color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.semibold, lineHeight: 21 },
-  progressWrap: { gap: 6 },
-  progressHead: { flexDirection: 'row', justifyContent: 'space-between' },
-  progressLabel: { color: Colors.primary, fontSize: Typography.xs + 1, fontFamily: Fonts.bold, letterSpacing: 0.5 },
-  progressTrack: { height: 8, borderRadius: 0, backgroundColor: Colors.glass, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 0, backgroundColor: Colors.primary },
-  duel: {
-    flexDirection: 'row', alignItems: 'stretch', borderRadius: 0, overflow: 'hidden',
-    borderWidth: 1, borderColor: Colors.glassBorder,
+  heroLine: { flex: 1, color: Colors.black, fontSize: 17, fontFamily: Fonts.semibold, lineHeight: 23 },
+  progressWrap: { gap: 8 },
+  segs: { flexDirection: 'row', gap: 3 },
+  seg: { flex: 1, height: 10, backgroundColor: Colors.primaryDim },
+  segOn: { backgroundColor: Colors.black },
+  heroBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: Colors.black, paddingHorizontal: 16, paddingVertical: 14,
   },
-  duelSide: { flex: 1, paddingVertical: 14, paddingHorizontal: 16, gap: 2 },
-  duelYou: { backgroundColor: Colors.glowGreen, alignItems: 'flex-start' },
-  duelBetina: { backgroundColor: Colors.glowAccent, alignItems: 'flex-end' },
-  duelMid: { width: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.card },
-  duelVs: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.blackItalic },
-  duelWho: { color: Colors.textPrimary, fontSize: Typography.xs + 1, fontFamily: Fonts.extrabold, letterSpacing: 1 },
-  duelPts: { color: Colors.textPrimary, fontSize: Typography['2xl'], fontFamily: Fonts.black },
+  heroBtnText: { color: Colors.primary, fontSize: 22, fontFamily: Fonts.display, letterSpacing: 0.5 },
+  heroBtnArrow: { color: Colors.primary, fontSize: 22, fontFamily: Fonts.display },
+
+  duel: { flexDirection: 'row', alignItems: 'stretch', borderWidth: 1.5, borderColor: Colors.border },
+  duelSide: { flex: 1, paddingVertical: 12, paddingHorizontal: 14, gap: 2 },
+  duelYou: { backgroundColor: Colors.primary, alignItems: 'flex-start' },
+  duelBetina: { backgroundColor: Colors.surface, alignItems: 'flex-end' },
+  duelMid: { width: 46, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.black },
+  duelVs: { color: Colors.textMuted, fontSize: 20, fontFamily: Fonts.display },
+  duelWho: { color: Colors.white, fontSize: 14, fontFamily: Fonts.label, letterSpacing: 1 },
+  duelPts: { fontSize: 52, lineHeight: 54, fontFamily: Fonts.display },
   duelBetinaName: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  duelSub: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, textAlign: 'center', marginTop: 6 },
+  duelSub: { textAlign: 'center', marginTop: 8 },
+
   tiles: { flexDirection: 'row', gap: 8 },
-  tile: { flex: 1, alignItems: 'center', paddingVertical: 12, paddingHorizontal: 6, gap: 2 },
-  tileValue: { color: Colors.textPrimary, fontSize: Typography.xl, fontFamily: Fonts.black },
-  tileLabel: { color: Colors.textSecondary, fontSize: Typography.xs, fontFamily: Fonts.semibold },
-  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: Typography.md, fontFamily: Fonts.extrabold },
+  tile: {
+    flex: 1, alignItems: 'flex-start', paddingVertical: 12, paddingHorizontal: 12, gap: 4,
+    borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface,
+  },
+  tileValue: { color: Colors.white, fontSize: 34, lineHeight: 36, fontFamily: Fonts.display },
+
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 },
   sectionAction: {
-    width: 30, height: 30, borderRadius: 0, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
+    width: 34, height: 34, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: Colors.primary,
   },
-  sectionActionText: { color: Colors.primary, fontSize: Typography.base, fontFamily: Fonts.bold },
-  compCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
-  compName: { color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.bold },
-  compMeta: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
-  chip: { borderRadius: 0, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1 },
-  chipOpen: { backgroundColor: Colors.glowGold, borderColor: Colors.gold },
-  chipDone: { backgroundColor: Colors.glowGreen, borderColor: Colors.primaryDim },
-  chipText: { fontSize: Typography.xs, fontFamily: Fonts.extrabold },
-  chipTextOpen: { color: Colors.gold },
-  chipTextDone: { color: Colors.primary },
-  chevron: { color: Colors.textSecondary, fontSize: Typography.xl, fontFamily: Fonts.bold, marginTop: -2 },
-  groupCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
-  groupEmoji: { fontSize: 22 },
-  groupRank: { color: Colors.textPrimary, fontSize: Typography.lg, fontFamily: Fonts.black },
+  sectionActionText: { color: Colors.primary, fontSize: 18, fontFamily: Fonts.label },
+
+  row: {
+    flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14,
+    borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface,
+  },
+  rowPressed: { borderColor: Colors.primary, backgroundColor: Colors.card },
+  rowName: { color: Colors.white, fontSize: 18, fontFamily: Fonts.label, letterSpacing: 0.3 },
+  chip: { paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1.5 },
+  chipOpen: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  chipDone: { borderColor: Colors.borderStrong },
+  chipText: { fontSize: 12, fontFamily: Fonts.label, letterSpacing: 0.4 },
+  chipTextOpen: { color: Colors.black },
+  chipTextDone: { color: Colors.textSecondary },
+  chevron: { color: Colors.primary, fontSize: 18, fontFamily: Fonts.label },
+  groupRank: { color: Colors.white, fontSize: 26, fontFamily: Fonts.display },
   teamTag: {
-    flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 0, backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
+    flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 7, paddingVertical: 3,
+    borderWidth: 1.5, borderColor: Colors.borderStrong,
   },
-  teamTagText: { color: Colors.textPrimary, fontSize: Typography.xs, fontFamily: Fonts.extrabold },
+  teamTagText: { color: Colors.white, fontSize: 12, fontFamily: Fonts.monoBold },
   dashed: {
-    borderRadius: 0, borderWidth: 1, borderStyle: 'dashed', borderColor: Colors.glassBorder,
-    padding: 16, alignItems: 'center', gap: 4,
+    borderWidth: 1.5, borderStyle: 'dashed', borderColor: Colors.borderStrong,
+    padding: 16, alignItems: 'center', gap: 6,
   },
-  dashedText: { color: Colors.primary, fontSize: Typography.base, fontFamily: Fonts.bold },
-  shortcuts: { flexDirection: 'row', gap: 8, marginTop: 6 },
+  dashedText: { color: Colors.primary, fontSize: 18, fontFamily: Fonts.label, letterSpacing: 0.5 },
+
+  shortcuts: { flexDirection: 'row', gap: 8, marginTop: 14 },
   shortcut: {
-    flex: 1, alignItems: 'center', gap: 4, paddingVertical: 12, borderRadius: 0,
-    backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
+    flex: 1, gap: 10, paddingVertical: 14, paddingHorizontal: 12,
+    borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface,
   },
-  shortcutPressed: { backgroundColor: Colors.glowGreen, borderColor: Colors.primary },
-  shortcutEmoji: { fontSize: 20 },
-  shortcutLabel: { color: Colors.textPrimary, fontSize: Typography.xs + 1, fontFamily: Fonts.semibold },
-  onbTitle: { color: Colors.textPrimary, fontSize: Typography.md, fontFamily: Fonts.extrabold },
+  shortcutPressed: { borderColor: Colors.primary },
+  shortcutLabel: { color: Colors.white, fontSize: 20, fontFamily: Fonts.display },
+  shortcutArrow: { color: Colors.primary, fontSize: 16, fontFamily: Fonts.label },
+
+  onbHead: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  onbTitle: { color: Colors.primary, fontSize: 26, lineHeight: 28, fontFamily: Fonts.display },
+  onbBody: { color: Colors.textSecondary, fontSize: 15, lineHeight: 21, fontFamily: Fonts.medium },
   onbGrid: { gap: 8 },
   onbTile: {
-    flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 0,
-    backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.glassBorder,
+    flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12,
+    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border,
   },
-  onbTileOn: { borderColor: Colors.primary, backgroundColor: Colors.glowGreen },
-  onbName: { flex: 1, color: Colors.textSecondary, fontSize: Typography.base, fontFamily: Fonts.semibold },
-  onbNameOn: { color: Colors.textPrimary },
-  onbCheck: { color: Colors.textMuted, fontSize: Typography.md, fontFamily: Fonts.bold },
+  onbTileOn: { borderColor: Colors.primary },
+  onbName: { flex: 1, color: Colors.textSecondary, fontSize: 17, fontFamily: Fonts.label },
+  onbNameOn: { color: Colors.white },
+  onbCheck: { color: Colors.textMuted, fontSize: 20, fontFamily: Fonts.label },
   onbCheckOn: { color: Colors.primary },
+
   backdrop: { backgroundColor: Colors.overlay },
   sheet: {
     position: 'absolute', left: 0, right: 0, bottom: 0,
-    backgroundColor: Colors.surface, borderTopLeftRadius: 0, borderTopRightRadius: 0,
-    borderWidth: 1, borderColor: Colors.glassBorder, paddingHorizontal: 20, paddingTop: 10, gap: 4,
+    backgroundColor: Colors.black, borderTopWidth: 3, borderTopColor: Colors.primary,
+    paddingHorizontal: 20, paddingTop: 10,
   },
-  sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 0, backgroundColor: Colors.glassBorder, marginBottom: 8 },
-  menuRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, borderRadius: 0 },
-  menuRowPressed: { backgroundColor: Colors.glass },
-  menuEmoji: { fontSize: 20, width: 28, textAlign: 'center' },
-  menuLabel: { color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.semibold },
-  menuSub: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, marginTop: 2 },
-  rulesBody: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.regular, lineHeight: 20, paddingLeft: 42, paddingBottom: 8 },
+  menuRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16,
+    borderBottomWidth: 1, borderBottomColor: Colors.line,
+  },
+  menuLabel: { color: Colors.white, fontSize: 18, fontFamily: Fonts.label, letterSpacing: 0.4 },
+  rulesBody: { color: Colors.textSecondary, fontSize: 14, fontFamily: Fonts.regular, lineHeight: 21, paddingVertical: 10 },
 });

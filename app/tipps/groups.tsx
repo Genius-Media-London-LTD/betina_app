@@ -8,6 +8,7 @@ import BackButton from '../../src/components/BackButton';
 import GlowButton from '../../src/components/GlowButton';
 import GlowCard from '../../src/components/GlowCard';
 import ScreenBg from '../../src/components/ScreenBg';
+import { Headline } from '../../src/components/Urban';
 import { useI18n } from '../../src/lib/i18n';
 import { TipGroup, createGroup, fetchMyGroups, joinGroup, leaveGroup } from '../../src/lib/tippspiel';
 import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
@@ -83,22 +84,21 @@ export default function GroupsScreen() {
   };
 
   return (
-    <ScreenBg glowTop={0.14} glowSize={460}>
+    <ScreenBg>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing.xl }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <BackButton />
-          <Text style={styles.title}>{t.tipGroups}</Text>
+          <Headline text={t.tipGroups} size={34} accent="last" />
         </View>
 
         {loading ? (
           <ActivityIndicator color={Colors.primary} style={{ marginTop: 24 }} />
         ) : groups.length === 0 ? (
-          <GlowCard variant="accent" style={styles.emptyCard}>
-            <Text style={styles.emptyEmoji}>👥</Text>
+          <GlowCard style={styles.emptyCard}>
             <Text style={styles.emptyText}>{t.tipNoGroups}</Text>
           </GlowCard>
         ) : (
@@ -111,9 +111,9 @@ export default function GroupsScreen() {
                     <Text style={styles.groupMeta}>{g.members} {t.tipMembers} · {g.code}</Text>
                   </View>
                   <Pressable onPress={() => onLeave(g)} hitSlop={8} style={styles.leaveBtn}>
-                    <Text style={styles.leaveText}>✕</Text>
+                    <Text style={styles.leaveText}>×</Text>
                   </Pressable>
-                  <Text style={styles.chevron}>›</Text>
+                  <Text style={styles.chevron}>→</Text>
                 </GlowCard>
               </Pressable>
             </Animated.View>
@@ -159,26 +159,23 @@ export default function GroupsScreen() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.lg, gap: 14 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  title: { color: Colors.textPrimary, fontSize: Typography.xl, fontFamily: Fonts.extrabold },
   emptyCard: { padding: 20, alignItems: 'center', gap: 8 },
-  emptyEmoji: { fontSize: 32 },
   emptyText: { color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.medium, textAlign: 'center', lineHeight: 22 },
   groupCard: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
-  groupName: { color: Colors.textPrimary, fontSize: Typography.md, fontFamily: Fonts.bold },
-  groupMeta: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, letterSpacing: 0.5 },
+  groupName: { color: Colors.white, fontSize: 20, fontFamily: Fonts.label, textTransform: 'uppercase', letterSpacing: 0.4 },
+  groupMeta: { color: Colors.textMuted, fontSize: 11, fontFamily: Fonts.mono, letterSpacing: 0.8, textTransform: 'uppercase' },
   leaveBtn: {
     width: 30, height: 30, borderRadius: 0, alignItems: 'center', justifyContent: 'center',
     backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
   },
   leaveText: { color: Colors.textMuted, fontSize: Typography.sm, fontFamily: Fonts.bold },
-  chevron: { color: Colors.textSecondary, fontSize: Typography.xl, fontFamily: Fonts.bold, marginTop: -2 },
+  chevron: { color: Colors.primary, fontSize: 18, fontFamily: Fonts.label },
   error: { color: Colors.danger, fontSize: Typography.sm, fontFamily: Fonts.semibold, textAlign: 'center' },
   formCard: { padding: 16, gap: 10 },
-  formTitle: { color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.bold },
+  formTitle: { color: Colors.white, fontSize: 24, fontFamily: Fonts.display, textTransform: 'uppercase' },
   input: {
-    backgroundColor: Colors.surface, borderRadius: 0, borderWidth: 1, borderColor: Colors.glassBorder,
-    color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.semibold,
-    paddingHorizontal: 14, paddingVertical: 12,
+    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border,
+    color: Colors.white, fontSize: 16, fontFamily: Fonts.semibold, paddingHorizontal: 14, paddingVertical: 13,
   },
   codeInput: { letterSpacing: 3 },
 });

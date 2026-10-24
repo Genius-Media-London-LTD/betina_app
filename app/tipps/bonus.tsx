@@ -7,6 +7,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import BackButton from '../../src/components/BackButton';
 import GlowCard from '../../src/components/GlowCard';
 import ScreenBg from '../../src/components/ScreenBg';
+import { Headline } from '../../src/components/Urban';
 import { CompetitionChips, Crest, LOCALE, PointsBadge, fillText } from '../../src/components/TipParts';
 import { useI18n } from '../../src/lib/i18n';
 import {
@@ -73,14 +74,14 @@ export default function BonusScreen() {
   const teamById = (id: number | null | undefined) => teams.find((x) => x.id === id) ?? null;
 
   return (
-    <ScreenBg glowTop={0.14} glowSize={460}>
+    <ScreenBg>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing.xl }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <BackButton />
-          <Text style={styles.title}>{t.tipBonusTitle}</Text>
+          <Headline text={t.tipBonusTitle} size={34} accent="last" />
         </View>
 
         <CompetitionChips competitions={competitions} value={comp} onChange={(c) => c && setComp(c)} />
@@ -118,11 +119,11 @@ export default function BonusScreen() {
                     onPress={() => { Haptics.selectionAsync(); setOpenQuestion(expanded ? null : q.id); }}
                     style={[styles.choice, chosen && styles.choiceSet]}
                   >
-                    {chosen ? <Crest uri={chosen.crest} name={chosen.name} size={28} /> : <Text style={styles.choiceEmoji}>❔</Text>}
+                    {chosen ? <Crest uri={chosen.crest} name={chosen.name} size={28} /> : <Text style={styles.choiceEmoji}>?</Text>}
                     <Text style={[styles.choiceText, !chosen && styles.choicePlaceholder]}>
                       {chosen ? chosen.name : t.tipBonusPick}
                     </Text>
-                    {!closed && <Text style={styles.choiceChevron}>{expanded ? '⌃' : '⌄'}</Text>}
+                    {!closed && <Text style={styles.choiceChevron}>{expanded ? '−' : '+'}</Text>}
                   </Pressable>
 
                   {correct && (
@@ -159,30 +160,29 @@ export default function BonusScreen() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.lg, gap: 14 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  title: { color: Colors.textPrimary, fontSize: Typography.xl, fontFamily: Fonts.extrabold },
   error: { color: Colors.danger, fontSize: Typography.sm, fontFamily: Fonts.semibold, textAlign: 'center' },
   qCard: { padding: 16, gap: 10 },
   qHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  qText: { flex: 1, color: Colors.textPrimary, fontSize: Typography.md, fontFamily: Fonts.bold },
-  qPoints: { color: Colors.gold, fontSize: Typography.sm, fontFamily: Fonts.extrabold },
-  qMeta: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
+  qText: { flex: 1, color: Colors.white, fontSize: 24, lineHeight: 26, fontFamily: Fonts.display, textTransform: 'uppercase' },
+  qPoints: { color: Colors.primary, fontSize: 18, fontFamily: Fonts.display },
+  qMeta: { color: Colors.textMuted, fontSize: 11, fontFamily: Fonts.mono, letterSpacing: 0.8, textTransform: 'uppercase' },
   choice: {
     flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 0,
     backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.glassBorder,
   },
   choiceSet: { borderColor: Colors.primary },
-  choiceEmoji: { fontSize: 20 },
-  choiceText: { flex: 1, color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.bold },
+  choiceEmoji: { color: Colors.primary, fontSize: 24, fontFamily: Fonts.display, width: 28, textAlign: 'center' },
+  choiceText: { flex: 1, color: Colors.white, fontSize: 18, fontFamily: Fonts.label, textTransform: 'uppercase', letterSpacing: 0.4 },
   choicePlaceholder: { color: Colors.textSecondary, fontFamily: Fonts.semibold },
-  choiceChevron: { color: Colors.textSecondary, fontSize: Typography.base, fontFamily: Fonts.bold },
+  choiceChevron: { color: Colors.primary, fontSize: 20, fontFamily: Fonts.label },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   team: {
     width: '31.5%', alignItems: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 4,
     borderRadius: 0, backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
   },
-  teamActive: { backgroundColor: Colors.glowGreen, borderColor: Colors.primary },
+  teamActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   teamPressed: { opacity: 0.7 },
-  teamName: { color: Colors.textPrimary, fontSize: Typography.xs + 1, fontFamily: Fonts.semibold, textAlign: 'center' },
+  teamName: { color: Colors.white, fontSize: 13, fontFamily: Fonts.label, textTransform: 'uppercase', letterSpacing: 0.4, textAlign: 'center' },
   emptyCard: { padding: 20, alignItems: 'center' },
   emptyText: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center' },
 });
