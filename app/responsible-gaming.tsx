@@ -44,11 +44,11 @@ export default function ResponsibleGaming() {
   const router = useRouter();
 
   return (
-    <ScreenBg glowTop={0.12} glowSize={440}>
+    <ScreenBg>
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing.xl },
+          { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -58,7 +58,7 @@ export default function ResponsibleGaming() {
         </View>
 
         {/* BETina intro */}
-        <GlowCard variant="accent" style={styles.introCard}>
+        <GlowCard style={styles.introCard}>
           <BETinaAvatar size={52} />
           <View style={styles.introText}>
             <Text style={styles.introTitle}>Let’s keep it fun 💚</Text>
@@ -154,10 +154,10 @@ export default function ResponsibleGaming() {
 const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingHorizontal: Spacing.lg, gap: 16 },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingTop: Spacing.sm },
-  title: { color: Colors.white, fontSize: Typography.lg + 2, fontFamily: Fonts.bold },
+  title: { color: Colors.white, fontSize: 44, lineHeight: 46, fontFamily: Fonts.display, textTransform: 'uppercase', flexShrink: 1 },
   introCard: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
   introText: { flex: 1, gap: 3 },
-  introTitle: { color: Colors.white, fontSize: Typography.base, fontFamily: Fonts.bold },
+  introTitle: { color: Colors.primary, fontSize: 24, fontFamily: Fonts.display, textTransform: 'uppercase' },
   introBody: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, lineHeight: 18 },
   section: { gap: Spacing.sm },
   listCard: { paddingVertical: 14, paddingHorizontal: 16, gap: 10 },

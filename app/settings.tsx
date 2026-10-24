@@ -14,22 +14,23 @@ import { useSession } from '../src/hooks/useSession';
 import { LANGUAGES, LangCode, useI18n } from '../src/lib/i18n';
 import { signOut } from '../src/lib/session';
 import { supabase } from '../src/lib/supabase';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
+import { Meta } from '../src/components/Urban';
+import { Colors, Fonts } from '../src/theme';
 
 
 function Row({
   emoji, label, value, onPress, right, last,
 }: {
+  /** Kept for call-site readability; the urban rows show no emoji. */
   emoji: string; label: string; value?: string;
   onPress?: () => void; right?: React.ReactNode; last?: boolean;
 }) {
   return (
     <>
       <Pressable onPress={onPress} disabled={!onPress} style={styles.row}>
-        <Text style={styles.rowEmoji}>{emoji}</Text>
-        <Text style={styles.rowLabel}>{label}</Text>
-        {value && <Text style={styles.rowValue}>{value}</Text>}
-        {right ?? (onPress && <Text style={styles.rowChevron}>›</Text>)}
+        <Text style={styles.rowLabel}>{label.toUpperCase()}</Text>
+        {value && <Text style={styles.rowValue} numberOfLines={1}>{value.toUpperCase()}</Text>}
+        {right ?? (onPress && <Text style={styles.rowChevron}>→</Text>)}
       </Pressable>
       {!last && <View style={styles.divider} />}
     </>
@@ -138,13 +139,13 @@ export default function Settings() {
   };
 
   return (
-    <ScreenBg glowTop={0.12} glowSize={440}>
+    <ScreenBg>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing['2xl'] }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}
       >
         <Animated.View entering={FadeInDown.duration(500)}>
-          <Text style={styles.title}>{t.settingsTitle}</Text>
+          <Text style={styles.title}>{t.settingsTitle.toUpperCase()}<Text style={{ color: Colors.primary }}>.</Text></Text>
         </Animated.View>
 
         {/* Profile card (or a sign-in prompt for guests) */}
@@ -152,10 +153,10 @@ export default function Settings() {
           {guest ? (
             <GlowCard style={styles.profileCard}>
               <View style={styles.profileInitial}>
-                <Text style={styles.profileInitialLabel}>👋</Text>
+                <Text style={styles.profileInitialLabel}>?</Text>
               </View>
               <View style={styles.profileInfo}>
-                <Text style={styles.profileName} numberOfLines={1}>{t.guestTitle}</Text>
+                <Text style={styles.profileName} numberOfLines={1}>{t.guestTitle.toUpperCase()}</Text>
                 <Text style={styles.profileMeta} numberOfLines={2}>{t.guestBody}</Text>
               </View>
             </GlowCard>
@@ -165,12 +166,8 @@ export default function Settings() {
                 <Text style={styles.profileInitialLabel}>{(name[0] || '?').toUpperCase()}</Text>
               </View>
               <View style={styles.profileInfo}>
-                <Text style={styles.profileName} numberOfLines={1}>{name}</Text>
-                <Text style={styles.profileMeta}>{phone ?? '—'}</Text>
-              </View>
-              <View style={styles.tierPill}>
-                <View style={styles.tierDot} />
-                <Text style={styles.tierPillLabel}>{tier}</Text>
+                <Text style={styles.profileName} numberOfLines={1}>{name.toUpperCase()}</Text>
+                <Meta>{`${phone ?? '—'} · ${tier}`}</Meta>
               </View>
             </GlowCard>
           )}
@@ -183,7 +180,7 @@ export default function Settings() {
             <Row
               emoji="🌐"
               label={t.settingsLanguage}
-              value={`${currentLangInfo.flag} ${currentLangInfo.nativeName}`}
+              value={currentLangInfo.nativeName}
               onPress={() => { setSelectedLang(lang); setLangModalOpen(true); }}
               last
             />
@@ -224,11 +221,11 @@ export default function Settings() {
                 style={styles.deleteLink}
                 hitSlop={8}
               >
-                <Text style={styles.deleteLinkLabel}>{t.settingsDeleteAccount}</Text>
+                <Text style={styles.deleteLinkLabel}>{t.settingsDeleteAccount.toUpperCase()}</Text>
               </Pressable>
             </>
           )}
-          <Text style={styles.version}>BETina v1.0 · powered by GeniusBet</Text>
+          <Text style={styles.version}>BETINA V1.0 · POWERED BY GENIUSBET · 18+</Text>
         </Animated.View>
       </ScrollView>
 
@@ -236,8 +233,7 @@ export default function Settings() {
       <Modal visible={langModalOpen} transparent animationType="slide" onRequestClose={() => setLangModalOpen(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setLangModalOpen(false)} />
         <View style={[styles.modalSheet, { paddingBottom: insets.bottom + 16 }]}>
-          <View style={styles.modalHandle} />
-          <Text style={styles.modalTitle}>{t.settingsLanguage}</Text>
+          <Text style={styles.modalTitle}>{t.settingsLanguage.toUpperCase()}</Text>
 
           <ScrollView style={styles.langList} showsVerticalScrollIndicator={false}>
             {LANGUAGES.map((l) => {
@@ -250,7 +246,7 @@ export default function Settings() {
                 >
                   <Text style={styles.langFlag}>{l.flag}</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.langNative, active && styles.langNativeActive]}>{l.nativeName}</Text>
+                    <Text style={[styles.langNative, active && styles.langNativeActive]}>{l.nativeName.toUpperCase()}</Text>
                     <Text style={styles.langLabel}>{l.label}</Text>
                   </View>
                   {active && <Text style={styles.langCheck}>✓</Text>}
@@ -265,7 +261,7 @@ export default function Settings() {
             style={[styles.saveBtn, saving && { opacity: 0.6 }]}
           >
             <Text style={styles.saveBtnLabel}>
-              {saved ? t.settingsSaved : saving ? '…' : t.settingsSave}
+              {(saved ? t.settingsSaved : saving ? '…' : t.settingsSave).toUpperCase()}
             </Text>
           </Pressable>
         </View>
@@ -276,8 +272,7 @@ export default function Settings() {
         <View style={styles.deleteCenter}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => { if (!deleting) setDeleteModalOpen(false); }} />
           <View style={styles.deleteDialog}>
-            <Text style={styles.deleteDialogEmoji}>⚠️</Text>
-            <Text style={styles.deleteDialogTitle}>{t.deleteAcctTitle}</Text>
+            <Text style={styles.deleteDialogTitle}>{t.deleteAcctTitle.toUpperCase()}</Text>
             <Text style={styles.deleteDialogBody}>{t.deleteAcctBody}</Text>
             {deleteError && <Text style={styles.deleteDialogError}>{t.deleteAcctFailed}</Text>}
             <Pressable
@@ -285,7 +280,7 @@ export default function Settings() {
               disabled={deleting}
               style={[styles.deleteConfirmBtn, deleting && { opacity: 0.6 }]}
             >
-              <Text style={styles.deleteConfirmLabel}>{deleting ? t.deleteAcctWorking : t.deleteAcctConfirm}</Text>
+              <Text style={styles.deleteConfirmLabel}>{(deleting ? t.deleteAcctWorking : t.deleteAcctConfirm).toUpperCase()}</Text>
             </Pressable>
             <Pressable onPress={() => { if (!deleting) setDeleteModalOpen(false); }} disabled={deleting} style={styles.deleteCancelBtn}>
               <Text style={styles.deleteCancelLabel}>{t.deleteAcctCancel}</Text>
@@ -298,78 +293,56 @@ export default function Settings() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: Spacing.lg, gap: Spacing.md },
-  title: { color: Colors.white, fontSize: 26, fontFamily: Fonts.bold },
-  profileCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 14, paddingHorizontal: 16 },
-  profileInitial: {
-    width: 48, height: 48, borderRadius: 0,
-    backgroundColor: withAlpha(Colors.primary, 0.12), borderWidth: 1, borderColor: withAlpha(Colors.primary, 0.35),
-    alignItems: 'center', justifyContent: 'center',
-  },
-  profileInitialLabel: { color: Colors.primary, fontSize: Typography.md + 1, fontFamily: Fonts.bold },
-  profileInfo: { flex: 1, gap: 1 },
-  profileName: { color: Colors.white, fontSize: Typography.base + 1, fontFamily: Fonts.bold },
-  profileMeta: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
-  tierPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: withAlpha(Colors.primary, 0.1), borderWidth: 1, borderColor: withAlpha(Colors.primary, 0.3),
-    borderRadius: 0, paddingVertical: 6, paddingHorizontal: 12,
-  },
-  tierDot: { width: 7, height: 7, borderRadius: 0, backgroundColor: Colors.primary },
-  tierPillLabel: { color: Colors.primary, fontSize: Typography.xs, fontFamily: Fonts.bold, letterSpacing: 0.6 },
-  section: { gap: Spacing.sm },
-  row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 12, paddingHorizontal: 16 },
-  rowEmoji: { fontSize: 17 },
-  rowLabel: { flex: 1, color: Colors.white, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
-  rowValue: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium },
-  rowChevron: { color: Colors.textMuted, fontSize: Typography.sm + 1 },
-  divider: { height: 1, backgroundColor: withAlpha(Colors.white, 0.06), marginHorizontal: 16 },
-  version: { textAlign: 'center', color: Colors.textMuted, fontSize: Typography.xs, fontFamily: Fonts.medium, paddingTop: Spacing.xs },
+  content: { paddingHorizontal: 16, gap: 14 },
+  title: { color: Colors.white, fontSize: 64, lineHeight: 66, fontFamily: Fonts.display },
+  profileCard: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 12 },
+  profileInitial: { width: 48, height: 48, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
+  profileInitialLabel: { color: Colors.black, fontSize: 28, fontFamily: Fonts.display },
+  profileInfo: { flex: 1, gap: 3 },
+  profileName: { color: Colors.white, fontSize: 24, lineHeight: 26, fontFamily: Fonts.display },
+  profileMeta: { color: Colors.textSecondary, fontSize: 13, fontFamily: Fonts.medium, lineHeight: 18 },
+  section: { gap: 6, marginTop: 6 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 14, paddingHorizontal: 14 },
+  rowLabel: { flex: 1, color: Colors.white, fontSize: 17, fontFamily: Fonts.label, letterSpacing: 0.3 },
+  rowValue: { color: Colors.textMuted, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.8, maxWidth: '45%' },
+  rowChevron: { color: Colors.primary, fontSize: 16, fontFamily: Fonts.label },
+  divider: { height: 1, backgroundColor: Colors.line, marginHorizontal: 14 },
+  version: { textAlign: 'center', color: Colors.textMuted, fontSize: 9, fontFamily: Fonts.mono, letterSpacing: 0.8, paddingTop: 6 },
 
   // Modal
-  modalBackdrop: { flex: 1, backgroundColor: withAlpha(Colors.black, 0.6) },
+  modalBackdrop: { flex: 1, backgroundColor: Colors.overlay },
   modalSheet: {
-    backgroundColor: Colors.surface, borderTopLeftRadius: 0, borderTopRightRadius: 0,
-    borderWidth: 1, borderColor: withAlpha(Colors.white, 0.08),
-    paddingHorizontal: Spacing.lg, paddingTop: 12, maxHeight: '75%',
+    backgroundColor: Colors.black, borderTopWidth: 3, borderTopColor: Colors.primary,
+    paddingHorizontal: 16, paddingTop: 16, maxHeight: '75%',
   },
-  modalHandle: { width: 36, height: 4, borderRadius: 0, backgroundColor: Colors.textMuted, alignSelf: 'center', marginBottom: 16 },
-  modalTitle: { color: Colors.white, fontSize: Typography.lg, fontFamily: Fonts.bold, marginBottom: 16 },
+  modalTitle: { color: Colors.white, fontSize: 28, fontFamily: Fonts.display, marginBottom: 12 },
   langList: { maxHeight: 380 },
   langRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    paddingVertical: 14, paddingHorizontal: 12, borderRadius: 0, marginBottom: 4,
+    flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, paddingHorizontal: 12,
+    borderBottomWidth: 1, borderBottomColor: Colors.line,
   },
-  langRowActive: { backgroundColor: withAlpha(Colors.primary, 0.08), borderWidth: 1, borderColor: withAlpha(Colors.primary, 0.2) },
-  langFlag: { fontSize: 28 },
-  langNative: { color: Colors.white, fontSize: Typography.base, fontFamily: Fonts.semibold },
-  langNativeActive: { color: Colors.primary },
-  langLabel: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, marginTop: 2 },
-  langCheck: { color: Colors.primary, fontSize: Typography.base + 2, fontFamily: Fonts.bold },
-  saveBtn: {
-    marginTop: 12, backgroundColor: Colors.primary,
-    borderRadius: 0, paddingVertical: 14, alignItems: 'center',
-  },
-  saveBtnLabel: { color: Colors.black, fontFamily: Fonts.bold, fontSize: Typography.base },
+  langRowActive: { backgroundColor: Colors.primary },
+  langFlag: { fontSize: 26 },
+  langNative: { color: Colors.white, fontSize: 18, fontFamily: Fonts.label, letterSpacing: 0.3 },
+  langNativeActive: { color: Colors.black },
+  langLabel: { color: Colors.textMuted, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.8, marginTop: 2 },
+  langCheck: { color: Colors.black, fontSize: 18, fontFamily: Fonts.label },
+  saveBtn: { marginTop: 12, backgroundColor: Colors.primary, paddingVertical: 15, alignItems: 'center' },
+  saveBtnLabel: { color: Colors.black, fontFamily: Fonts.display, fontSize: 20 },
 
   // Delete account
   deleteLink: { alignItems: 'center', paddingVertical: 12, marginTop: 2 },
-  deleteLinkLabel: { color: Colors.danger, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
-  deleteCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: withAlpha(Colors.black, 0.65), padding: 28 },
+  deleteLinkLabel: { color: Colors.danger, fontSize: 11, fontFamily: Fonts.mono, letterSpacing: 0.8 },
+  deleteCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.overlay, padding: 24 },
   deleteDialog: {
-    width: '100%', maxWidth: 380, backgroundColor: Colors.surface,
-    borderRadius: 0, borderWidth: 1, borderColor: withAlpha(Colors.danger, 0.3),
-    paddingHorizontal: 22, paddingTop: 22, paddingBottom: 14, alignItems: 'center',
+    width: '100%', maxWidth: 380, backgroundColor: Colors.black, borderWidth: 1.5, borderColor: Colors.danger,
+    paddingHorizontal: 18, paddingTop: 20, paddingBottom: 10,
   },
-  deleteDialogEmoji: { fontSize: 34, marginBottom: 10 },
-  deleteDialogTitle: { color: Colors.white, fontSize: Typography.lg, fontFamily: Fonts.bold, textAlign: 'center', marginBottom: 8 },
-  deleteDialogBody: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center', lineHeight: 20, marginBottom: 18 },
-  deleteDialogError: { color: Colors.danger, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center', marginBottom: 14 },
-  deleteConfirmBtn: {
-    width: '100%', backgroundColor: Colors.danger,
-    borderRadius: 0, paddingVertical: 14, alignItems: 'center', marginBottom: 4,
-  },
-  deleteConfirmLabel: { color: Colors.dangerDeep, fontFamily: Fonts.bold, fontSize: Typography.base },
+  deleteDialogTitle: { color: Colors.white, fontSize: 30, lineHeight: 32, fontFamily: Fonts.display, marginBottom: 10 },
+  deleteDialogBody: { color: Colors.textSecondary, fontSize: 14, fontFamily: Fonts.medium, lineHeight: 20, marginBottom: 18 },
+  deleteDialogError: { color: Colors.danger, fontSize: 14, fontFamily: Fonts.medium, marginBottom: 14 },
+  deleteConfirmBtn: { width: '100%', backgroundColor: Colors.danger, paddingVertical: 15, alignItems: 'center', marginBottom: 4 },
+  deleteConfirmLabel: { color: Colors.black, fontFamily: Fonts.display, fontSize: 20 },
   deleteCancelBtn: { width: '100%', paddingVertical: 14, alignItems: 'center' },
-  deleteCancelLabel: { color: Colors.textSecondary, fontFamily: Fonts.semibold, fontSize: Typography.base },
+  deleteCancelLabel: { color: Colors.textSecondary, fontFamily: Fonts.label, fontSize: 15, letterSpacing: 0.5 },
 });

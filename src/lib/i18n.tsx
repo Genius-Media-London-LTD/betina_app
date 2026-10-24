@@ -199,6 +199,7 @@ type Translations = {
   tabTipps: string;
   tabNews: string;
   tabMenu: string;
+  notifAll: string;
   loginHeadline: string;
   loginSticker: string;
   loginSendCode: string;
@@ -667,6 +668,7 @@ const T: Record<LangCode, Translations> = {
     registerHeadline: "Who are you?",
     interestsHeadline: "What do you love?",
     welcomeHi: "Hi",
+    notifAll: "All",
   },
   de: {
     welcomeTitle: 'Willkommen',
@@ -975,6 +977,7 @@ const T: Record<LangCode, Translations> = {
     registerHeadline: "Wer bist du?",
     interestsHeadline: "Was feierst du?",
     welcomeHi: "Hi",
+    notifAll: "Alle",
   },
   es: {
     welcomeTitle: 'Bienvenido',
@@ -1283,6 +1286,7 @@ const T: Record<LangCode, Translations> = {
     registerHeadline: "¿Quién eres?",
     interestsHeadline: "¿Qué te flipa?",
     welcomeHi: "Hola",
+    notifAll: "Todas",
   },
   pt: {
     welcomeTitle: 'Bem-vindo',
@@ -1591,6 +1595,7 @@ const T: Record<LangCode, Translations> = {
     registerHeadline: "Quem és tu?",
     interestsHeadline: "O que curtes?",
     welcomeHi: "Olá",
+    notifAll: "Todas",
   },
   fr: {
     welcomeTitle: 'Bienvenue',
@@ -1899,6 +1904,7 @@ const T: Record<LangCode, Translations> = {
     registerHeadline: "Qui es-tu ?",
     interestsHeadline: "Qu'est-ce qui te fait vibrer ?",
     welcomeHi: "Salut",
+    notifAll: "Toutes",
   },
   it: {
     welcomeTitle: 'Benvenuto',
@@ -2207,6 +2213,7 @@ const T: Record<LangCode, Translations> = {
     registerHeadline: "Chi sei?",
     interestsHeadline: "Cosa ti piace?",
     welcomeHi: "Ciao",
+    notifAll: "Tutte",
   },
   ro: {
     welcomeTitle: 'Bun venit',
@@ -2515,6 +2522,7 @@ const T: Record<LangCode, Translations> = {
     registerHeadline: "Cine ești?",
     interestsHeadline: "Ce-ți place?",
     welcomeHi: "Salut",
+    notifAll: "Toate",
   },
 };
 

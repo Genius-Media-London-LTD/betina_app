@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import BackButton from '../src/components/BackButton';
-import BETinaAvatar from '../src/components/BETinaAvatar';
-import GlowCard from '../src/components/GlowCard';
 import ScreenBg from '../src/components/ScreenBg';
-import { languages } from '../src/lib/demo';
+import { Meta } from '../src/components/Urban';
+import { LANGUAGES, LangCode, useI18n } from '../src/lib/i18n';
 import { supabase } from '../src/lib/supabase';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
+import { Colors, Fonts } from '../src/theme';
 
+/** App language — switches instantly and is saved on the profile (chat + pushes use it). */
 export default function Language() {
   const insets = useSafeAreaInsets();
-  const [selected, setSelected] = useState('en');
+  const { lang, setLang, t } = useI18n();
 
-  const choose = async (code: string) => {
+  const choose = async (code: LangCode) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelected(code);
+    await setLang(code);
     const { data } = await supabase.auth.getUser();
     if (data.user) {
       await supabase.from('profiles').update({ language: code }).eq('id', data.user.id);
@@ -24,49 +24,31 @@ export default function Language() {
   };
 
   return (
-    <ScreenBg glowTop={0.12} glowSize={440}>
+    <ScreenBg>
       <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing.xl },
-        ]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.topBar}>
           <BackButton />
-          <View style={styles.topText}>
-            <Text style={styles.title}>Language</Text>
-            <Text style={styles.subtitle}>BETina speaks your language.</Text>
-          </View>
+          <Meta color={Colors.primary}>{`${LANGUAGES.length} ${t.settingsLanguage}`}</Meta>
         </View>
+        <Text style={styles.title}>{t.settingsLanguage.toUpperCase()}<Text style={{ color: Colors.primary }}>.</Text></Text>
 
-        <GlowCard>
-          {languages.map((lang, i) => (
-            <React.Fragment key={lang.code}>
-              <Pressable onPress={() => choose(lang.code)} style={styles.row}>
-                <Text style={styles.flag}>{lang.flag}</Text>
-                <View style={styles.rowText}>
-                  <Text style={[styles.langName, selected === lang.code && styles.langNameActive]}>
-                    {lang.name}
-                  </Text>
-                  <Text style={styles.langNative}>{lang.native}</Text>
+        <View>
+          {LANGUAGES.map((l) => {
+            const active = l.code === lang;
+            return (
+              <Pressable key={l.code} onPress={() => choose(l.code)} style={[styles.row, active && styles.rowActive]}>
+                <Text style={styles.flag}>{l.flag}</Text>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={[styles.name, active && styles.nameActive]}>{l.nativeName.toUpperCase()}</Text>
+                  <Meta color={active ? Colors.black : Colors.textMuted}>{l.label}</Meta>
                 </View>
-                {selected === lang.code && (
-                  <View style={styles.check}>
-                    <Text style={styles.checkLabel}>✓</Text>
-                  </View>
-                )}
+                <Text style={[styles.check, active && { color: Colors.black }]}>{active ? '✓' : ''}</Text>
               </Pressable>
-              {i < languages.length - 1 && <View style={styles.divider} />}
-            </React.Fragment>
-          ))}
-        </GlowCard>
-
-        <View style={styles.spacer} />
-
-        <View style={styles.note}>
-          <BETinaAvatar size={32} />
-          <Text style={styles.noteText}>Chat and notifications switch instantly — no restart needed.</Text>
+            );
+          })}
         </View>
       </ScrollView>
     </ScreenBg>
@@ -74,91 +56,16 @@ export default function Language() {
 }
 
 const styles = StyleSheet.create({
-  content: {
-    flexGrow: 1,
-    paddingHorizontal: Spacing.lg,
-    gap: 14,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    paddingTop: Spacing.sm,
-  },
-  topText: { gap: 1 },
-  title: {
-    color: Colors.white,
-    fontSize: Typography.lg + 2,
-    fontFamily: Fonts.bold,
-  },
-  subtitle: {
-    color: Colors.textSecondary,
-    fontSize: Typography.xs + 1,
-    fontFamily: Fonts.medium,
-  },
+  content: { flexGrow: 1, paddingHorizontal: 16, gap: 14 },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  title: { color: Colors.white, fontSize: 64, lineHeight: 66, fontFamily: Fonts.display, marginTop: 6 },
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    paddingVertical: 15,
-    paddingHorizontal: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 14,
+    borderBottomWidth: 1, borderBottomColor: Colors.line,
   },
-  flag: { fontSize: 22 },
-  rowText: {
-    flex: 1,
-    gap: 1,
-  },
-  langName: {
-    color: Colors.white,
-    fontSize: Typography.base,
-    fontFamily: Fonts.semibold,
-  },
-  langNameActive: {
-    fontFamily: Fonts.bold,
-  },
-  langNative: {
-    color: Colors.textMuted,
-    fontSize: Typography.xs + 1,
-    fontFamily: Fonts.medium,
-  },
-  check: {
-    width: 24,
-    height: 24,
-    borderRadius: 0,
-    backgroundColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkLabel: {
-    color: Colors.background,
-    fontSize: Typography.xs + 1,
-    fontFamily: Fonts.bold,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: withAlpha(Colors.white, 0.06),
-    marginHorizontal: 16,
-  },
-  spacer: {
-    flex: 1,
-    minHeight: Spacing.base,
-  },
-  note: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm + 2,
-    backgroundColor: withAlpha(Colors.accent, 0.18),
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.accent, 0.4),
-    borderRadius: 0,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-  },
-  noteText: {
-    flex: 1,
-    color: Colors.textPrimary,
-    fontSize: Typography.xs + 1,
-    fontFamily: Fonts.medium,
-    lineHeight: 18,
-  },
+  rowActive: { backgroundColor: Colors.primary, borderBottomColor: Colors.primary },
+  flag: { fontSize: 24 },
+  name: { color: Colors.white, fontSize: 22, fontFamily: Fonts.display },
+  nameActive: { color: Colors.black },
+  check: { color: Colors.primary, fontSize: 20, fontFamily: Fonts.label },
 });

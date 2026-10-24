@@ -25,11 +25,11 @@ export default function Help() {
   const [openIndex, setOpenIndex] = useState(0);
 
   return (
-    <ScreenBg glowTop={0.12} glowSize={440}>
+    <ScreenBg>
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing.xl },
+          { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -40,7 +40,7 @@ export default function Help() {
 
         {/* ask BETina first */}
         <Pressable onPress={() => router.push('/(tabs)/chat')}>
-          <GlowCard variant="accent" style={styles.askCard}>
+          <GlowCard style={styles.askCard}>
             <BETinaAvatar size={52} />
             <View style={styles.askText}>
               <Text style={styles.askTitle}>Ask BETina first</Text>
@@ -62,7 +62,7 @@ export default function Help() {
                     <View style={styles.faqHeader}>
                       <Text style={styles.faqQuestion}>{faq.q}</Text>
                       <Text style={[styles.faqCaret, open && styles.faqCaretOpen]}>
-                        {open ? '▴' : '▾'}
+                        {open ? '−' : '+'}
                       </Text>
                     </View>
                     {open && <Text style={styles.faqAnswer}>{faq.a}</Text>}
@@ -79,16 +79,14 @@ export default function Help() {
           <SectionLabel>CONTACT US</SectionLabel>
           <View style={styles.contactRow}>
             <GlowCard style={styles.contactCard}>
-              <Text style={styles.contactEmoji}>💬</Text>
-              <Text style={styles.contactLabel}>Live chat</Text>
+                            <Text style={styles.contactLabel}>Live chat</Text>
               <View style={styles.onlineRow}>
                 <View style={styles.onlineDot} />
                 <Text style={styles.onlineLabel}>Online now</Text>
               </View>
             </GlowCard>
             <GlowCard style={styles.contactCard}>
-              <Text style={styles.contactEmoji}>✉️</Text>
-              <Text style={styles.contactLabel}>Email</Text>
+                            <Text style={styles.contactLabel}>Email</Text>
               <Text style={styles.contactHint}>Reply in ~4 h</Text>
             </GlowCard>
           </View>
@@ -112,36 +110,15 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     paddingTop: Spacing.sm,
   },
-  title: {
-    color: Colors.white,
-    fontSize: Typography.lg + 2,
-    fontFamily: Fonts.bold,
-  },
-  askCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    padding: 16,
-  },
+  title: { color: Colors.white, fontSize: 44, lineHeight: 46, fontFamily: Fonts.display, textTransform: 'uppercase', flexShrink: 1 },
+  askCard: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, backgroundColor: Colors.primary, borderColor: Colors.primary },
   askText: {
     flex: 1,
     gap: 2,
   },
-  askTitle: {
-    color: Colors.white,
-    fontSize: Typography.base,
-    fontFamily: Fonts.bold,
-  },
-  askHint: {
-    color: Colors.textSecondary,
-    fontSize: Typography.xs + 1,
-    fontFamily: Fonts.medium,
-    lineHeight: 17,
-  },
-  askArrow: {
-    color: Colors.primary,
-    fontSize: Typography.base + 1,
-  },
+  askTitle: { color: Colors.black, fontSize: 24, fontFamily: Fonts.display, textTransform: 'uppercase' },
+  askHint: { color: Colors.black, fontSize: 13, fontFamily: Fonts.medium, lineHeight: 18 },
+  askArrow: { color: Colors.black, fontSize: 24, fontFamily: Fonts.display },
   section: {
     gap: Spacing.sm,
   },
@@ -155,15 +132,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  faqQuestion: {
-    color: Colors.white,
-    fontSize: Typography.sm + 1,
-    fontFamily: Fonts.semibold,
-  },
-  faqCaret: {
-    color: Colors.textMuted,
-    fontSize: Typography.sm,
-  },
+  faqQuestion: { flex: 1, color: Colors.white, fontSize: 17, fontFamily: Fonts.label, textTransform: 'uppercase', letterSpacing: 0.3 },
+  faqCaret: { color: Colors.textMuted, fontSize: 20, fontFamily: Fonts.label },
   faqCaretOpen: {
     color: Colors.primary,
   },
@@ -173,11 +143,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
     lineHeight: 20,
   },
-  divider: {
-    height: 1,
-    backgroundColor: withAlpha(Colors.white, 0.06),
-    marginHorizontal: 16,
-  },
+  divider: { height: 1, backgroundColor: Colors.line, marginHorizontal: 16 },
   contactRow: {
     flexDirection: 'row',
     gap: Spacing.sm + 2,
@@ -190,11 +156,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm + 2,
   },
   contactEmoji: { fontSize: 22 },
-  contactLabel: {
-    color: Colors.white,
-    fontSize: Typography.sm,
-    fontFamily: Fonts.bold,
-  },
+  contactLabel: { color: Colors.white, fontSize: 22, fontFamily: Fonts.display, textTransform: 'uppercase' },
   onlineRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -206,16 +168,8 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     backgroundColor: Colors.primary,
   },
-  onlineLabel: {
-    color: Colors.primary,
-    fontSize: Typography.xs,
-    fontFamily: Fonts.semibold,
-  },
-  contactHint: {
-    color: Colors.textSecondary,
-    fontSize: Typography.xs,
-    fontFamily: Fonts.medium,
-  },
+  onlineLabel: { color: Colors.primary, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.8, textTransform: 'uppercase' },
+  contactHint: { color: Colors.textMuted, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.8, textTransform: 'uppercase' },
   spacer: {
     flex: 1,
     minHeight: Spacing.base,

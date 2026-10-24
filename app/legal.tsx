@@ -20,11 +20,11 @@ export default function Legal() {
   const insets = useSafeAreaInsets();
 
   return (
-    <ScreenBg glowTop={0.12} glowSize={440}>
+    <ScreenBg>
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing.xl },
+          { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -64,7 +64,7 @@ export default function Legal() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.lg, gap: 14 },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingTop: Spacing.sm },
-  title: { color: Colors.white, fontSize: Typography.lg + 2, fontFamily: Fonts.bold },
+  title: { color: Colors.white, fontSize: 44, lineHeight: 46, fontFamily: Fonts.display, textTransform: 'uppercase', flexShrink: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 14, paddingHorizontal: 16 },
   rowEmoji: { fontSize: 17 },
   rowLabel: { flex: 1, color: Colors.white, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
