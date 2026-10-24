@@ -2,6 +2,7 @@ import { langForDialCode, useI18n } from '../../src/lib/i18n';
 import React, { useState } from 'react';
 import {
   FlatList,
+  Image,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -14,12 +15,13 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import BETinaAvatar from '../../src/components/BETinaAvatar';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import DismissKeyboard from '../../src/components/DismissKeyboard';
 import GlowButton from '../../src/components/GlowButton';
 import ScreenBg from '../../src/components/ScreenBg';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
+import { Headline, Meta, Sticker } from '../../src/components/Urban';
+import { Colors, Fonts } from '../../src/theme';
 
 const DIAL_CODES = [
   { flag: '🇦🇹', code: '+43', country: 'Austria' },
@@ -110,99 +112,105 @@ export default function Login() {
   };
 
   return (
-    <ScreenBg glowTop={0.18} glowSize={420}>
+    <ScreenBg>
       {/* Dial code picker */}
       <Modal visible={dialPickerVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalSheet, { paddingBottom: insets.bottom + 16 }]}>
-            <Text style={styles.modalTitle}>{t.loginSelectDial}</Text>
+            <View style={styles.modalHead}>
+              <Text style={styles.modalTitle}>{t.loginSelectDial.toUpperCase()}</Text>
+              <Pressable onPress={() => setDialPickerVisible(false)} hitSlop={10}>
+                <Text style={styles.modalClose}>×</Text>
+              </Pressable>
+            </View>
             <FlatList
               data={DIAL_CODES}
               keyExtractor={(d) => d.code + d.country}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={[styles.dialRow, item.code === dialEntry.code && item.country === dialEntry.country && styles.dialRowActive]}
-                  onPress={() => {
-                    setDialEntry(item);
-                    setDialPickerVisible(false);
-                    const detected = langForDialCode(item.code);
-                    if (detected) setLang(detected);
-                  }}
-                >
-                  <Text style={styles.dialFlag}>{item.flag}</Text>
-                  <Text style={styles.dialCountry}>{item.country}</Text>
-                  <Text style={styles.dialCode}>{item.code}</Text>
-                </Pressable>
-              )}
+              renderItem={({ item }) => {
+                const active = item.code === dialEntry.code && item.country === dialEntry.country;
+                return (
+                  <Pressable
+                    style={[styles.dialRow, active && styles.dialRowActive]}
+                    onPress={() => {
+                      setDialEntry(item);
+                      setDialPickerVisible(false);
+                      const detected = langForDialCode(item.code);
+                      if (detected) setLang(detected);
+                    }}
+                  >
+                    <Text style={styles.dialFlag}>{item.flag}</Text>
+                    <Text style={[styles.dialCountry, active && { color: Colors.black }]}>{item.country.toUpperCase()}</Text>
+                    <Text style={[styles.dialCodeText, active && { color: Colors.black }]}>{item.code}</Text>
+                  </Pressable>
+                );
+              }}
             />
           </View>
         </View>
       </Modal>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.flex}
-      >
-       <DismissKeyboard>
-        <View
-          style={[
-            styles.content,
-            { paddingTop: insets.top + Spacing.xl, paddingBottom: insets.bottom + Spacing['2xl'] },
-          ]}
-        >
-          <Animated.View entering={FadeInDown.duration(700)} style={styles.header}>
-            <BETinaAvatar size={88} />
-            <View style={styles.headerText}>
-              <Text style={styles.title}>{t.welcomeTitle}</Text>
-              <Text style={styles.subtitle}>
-                {t.enterPhone}.{'\n'}{t.welcomeSubtitle}
-              </Text>
-            </View>
-          </Animated.View>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
+        <DismissKeyboard>
+          <View style={styles.flex}>
+            {/* Photo header */}
+            <Animated.View entering={FadeIn.duration(700)} style={styles.photo}>
+              <Image source={require('../../assets/urban/betina-login.jpg')} style={styles.photoImage} resizeMode="cover" />
+              <LinearGradient colors={['transparent', Colors.black]} locations={[0.45, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+              <View style={[styles.photoTop, { top: insets.top + 10 }]}>
+                <Image source={require('../../assets/urban/logo-wordmark.png')} style={styles.wordmark} resizeMode="contain" />
+              </View>
+              <Sticker text={t.loginSticker} rotate={4} style={styles.sticker} />
+            </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(150).duration(700)} style={styles.field}>
-            <Text style={styles.fieldLabel}>{t.phoneLabel}</Text>
-            <View style={styles.phoneRow}>
-              <Pressable style={styles.dialCode} onPress={() => setDialPickerVisible(true)}>
-                <Text style={styles.dialFlag}>{dialEntry.flag}</Text>
-                <Text style={styles.dialText}>{dialEntry.code}</Text>
-                <Text style={styles.dialCaret}>▾</Text>
-              </Pressable>
-              <View style={styles.inputWrap}>
-                <TextInput
-                  value={phone}
-                  onChangeText={(v) => { setPhone(v); setError(null); }}
-                  placeholder="664 123 45"
-                  placeholderTextColor={Colors.textMuted}
-                  keyboardType="phone-pad"
-                  style={styles.input}
-                  returnKeyType="done"
-                  onSubmitEditing={() => Keyboard.dismiss()}
-                />
+            <View style={[styles.content, { paddingBottom: insets.bottom + 12 }]}>
+              <Animated.View entering={FadeInDown.delay(150).duration(600)}>
+                <Headline text={t.loginHeadline} size={60} accent="last" />
+                <Text style={styles.subtitle}>{t.enterPhone}. {t.welcomeSubtitle}</Text>
+              </Animated.View>
+
+              <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.field}>
+                <Meta>{t.phoneLabel}</Meta>
+                <View style={styles.phoneRow}>
+                  <Pressable style={styles.dialCode} onPress={() => setDialPickerVisible(true)}>
+                    <Text style={styles.dialFlag}>{dialEntry.flag}</Text>
+                    <Text style={styles.dialText}>{dialEntry.code}</Text>
+                    <Text style={styles.dialCaret}>▾</Text>
+                  </Pressable>
+                  <TextInput
+                    value={phone}
+                    onChangeText={(v) => { setPhone(v); setError(null); }}
+                    placeholder="664 123 45"
+                    placeholderTextColor={Colors.textMuted}
+                    keyboardType="phone-pad"
+                    style={styles.input}
+                    returnKeyType="done"
+                    onSubmitEditing={() => Keyboard.dismiss()}
+                  />
+                </View>
+                {error && <Text style={styles.error}>{error}</Text>}
+              </Animated.View>
+
+              <Animated.View entering={FadeInDown.delay(350).duration(600)} style={styles.ctaBlock}>
+                <GlowButton label={t.loginSendCode} onPress={sendCode} loading={loading} />
+                <Text style={styles.terms}>
+                  {t.termsAgree} <Text style={styles.termsLink}>{t.termsLink}</Text> &{' '}
+                  <Text style={styles.termsLink}>{t.privacyLink}</Text>
+                </Text>
+              </Animated.View>
+
+              <View style={styles.flex} />
+
+              {/* Guest access — Apple 5.1.1(v): non-account content (news/articles)
+                  must be reachable without registering. Lands on the News tab. */}
+              <View style={styles.footer}>
+                <Meta>18+</Meta>
+                <Pressable onPress={() => router.replace('/(tabs)/live')} hitSlop={8}>
+                  <Meta color={Colors.primary}>{`${t.loginGuest} →`}</Meta>
+                </Pressable>
               </View>
             </View>
-            {error && <Text style={styles.error}>{error}</Text>}
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(250).duration(700)} style={styles.ctaBlock}>
-            <GlowButton label={t.continueBtn} onPress={sendCode} loading={loading} />
-            <Text style={styles.terms}>
-              {t.termsAgree} <Text style={styles.termsLink}>{t.termsLink}</Text> &{' '}
-              <Text style={styles.termsLink}>{t.privacyLink}</Text>
-            </Text>
-          </Animated.View>
-
-          <View style={styles.flex} />
-
-          {/* Guest access — Apple 5.1.1(v): non-account content (news/articles)
-              must be reachable without registering. Lands on the Live tab. */}
-          <Animated.View entering={FadeInDown.delay(350).duration(700)}>
-            <Pressable onPress={() => router.replace('/(tabs)/live')} hitSlop={8} style={styles.guestBtn}>
-              <Text style={styles.guestLabel}>{t.loginGuest} →</Text>
-            </Pressable>
-          </Animated.View>
-        </View>
-       </DismissKeyboard>
+          </View>
+        </DismissKeyboard>
       </KeyboardAvoidingView>
     </ScreenBg>
   );
@@ -210,59 +218,43 @@ export default function Login() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { flex: 1, paddingHorizontal: Spacing.xl },
-  guestBtn: { alignSelf: 'center', paddingVertical: 12 },
-  guestLabel: { color: Colors.textSecondary, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
-  header: { alignItems: 'center', gap: Spacing.base, paddingTop: 28, paddingBottom: 36 },
-  headerText: { alignItems: 'center', gap: 6 },
-  title: { color: Colors.white, fontSize: 26, fontFamily: Fonts.bold },
-  subtitle: {
-    color: Colors.textSecondary, fontSize: Typography.sm + 1,
-    fontFamily: Fonts.medium, textAlign: 'center', lineHeight: 21,
-  },
-  field: { gap: Spacing.sm + 2 },
-  fieldLabel: {
-    color: Colors.textSecondary, fontSize: Typography.xs + 1,
-    fontFamily: Fonts.semibold, letterSpacing: 1.2, textTransform: 'uppercase',
-  },
-  phoneRow: { flexDirection: 'row', gap: Spacing.sm + 2 },
+  photo: { height: '42%', minHeight: 260, overflow: 'hidden', backgroundColor: Colors.surface },
+  photoImage: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
+  photoTop: { position: 'absolute', left: 16, right: 16 },
+  wordmark: { width: 120, height: 22 },
+  sticker: { position: 'absolute', right: 16, bottom: 22 },
+  content: { flex: 1, paddingHorizontal: 16, gap: 18, marginTop: -6 },
+  subtitle: { color: Colors.textSecondary, fontSize: 15, lineHeight: 21, fontFamily: Fonts.medium, marginTop: 8 },
+  field: { gap: 8 },
+  phoneRow: { flexDirection: 'row', gap: 8 },
   dialCode: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-    borderRadius: 0, paddingHorizontal: 14,
+    flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12,
+    borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface,
   },
   dialFlag: { fontSize: 18 },
-  dialText: { color: Colors.white, fontSize: Typography.md - 1, fontFamily: Fonts.semibold },
-  dialCaret: { color: Colors.textMuted, fontSize: 11 },
-  inputWrap: {
-    flex: 1, backgroundColor: Colors.glass, borderWidth: 1,
-    borderColor: withAlpha(Colors.primary, 0.45), borderRadius: 0, paddingHorizontal: 18,
-  },
+  dialText: { color: Colors.white, fontSize: 17, fontFamily: Fonts.label },
+  dialCaret: { color: Colors.primary, fontSize: 11 },
   input: {
-    color: Colors.white, fontSize: Typography.md - 1,
-    fontFamily: Fonts.semibold, paddingVertical: 16,
+    flex: 1, color: Colors.white, fontSize: 20, fontFamily: Fonts.label, letterSpacing: 1,
+    paddingVertical: 14, paddingHorizontal: 14,
+    borderWidth: 1.5, borderColor: Colors.primary, backgroundColor: Colors.surface,
   },
-  error: { color: Colors.danger, fontSize: Typography.sm, fontFamily: Fonts.medium, lineHeight: 19 },
-  ctaBlock: { gap: 18, marginTop: 28 },
-  terms: {
-    color: Colors.textMuted, fontSize: Typography.xs + 1,
-    fontFamily: Fonts.medium, textAlign: 'center', lineHeight: 19,
-  },
+  error: { color: Colors.danger, fontSize: 14, fontFamily: Fonts.medium, lineHeight: 19 },
+  ctaBlock: { gap: 14 },
+  terms: { color: Colors.textMuted, fontSize: 12, fontFamily: Fonts.medium, lineHeight: 18 },
   termsLink: { color: Colors.textSecondary, textDecorationLine: 'underline' },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: withAlpha(Colors.black, 0.7), justifyContent: 'flex-end' },
-  modalSheet: {
-    backgroundColor: Colors.card, borderTopLeftRadius: 0,
-    borderTopRightRadius: 0, paddingTop: 20, maxHeight: '80%',
-  },
-  modalTitle: {
-    color: Colors.white, fontSize: Typography.base, fontFamily: Fonts.bold,
-    textAlign: 'center', paddingBottom: 16,
-  },
+  modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
+  modalSheet: { backgroundColor: Colors.black, borderTopWidth: 3, borderTopColor: Colors.primary, maxHeight: '80%' },
+  modalHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16 },
+  modalTitle: { color: Colors.white, fontSize: 24, fontFamily: Fonts.display },
+  modalClose: { color: Colors.white, fontSize: 26, fontFamily: Fonts.label },
   dialRow: {
-    flexDirection: 'row', alignItems: 'center',
-    gap: Spacing.md, paddingVertical: 14, paddingHorizontal: 24,
+    flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 20,
+    borderBottomWidth: 1, borderBottomColor: Colors.line,
   },
-  dialRowActive: { backgroundColor: withAlpha(Colors.primary, 0.08) },
-  dialCountry: { flex: 1, color: Colors.white, fontSize: Typography.base - 1, fontFamily: Fonts.medium },
+  dialRowActive: { backgroundColor: Colors.primary },
+  dialCountry: { flex: 1, color: Colors.white, fontSize: 16, fontFamily: Fonts.label, letterSpacing: 0.3 },
+  dialCodeText: { color: Colors.textSecondary, fontSize: 13, fontFamily: Fonts.monoBold },
 });

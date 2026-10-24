@@ -18,9 +18,10 @@ import DismissKeyboard from '../../src/components/DismissKeyboard';
 import ChatBubble from '../../src/components/ChatBubble';
 import GlowButton from '../../src/components/GlowButton';
 import ScreenBg from '../../src/components/ScreenBg';
+import { Headline, Meta } from '../../src/components/Urban';
 import { useI18n } from '../../src/lib/i18n';
 import { supabase } from '../../src/lib/supabase';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
+import { Colors, Fonts } from '../../src/theme';
 
 const CODE_LENGTH = 6;
 
@@ -110,7 +111,7 @@ export default function Otp() {
   const activeIndex = Math.min(code.length, CODE_LENGTH - 1);
 
   return (
-    <ScreenBg glowTop={0.2} glowSize={420}>
+    <ScreenBg>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.flex}
@@ -119,7 +120,7 @@ export default function Otp() {
         <View
           style={[
             styles.content,
-            { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing['2xl'] },
+            { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 },
           ]}
         >
           <View style={styles.topBar}>
@@ -127,10 +128,8 @@ export default function Otp() {
           </View>
 
           <Animated.View entering={FadeInDown.duration(600)} style={styles.headerBlock}>
-            <Text style={styles.title}>{t.otpTitle}</Text>
-            <Text style={styles.subtitle}>
-              {t.otpSubtitle} <Text style={styles.phone}>{phone}</Text>
-            </Text>
+            <Headline text={t.otpHeadline} size={60} accent="last" />
+            <Text style={styles.subtitle}>{t.otpSentTo.replace('{phone}', phone)}</Text>
           </Animated.View>
 
           {/* OTP boxes over a hidden input */}
@@ -166,14 +165,12 @@ export default function Otp() {
           {error && <Text style={styles.error}>{error}</Text>}
 
           <View style={styles.resendRow}>
-            <Text style={styles.resendHint}>{t.otpNoCode}</Text>
+            <Meta>{`${code.length} / ${CODE_LENGTH}`}</Meta>
             {resendIn > 0 ? (
-              <Text style={styles.resendWait}>
-                {t.otpResendIn} <Text style={styles.resendTime}>0:{String(resendIn).padStart(2, '0')}</Text>
-              </Text>
+              <Meta>{`${t.otpResendIn} 0:${String(resendIn).padStart(2, '0')}`}</Meta>
             ) : (
               <Pressable onPress={resend} hitSlop={8}>
-                <Text style={styles.resendTime}>{t.otpResend}</Text>
+                <Meta color={Colors.primary}>{`${t.otpResend} →`}</Meta>
               </Pressable>
             )}
           </View>
@@ -212,133 +209,30 @@ export default function Otp() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: {
-    flex: 1,
-    paddingHorizontal: Spacing.xl,
-  },
-  topBar: {
-    paddingVertical: Spacing.lg,
-  },
-  headerBlock: {
-    gap: Spacing.sm,
-    paddingBottom: 34,
-  },
-  title: {
-    color: Colors.white,
-    fontSize: 26,
-    fontFamily: Fonts.bold,
-  },
-  subtitle: {
-    color: Colors.textSecondary,
-    fontSize: Typography.sm + 1,
-    fontFamily: Fonts.medium,
-    lineHeight: 21,
-  },
-  phone: {
-    color: Colors.white,
-    fontFamily: Fonts.semibold,
-  },
-  otpRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    justifyContent: 'center',
-  },
+  content: { flex: 1, paddingHorizontal: 16 },
+  topBar: { paddingBottom: 20 },
+  headerBlock: { gap: 10, paddingBottom: 28 },
+  subtitle: { color: Colors.textSecondary, fontSize: 15, fontFamily: Fonts.medium, lineHeight: 21 },
+  otpRow: { flexDirection: 'row', gap: 8, justifyContent: 'center' },
   otpBox: {
     // Flexible width so all six boxes always fit the screen; capped on tablets.
-    flex: 1,
-    maxWidth: 58,
-    aspectRatio: 0.84,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.glass,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    borderRadius: 0,
+    flex: 1, maxWidth: 62, aspectRatio: 0.8, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border,
   },
-  otpBoxActive: {
-    borderColor: withAlpha(Colors.primary, 0.55),
-  },
-  otpDigit: {
-    color: Colors.white,
-    fontSize: 26,
-    fontFamily: Fonts.bold,
-  },
-  cursor: {
-    width: 2,
-    height: 26,
-    borderRadius: 0,
-    backgroundColor: Colors.primary,
-  },
-  hiddenInput: {
-    position: 'absolute',
-    opacity: 0,
-    height: 1,
-    width: 1,
-  },
-  error: {
-    color: Colors.danger,
-    fontSize: Typography.sm,
-    fontFamily: Fonts.medium,
-    textAlign: 'center',
-    paddingTop: Spacing.base,
-  },
-  resendRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-    paddingTop: Spacing.xl,
-  },
-  resendHint: {
-    color: Colors.textMuted,
-    fontSize: Typography.sm,
-    fontFamily: Fonts.medium,
-  },
-  resendWait: {
-    color: Colors.textSecondary,
-    fontSize: Typography.sm,
-    fontFamily: Fonts.medium,
-  },
-  resendTime: {
-    color: Colors.primary,
-    fontSize: Typography.sm,
-    fontFamily: Fonts.semibold,
-  },
-  rememberRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingTop: Spacing.xl,
-  },
+  otpBoxActive: { borderColor: Colors.primary },
+  otpDigit: { color: Colors.white, fontSize: 40, lineHeight: 46, fontFamily: Fonts.display },
+  cursor: { width: 3, height: 30, backgroundColor: Colors.primary },
+  hiddenInput: { position: 'absolute', opacity: 0, height: 1, width: 1 },
+  error: { color: Colors.danger, fontSize: 14, fontFamily: Fonts.medium, textAlign: 'center', paddingTop: 14 },
+  resendRow: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 12 },
+  rememberRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 24 },
   checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 0,
-    borderWidth: 1.5,
-    borderColor: Colors.glassBorder,
-    backgroundColor: Colors.glass,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 22, height: 22, borderWidth: 1.5, borderColor: Colors.borderStrong,
+    alignItems: 'center', justifyContent: 'center',
   },
-  checkboxActive: {
-    borderColor: Colors.primary,
-    backgroundColor: withAlpha(Colors.primary, 0.15),
-  },
-  checkmark: {
-    color: Colors.primary,
-    fontSize: 13,
-    fontFamily: Fonts.bold,
-    lineHeight: 16,
-  },
-  rememberLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.sm,
-    fontFamily: Fonts.medium,
-    flex: 1,
-  },
-  cta: {
-    marginTop: 20,
-  },
-  hintRow: {
-    alignItems: 'flex-start',
-  },
+  checkboxActive: { borderColor: Colors.primary, backgroundColor: Colors.primary },
+  checkmark: { color: Colors.black, fontSize: 13, fontFamily: Fonts.label, lineHeight: 16 },
+  rememberLabel: { color: Colors.textSecondary, fontSize: 14, fontFamily: Fonts.medium, flex: 1 },
+  cta: { marginTop: 20 },
+  hintRow: { alignItems: 'flex-start' },
 });

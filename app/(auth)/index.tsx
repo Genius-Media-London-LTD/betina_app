@@ -3,81 +3,69 @@ import { Image, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, {
-  Easing,
-  FadeInDown,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withTiming,
-} from 'react-native-reanimated';
-import BETinaAvatar from '../../src/components/BETinaAvatar';
+import Animated, { Easing, FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 import ScreenBg from '../../src/components/ScreenBg';
-import ParticlesBg from '../../src/components/ParticlesBg';
+import XPBar from '../../src/components/XPBar';
+import { Meta, OutlineNumber, Sticker, Ticker } from '../../src/components/Urban';
 import { supabase } from '../../src/lib/supabase';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
+import { Colors, Fonts } from '../../src/theme';
 
 const LOAD_MS = 2800;
 
 export default function Splash() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const loadProgress = useSharedValue(0);
 
   useEffect(() => {
-    loadProgress.value = withDelay(
-      1000,
-      withTiming(1, { duration: LOAD_MS, easing: Easing.bezier(0.4, 0, 0.2, 1) }),
-    );
-
     const timer = setTimeout(async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) router.replace('/(tabs)');
       else router.replace('/(auth)/login');
-    }, LOAD_MS + 1200);
+    }, LOAD_MS + 600);
     return () => clearTimeout(timer);
-  }, [loadProgress, router]);
-
-  const barStyle = useAnimatedStyle(() => ({ width: `${loadProgress.value * 100}%` }));
+  }, [router]);
 
   return (
-    <ScreenBg glowTop={0.42} glowSize={480}>
-      <ParticlesBg count={12} />
-
-      <View style={styles.center}>
-        <Animated.View entering={FadeInDown.duration(1400).easing(Easing.out(Easing.exp))}>
-          <BETinaAvatar size={172} pulse />
-        </Animated.View>
-
-        <Animated.View
-          entering={FadeInDown.delay(350).duration(1400).easing(Easing.out(Easing.exp))}
-          style={styles.titleWrap}
-        >
-          <Text style={styles.title}>
-            BET<Text style={styles.titleAccent}>ina</Text>
-          </Text>
-          <Text style={styles.subtitle}>Your AI Companion</Text>
-        </Animated.View>
+    <ScreenBg>
+      <View style={[styles.top, { paddingTop: insets.top + 10 }]}>
+        <Image source={require('../../assets/urban/logo-wordmark.png')} style={styles.wordmark} resizeMode="contain" />
+        <Meta color={Colors.primary}>AI COMPANION</Meta>
       </View>
 
-      <View style={[styles.bottom, { paddingBottom: insets.bottom + Spacing['3xl'] }]}>
-        <Animated.View entering={FadeInDown.delay(700).duration(1000)} style={styles.poweredBy}>
-          <Text style={styles.poweredByLabel}>Powered by</Text>
-          <Image
-            source={require('../../assets/logo-wordmark.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
+      {/* Photo */}
+      <Animated.View entering={FadeIn.duration(900)} style={styles.photo}>
+        <Image source={require('../../assets/urban/betina-splash.jpg')} style={styles.photoImage} resizeMode="cover" />
+        <LinearGradient
+          colors={['transparent', Colors.black]}
+          locations={[0.55, 1]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+        <View style={styles.vertical} pointerEvents="none">
+          <OutlineNumber value="BETINA" size={60} />
+        </View>
+        <Animated.View entering={ZoomIn.delay(900).springify()} style={styles.stickerWrap}>
+          <Sticker text={'Your game.\nYour vibe.'} rotate={-6} />
         </Animated.View>
-        <Animated.View entering={FadeInDown.delay(900).duration(1000)} style={styles.loadTrack}>
-          <Animated.View style={[styles.loadFill, barStyle]}>
-            <LinearGradient
-              colors={[Colors.primaryDim, Colors.primary]}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={StyleSheet.absoluteFill}
-            />
-          </Animated.View>
+      </Animated.View>
+
+      <Ticker label="Live" items={['BETina is live', 'BETina News', 'Beat BETina', 'XP drop']} />
+
+      <View style={[styles.bottom, { paddingBottom: insets.bottom + 24 }]}>
+        <Animated.View entering={FadeInDown.delay(400).duration(800).easing(Easing.out(Easing.exp))}>
+          <Meta color={Colors.primary}>// MEET YOUR</Meta>
+          <Text style={styles.name}>BETINA</Text>
+        </Animated.View>
+        <Animated.View entering={FadeInDown.delay(700).duration(700)} style={styles.load}>
+          <View style={styles.loadHead}>
+            <Meta>SYNCING YOUR TEAMS</Meta>
+            <Meta color={Colors.primary}>18+</Meta>
+          </View>
+          <XPBar progress={1} height={8} segments={24} delay={900} />
+          <View style={styles.powered}>
+            <Meta size={9}>POWERED BY</Meta>
+            <Image source={require('../../assets/logo-wordmark.png')} style={styles.logo} resizeMode="contain" />
+          </View>
         </Animated.View>
       </View>
     </ScreenBg>
@@ -85,67 +73,16 @@ export default function Splash() {
 }
 
 const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 28,
-    paddingHorizontal: Spacing['2xl'],
-  },
-  titleWrap: {
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  title: {
-    color: Colors.primary,
-    fontSize: 42,
-    fontFamily: Fonts.blackItalic,
-    letterSpacing: -1,
-    textShadowColor: withAlpha(Colors.primary, 0.5),
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 22,
-  },
-  titleAccent: {
-    color: Colors.white,
-    textShadowColor: 'transparent',
-  },
-  subtitle: {
-    color: Colors.textSecondary,
-    fontSize: Typography.sm + 1,
-    fontFamily: Fonts.medium,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-  },
-  bottom: {
-    alignItems: 'center',
-    gap: 22,
-    paddingHorizontal: 44,
-  },
-  poweredBy: {
-    alignItems: 'center',
-    gap: Spacing.sm + 2,
-  },
-  poweredByLabel: {
-    color: Colors.textMuted,
-    fontSize: 10,
-    fontFamily: Fonts.semibold,
-    letterSpacing: 2.2,
-    textTransform: 'uppercase',
-  },
-  logo: {
-    height: 22,
-    width: 160,
-  },
-  loadTrack: {
-    width: '100%',
-    height: 4,
-    borderRadius: 0,
-    backgroundColor: withAlpha(Colors.white, 0.08),
-    overflow: 'hidden',
-  },
-  loadFill: {
-    height: '100%',
-    borderRadius: 0,
-    overflow: 'hidden',
-  },
+  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 10 },
+  wordmark: { width: 120, height: 22 },
+  photo: { flex: 1, overflow: 'hidden', backgroundColor: Colors.surface },
+  photoImage: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
+  vertical: { position: 'absolute', right: -66, top: 130, transform: [{ rotate: '90deg' }] },
+  stickerWrap: { position: 'absolute', left: 16, bottom: 26 },
+  bottom: { paddingHorizontal: 16, paddingTop: 18, gap: 16 },
+  name: { color: Colors.primary, fontSize: 72, lineHeight: 76, fontFamily: Fonts.wordmark, letterSpacing: -1 },
+  load: { gap: 8 },
+  loadHead: { flexDirection: 'row', justifyContent: 'space-between' },
+  powered: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
+  logo: { width: 110, height: 18 },
 });

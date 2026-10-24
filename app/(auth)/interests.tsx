@@ -20,12 +20,13 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import BackButton from '../../src/components/BackButton';
 import GlowButton from '../../src/components/GlowButton';
 import ScreenBg from '../../src/components/ScreenBg';
+import { Headline } from '../../src/components/Urban';
 import { sports } from '../../src/lib/demo';
 import { SPORT_KEYS, useI18n } from '../../src/lib/i18n';
 import { supabase } from '../../src/lib/supabase';
 import { NEWS_API } from '../../src/lib/sports';
 import { claimProfileCompleted } from '../../src/lib/xp';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
+import { Colors, Fonts } from '../../src/theme';
 
 type Team = {
   idTeam: string;
@@ -110,7 +111,7 @@ export default function Interests() {
   };
 
   return (
-    <ScreenBg glowTop={0.14} glowSize={420}>
+    <ScreenBg>
       {/* Team picker modal */}
       <Modal visible={teamPickerVisible} animationType="slide" transparent>
         <KeyboardAvoidingView
@@ -118,7 +119,7 @@ export default function Interests() {
           style={styles.modalOverlay}
         >
           <View style={[styles.modalSheet, { paddingBottom: insets.bottom + 16 }]}>
-            <Text style={styles.modalTitle}>{t.interestsSearchTitle}</Text>
+            <Text style={styles.modalTitle}>{t.interestsSearchTitle.toUpperCase()}</Text>
 
             <View style={styles.searchWrap}>
               <TextInput
@@ -151,7 +152,7 @@ export default function Interests() {
                     </View>
                   )}
                   <View style={styles.teamInfo}>
-                    <Text style={styles.teamName}>{item.strTeam}</Text>
+                    <Text style={styles.teamName}>{item.strTeam.toUpperCase()}</Text>
                     <Text style={styles.teamMeta}>
                       {item.strSport} · {item.strLeague}
                     </Text>
@@ -174,7 +175,7 @@ export default function Interests() {
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing['2xl'] },
+          { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 },
         ]}
       >
         {/* back + step progress */}
@@ -187,7 +188,7 @@ export default function Interests() {
         </View>
 
         <Animated.View entering={FadeInDown.duration(600)} style={styles.headerBlock}>
-          <Text style={styles.title}>{t.interestsTitle}</Text>
+          <Headline text={t.interestsHeadline} size={56} accent="last" />
           <Text style={styles.subtitle}>{t.interestsSubtitle}</Text>
         </Animated.View>
 
@@ -202,9 +203,9 @@ export default function Interests() {
                 style={[styles.chip, active && styles.chipActive]}
               >
                 <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
-                  {sport.emoji} {SPORT_KEYS[sport.id] ? t[SPORT_KEYS[sport.id]] : sport.label}
+                  {String(SPORT_KEYS[sport.id] ? t[SPORT_KEYS[sport.id]] : sport.label).toUpperCase()}
                 </Text>
-                {active && <Text style={styles.chipCheck}>✓</Text>}
+                <Text style={[styles.chipCheck, active && styles.chipCheckActive]}>{active ? '✓' : '+'}</Text>
               </Pressable>
             );
           })}
@@ -229,14 +230,14 @@ export default function Interests() {
                   <Text style={{ fontSize: 20 }}>🏆</Text>
                 )}
                 <View>
-                  <Text style={styles.selectedTeamName}>{selectedTeam.strTeam}</Text>
+                  <Text style={styles.selectedTeamName}>{selectedTeam.strTeam.toUpperCase()}</Text>
                   <Text style={styles.selectedTeamMeta}>
                     {selectedTeam.strSport} · {selectedTeam.strLeague}
                   </Text>
                 </View>
               </View>
             ) : (
-              <Text style={styles.teamPickerPlaceholder}>🔍  {t.interestsSearchPlaceholder}</Text>
+              <Text style={styles.teamPickerPlaceholder}>{t.interestsSearchPlaceholder}</Text>
             )}
             <Text style={styles.caret}>▾</Text>
           </Pressable>
@@ -262,98 +263,61 @@ export default function Interests() {
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingHorizontal: Spacing.xl },
-  topBar: {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-between', paddingVertical: Spacing.lg,
-  },
-  progress: { flexDirection: 'row', gap: 6 },
-  progressSeg: {
-    width: 22, height: 4, borderRadius: 0,
-    backgroundColor: withAlpha(Colors.white, 0.12),
-  },
+  content: { flexGrow: 1, paddingHorizontal: 16 },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 20 },
+  progress: { flexDirection: 'row', gap: 4 },
+  progressSeg: { width: 34, height: 6, backgroundColor: Colors.line },
   progressActive: { backgroundColor: Colors.primary },
-  headerBlock: { gap: Spacing.sm, paddingBottom: 26 },
-  title: { color: Colors.white, fontSize: 26, fontFamily: Fonts.bold },
-  subtitle: {
-    color: Colors.textSecondary, fontSize: Typography.sm + 1,
-    fontFamily: Fonts.medium, lineHeight: 21,
-  },
-  chips: {
-    flexDirection: 'row', flexWrap: 'wrap',
-    gap: Spacing.sm + 2, paddingBottom: 28,
-  },
+  headerBlock: { gap: 10, paddingBottom: 22 },
+  subtitle: { color: Colors.textSecondary, fontSize: 15, fontFamily: Fonts.medium, lineHeight: 21 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 24 },
   chip: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-    borderRadius: 0, paddingVertical: 11, paddingHorizontal: 18,
+    width: '48.5%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, paddingVertical: 13, paddingHorizontal: 12,
   },
-  chipActive: { backgroundColor: withAlpha(Colors.primary, 0.14), borderColor: withAlpha(Colors.primary, 0.6) },
-  chipLabel: { color: Colors.textSecondary, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
-  chipLabelActive: { color: Colors.white },
-  chipCheck: { color: Colors.primary, fontSize: Typography.sm + 1 },
-  teamBlock: { gap: Spacing.sm + 2 },
-  fieldLabel: {
-    color: Colors.textSecondary, fontSize: Typography.xs + 1,
-    fontFamily: Fonts.semibold, letterSpacing: 1.2, textTransform: 'uppercase',
-  },
+  chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  chipLabel: { color: Colors.white, fontSize: 16, fontFamily: Fonts.label, letterSpacing: 0.4, flexShrink: 1 },
+  chipLabelActive: { color: Colors.black },
+  chipCheck: { color: Colors.textMuted, fontSize: 16, fontFamily: Fonts.label },
+  chipCheckActive: { color: Colors.black },
+  teamBlock: { gap: 8 },
+  fieldLabel: { color: Colors.textMuted, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.9, textTransform: 'uppercase' },
   teamPickerBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-    borderRadius: 0, paddingVertical: 16, paddingHorizontal: 18,
+    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border, paddingVertical: 14, paddingHorizontal: 14,
   },
-  teamPickerBtnActive: { borderColor: withAlpha(Colors.primary, 0.45) },
-  teamPickerPlaceholder: {
-    color: Colors.textMuted, fontSize: Typography.sm + 1, fontFamily: Fonts.medium,
-  },
+  teamPickerBtnActive: { borderColor: Colors.primary },
+  teamPickerPlaceholder: { color: Colors.textMuted, fontSize: 15, fontFamily: Fonts.medium },
   selectedTeamRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   selectedBadge: { width: 32, height: 32, resizeMode: 'contain' },
-  selectedTeamName: { color: Colors.white, fontSize: Typography.md - 1, fontFamily: Fonts.semibold },
-  selectedTeamMeta: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
-  caret: { color: Colors.textMuted, fontSize: 12 },
-  teamHint: { color: Colors.textMuted, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
-  spacer: { flex: 1, minHeight: Spacing.xl },
-  ctaBlock: { gap: Spacing.base - 2 },
-  skip: { alignItems: 'center' },
-  skipLabel: { color: Colors.textMuted, fontSize: Typography.sm, fontFamily: Fonts.medium },
+  selectedTeamName: { color: Colors.white, fontSize: 18, fontFamily: Fonts.label, letterSpacing: 0.3 },
+  selectedTeamMeta: { color: Colors.textMuted, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.6, textTransform: 'uppercase', marginTop: 2 },
+  caret: { color: Colors.primary, fontSize: 12 },
+  teamHint: { color: Colors.primary, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.6, textTransform: 'uppercase' },
+  spacer: { flex: 1, minHeight: 24 },
+  ctaBlock: { gap: 12 },
+  skip: { alignItems: 'center', paddingVertical: 6 },
+  skipLabel: { color: Colors.textMuted, fontSize: 11, fontFamily: Fonts.mono, letterSpacing: 0.8, textTransform: 'uppercase' },
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: withAlpha(Colors.black, 0.75), justifyContent: 'flex-end' },
-  modalSheet: {
-    backgroundColor: Colors.card, borderTopLeftRadius: 0,
-    borderTopRightRadius: 0, paddingTop: 20, maxHeight: '85%',
-  },
-  modalTitle: {
-    color: Colors.white, fontSize: Typography.base, fontFamily: Fonts.bold,
-    textAlign: 'center', paddingBottom: 14,
-  },
+  modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
+  modalSheet: { backgroundColor: Colors.black, borderTopWidth: 3, borderTopColor: Colors.primary, paddingTop: 18, maxHeight: '85%' },
+  modalTitle: { color: Colors.white, fontSize: 24, fontFamily: Fonts.display, paddingHorizontal: 20, paddingBottom: 12 },
   searchWrap: {
-    flexDirection: 'row', alignItems: 'center',
-    marginHorizontal: 20, marginBottom: 12,
-    backgroundColor: Colors.glass, borderWidth: 1,
-    borderColor: withAlpha(Colors.primary, 0.4), borderRadius: 0,
-    paddingHorizontal: 16,
+    flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginBottom: 12,
+    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.primary, paddingHorizontal: 14,
   },
-  searchInput: {
-    flex: 1, color: Colors.white, fontSize: Typography.base - 1,
-    fontFamily: Fonts.medium, paddingVertical: 14,
-  },
+  searchInput: { flex: 1, color: Colors.white, fontSize: 16, fontFamily: Fonts.medium, paddingVertical: 13 },
   searchSpinner: { marginLeft: 8 },
-  noResults: {
-    color: Colors.textMuted, textAlign: 'center',
-    fontFamily: Fonts.medium, fontSize: Typography.sm, paddingVertical: 20,
-  },
+  noResults: { color: Colors.textMuted, textAlign: 'center', fontFamily: Fonts.medium, fontSize: 14, paddingVertical: 20 },
   teamRow: {
-    flexDirection: 'row', alignItems: 'center',
-    gap: 14, paddingVertical: 12, paddingHorizontal: 20,
+    flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, paddingHorizontal: 20,
+    borderBottomWidth: 1, borderBottomColor: Colors.line,
   },
   teamBadge: { width: 36, height: 36, resizeMode: 'contain' },
-  teamBadgePlaceholder: {
-    backgroundColor: Colors.glass, borderRadius: 0,
-    alignItems: 'center', justifyContent: 'center',
-  },
+  teamBadgePlaceholder: { backgroundColor: Colors.card, alignItems: 'center', justifyContent: 'center' },
   teamInfo: { flex: 1 },
-  teamName: { color: Colors.white, fontSize: Typography.base - 1, fontFamily: Fonts.semibold },
-  teamMeta: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, marginTop: 2 },
+  teamName: { color: Colors.white, fontSize: 17, fontFamily: Fonts.label, letterSpacing: 0.3 },
+  teamMeta: { color: Colors.textMuted, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.6, textTransform: 'uppercase', marginTop: 3 },
   modalClose: { alignItems: 'center', paddingVertical: 16 },
-  modalCloseText: { color: Colors.textMuted, fontSize: Typography.sm, fontFamily: Fonts.medium },
+  modalCloseText: { color: Colors.textMuted, fontSize: 11, fontFamily: Fonts.mono, letterSpacing: 0.8, textTransform: 'uppercase' },
 });

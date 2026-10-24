@@ -18,9 +18,10 @@ import BackButton from '../../src/components/BackButton';
 import ChatBubble from '../../src/components/ChatBubble';
 import GlowButton from '../../src/components/GlowButton';
 import ScreenBg from '../../src/components/ScreenBg';
+import { Headline } from '../../src/components/Urban';
 import { langForCountry, useI18n } from '../../src/lib/i18n';
 import { supabase } from '../../src/lib/supabase';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../../src/theme';
+import { Colors, Fonts } from '../../src/theme';
 
 const COUNTRIES = [
   { flag: '🇦🇹', name: 'Austria', code: 'AT' },
@@ -120,12 +121,12 @@ export default function Register() {
   };
 
   return (
-    <ScreenBg glowTop={0.14} glowSize={420}>
+    <ScreenBg>
       {/* Country picker modal */}
       <Modal visible={pickerVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalSheet, { paddingBottom: insets.bottom + 16 }]}>
-            <Text style={styles.modalTitle}>{t.registerSelectCountry}</Text>
+            <Text style={styles.modalTitle}>{t.registerSelectCountry.toUpperCase()}</Text>
             <FlatList
               data={COUNTRIES}
               keyExtractor={(c) => c.code}
@@ -140,7 +141,7 @@ export default function Register() {
                   }}
                 >
                   <Text style={styles.modalFlag}>{item.flag}</Text>
-                  <Text style={styles.modalCountryName}>{item.name}</Text>
+                  <Text style={styles.modalCountryName}>{item.name.toUpperCase()}</Text>
                   {item.code === country.code && <Text style={styles.modalCheck}>✓</Text>}
                 </Pressable>
               )}
@@ -156,7 +157,7 @@ export default function Register() {
         <ScrollView
           contentContainerStyle={[
             styles.content,
-            { paddingTop: insets.top + Spacing.base, paddingBottom: insets.bottom + Spacing['2xl'] },
+            { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 },
           ]}
           keyboardShouldPersistTaps="handled"
         >
@@ -169,7 +170,7 @@ export default function Register() {
           </View>
 
           <Animated.View entering={FadeInDown.duration(600)} style={styles.headerBlock}>
-            <Text style={styles.title}>{t.registerTitle}</Text>
+            <Headline text={t.registerHeadline} size={60} accent="last" />
             <Text style={styles.subtitle}>{t.registerSubtitle}</Text>
           </Animated.View>
 
@@ -179,7 +180,7 @@ export default function Register() {
               <Pressable style={styles.selectRow} onPress={() => setPickerVisible(true)}>
                 <View style={styles.selectLeft}>
                   <Text style={styles.flag}>{country.flag}</Text>
-                  <Text style={styles.selectValue}>{country.name}</Text>
+                  <Text style={styles.selectValue}>{country.name.toUpperCase()}</Text>
                 </View>
                 <Text style={styles.caret}>▾</Text>
               </Pressable>
@@ -254,82 +255,45 @@ export default function Register() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { flexGrow: 1, paddingHorizontal: Spacing.xl },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.lg,
-  },
-  progress: { flexDirection: 'row', gap: 6 },
-  progressSeg: {
-    width: 22, height: 4, borderRadius: 0,
-    backgroundColor: withAlpha(Colors.white, 0.12),
-  },
+  content: { flexGrow: 1, paddingHorizontal: 16 },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 20 },
+  progress: { flexDirection: 'row', gap: 4 },
+  progressSeg: { width: 34, height: 6, backgroundColor: Colors.line },
   progressActive: { backgroundColor: Colors.primary },
-  headerBlock: { gap: Spacing.sm, paddingBottom: 30 },
-  title: { color: Colors.white, fontSize: 26, fontFamily: Fonts.bold },
-  subtitle: {
-    color: Colors.textSecondary, fontSize: Typography.sm + 1,
-    fontFamily: Fonts.medium, lineHeight: 21,
-  },
-  form: { gap: Spacing.lg },
-  field: { gap: Spacing.sm + 2 },
-  fieldLabel: {
-    color: Colors.textSecondary, fontSize: Typography.xs + 1,
-    fontFamily: Fonts.semibold, letterSpacing: 1.2, textTransform: 'uppercase',
-  },
+  headerBlock: { gap: 10, paddingBottom: 26 },
+  subtitle: { color: Colors.textSecondary, fontSize: 15, fontFamily: Fonts.medium, lineHeight: 21 },
+  form: { gap: 18 },
+  field: { gap: 8, marginTop: 18 },
+  fieldLabel: { color: Colors.textMuted, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.9, textTransform: 'uppercase' },
   selectRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-    borderRadius: 0, paddingVertical: 16, paddingHorizontal: 18,
+    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border, paddingVertical: 14, paddingHorizontal: 14,
   },
-  selectLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm + 2 },
+  selectLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   flag: { fontSize: 20 },
-  selectValue: { color: Colors.white, fontSize: Typography.md - 1, fontFamily: Fonts.semibold },
-  caret: { color: Colors.textMuted, fontSize: 12 },
-  inputWrap: {
-    backgroundColor: Colors.glass, borderWidth: 1,
-    borderColor: withAlpha(Colors.primary, 0.45), borderRadius: 0, paddingHorizontal: 18,
-  },
-  input: {
-    color: Colors.white, fontSize: Typography.md - 1,
-    fontFamily: Fonts.semibold, paddingVertical: 16,
-  },
-  spacer: { flex: 1, minHeight: Spacing.xl },
+  selectValue: { color: Colors.white, fontSize: 18, fontFamily: Fonts.label, letterSpacing: 0.3 },
+  caret: { color: Colors.primary, fontSize: 12 },
+  inputWrap: { backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.primary, paddingHorizontal: 14 },
+  input: { color: Colors.white, fontSize: 20, fontFamily: Fonts.label, paddingVertical: 14 },
+  spacer: { flex: 1, minHeight: 24 },
   hintRow: { paddingBottom: 18 },
-  hintText: {
-    color: Colors.textPrimary, fontSize: Typography.sm,
-    fontFamily: Fonts.medium, lineHeight: 20,
-  },
-  hintAccent: { color: Colors.primary, fontFamily: Fonts.semibold },
-  birthdayRow: { flexDirection: 'row', gap: Spacing.sm + 2 },
-  birthdayBox: { backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder, borderRadius: 0 },
-  birthdayInput: { color: Colors.white, fontSize: Typography.md - 1, fontFamily: Fonts.semibold, paddingVertical: 16, textAlign: 'center' },
-  ageHint: { color: Colors.textMuted, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
-  birthdayErr: { color: Colors.danger, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
+  hintText: { color: Colors.white, fontSize: 15, fontFamily: Fonts.medium, lineHeight: 21 },
+  hintAccent: { color: Colors.primary, fontFamily: Fonts.label },
+  birthdayRow: { flexDirection: 'row', gap: 8 },
+  birthdayBox: { backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border },
+  birthdayInput: { color: Colors.white, fontSize: 26, fontFamily: Fonts.display, paddingVertical: 10, textAlign: 'center' },
+  ageHint: { color: Colors.textMuted, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.8, textTransform: 'uppercase' },
+  birthdayErr: { color: Colors.danger, fontSize: 13, fontFamily: Fonts.medium },
   // Modal
-  modalOverlay: {
-    flex: 1, backgroundColor: withAlpha(Colors.black, 0.7),
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    backgroundColor: Colors.card, borderTopLeftRadius: 0,
-    borderTopRightRadius: 0, paddingTop: 20, maxHeight: '75%',
-  },
-  modalTitle: {
-    color: Colors.white, fontSize: Typography.base,
-    fontFamily: Fonts.bold, textAlign: 'center', paddingBottom: 16,
-  },
+  modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
+  modalSheet: { backgroundColor: Colors.black, borderTopWidth: 3, borderTopColor: Colors.primary, paddingTop: 18, maxHeight: '75%' },
+  modalTitle: { color: Colors.white, fontSize: 24, fontFamily: Fonts.display, paddingHorizontal: 20, paddingBottom: 12 },
   modalItem: {
-    flexDirection: 'row', alignItems: 'center',
-    gap: Spacing.md, paddingVertical: 14, paddingHorizontal: 24,
+    flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 20,
+    borderBottomWidth: 1, borderBottomColor: Colors.line,
   },
-  modalItemActive: { backgroundColor: withAlpha(Colors.primary, 0.08) },
+  modalItemActive: { backgroundColor: Colors.card },
   modalFlag: { fontSize: 22 },
-  modalCountryName: {
-    flex: 1, color: Colors.white,
-    fontSize: Typography.base - 1, fontFamily: Fonts.medium,
-  },
-  modalCheck: { color: Colors.primary, fontSize: Typography.base, fontFamily: Fonts.bold },
+  modalCountryName: { flex: 1, color: Colors.white, fontSize: 16, fontFamily: Fonts.label, letterSpacing: 0.3 },
+  modalCheck: { color: Colors.primary, fontSize: 16, fontFamily: Fonts.label },
 });

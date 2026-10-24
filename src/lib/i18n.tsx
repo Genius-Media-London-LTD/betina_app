@@ -199,6 +199,14 @@ type Translations = {
   tabTipps: string;
   tabNews: string;
   tabMenu: string;
+  loginHeadline: string;
+  loginSticker: string;
+  loginSendCode: string;
+  otpHeadline: string;
+  otpSentTo: string;
+  registerHeadline: string;
+  interestsHeadline: string;
+  welcomeHi: string;
   journeyHeadline: string;
   journeyKicker: string;
   journeyCurrent: string;
@@ -651,6 +659,14 @@ const T: Record<LangCode, Translations> = {
     journeyAllTiers: "All tiers & rewards",
     tiersHeadline: "Tiers & rewards.",
     tiersYou: "You",
+    loginHeadline: "Log in.",
+    loginSticker: "She's waiting",
+    loginSendCode: "Send code",
+    otpHeadline: "Check the code.",
+    otpSentTo: "We sent 6 digits to {phone}",
+    registerHeadline: "Who are you?",
+    interestsHeadline: "What do you love?",
+    welcomeHi: "Hi",
   },
   de: {
     welcomeTitle: 'Willkommen',
@@ -951,6 +967,14 @@ const T: Record<LangCode, Translations> = {
     journeyAllTiers: "Alle Tiers & Rewards",
     tiersHeadline: "Tiers & Rewards.",
     tiersYou: "Du",
+    loginHeadline: "Log dich ein.",
+    loginSticker: "Sie wartet schon",
+    loginSendCode: "Code senden",
+    otpHeadline: "Code checken.",
+    otpSentTo: "Wir haben dir 6 Ziffern an {phone} geschickt",
+    registerHeadline: "Wer bist du?",
+    interestsHeadline: "Was feierst du?",
+    welcomeHi: "Hi",
   },
   es: {
     welcomeTitle: 'Bienvenido',
@@ -1251,6 +1275,14 @@ const T: Record<LangCode, Translations> = {
     journeyAllTiers: "Niveles y recompensas",
     tiersHeadline: "Niveles y premios.",
     tiersYou: "Tú",
+    loginHeadline: "Entra ya.",
+    loginSticker: "Ya te espera",
+    loginSendCode: "Enviar código",
+    otpHeadline: "Mete el código.",
+    otpSentTo: "Te enviamos 6 dígitos al {phone}",
+    registerHeadline: "¿Quién eres?",
+    interestsHeadline: "¿Qué te flipa?",
+    welcomeHi: "Hola",
   },
   pt: {
     welcomeTitle: 'Bem-vindo',
@@ -1551,6 +1583,14 @@ const T: Record<LangCode, Translations> = {
     journeyAllTiers: "Níveis e recompensas",
     tiersHeadline: "Níveis e prémios.",
     tiersYou: "Tu",
+    loginHeadline: "Entra já.",
+    loginSticker: "Ela já espera",
+    loginSendCode: "Enviar código",
+    otpHeadline: "Mete o código.",
+    otpSentTo: "Enviámos 6 dígitos para {phone}",
+    registerHeadline: "Quem és tu?",
+    interestsHeadline: "O que curtes?",
+    welcomeHi: "Olá",
   },
   fr: {
     welcomeTitle: 'Bienvenue',
@@ -1851,6 +1891,14 @@ const T: Record<LangCode, Translations> = {
     journeyAllTiers: "Niveaux et récompenses",
     tiersHeadline: "Niveaux & bonus.",
     tiersYou: "Toi",
+    loginHeadline: "Connecte-toi.",
+    loginSticker: "Elle t'attend",
+    loginSendCode: "Envoyer le code",
+    otpHeadline: "Entre le code.",
+    otpSentTo: "On a envoyé 6 chiffres au {phone}",
+    registerHeadline: "Qui es-tu ?",
+    interestsHeadline: "Qu'est-ce qui te fait vibrer ?",
+    welcomeHi: "Salut",
   },
   it: {
     welcomeTitle: 'Benvenuto',
@@ -2151,6 +2199,14 @@ const T: Record<LangCode, Translations> = {
     journeyAllTiers: "Livelli e premi",
     tiersHeadline: "Livelli & premi.",
     tiersYou: "Tu",
+    loginHeadline: "Entra ora.",
+    loginSticker: "Ti aspetta",
+    loginSendCode: "Invia codice",
+    otpHeadline: "Inserisci il codice.",
+    otpSentTo: "Ti abbiamo inviato 6 cifre al {phone}",
+    registerHeadline: "Chi sei?",
+    interestsHeadline: "Cosa ti piace?",
+    welcomeHi: "Ciao",
   },
   ro: {
     welcomeTitle: 'Bun venit',
@@ -2451,6 +2507,14 @@ const T: Record<LangCode, Translations> = {
     journeyAllTiers: "Niveluri și recompense",
     tiersHeadline: "Niveluri & bonusuri.",
     tiersYou: "Tu",
+    loginHeadline: "Intră acum.",
+    loginSticker: "Te așteaptă",
+    loginSendCode: "Trimite codul",
+    otpHeadline: "Bagă codul.",
+    otpSentTo: "Ți-am trimis 6 cifre la {phone}",
+    registerHeadline: "Cine ești?",
+    interestsHeadline: "Ce-ți place?",
+    welcomeHi: "Salut",
   },
 };
 

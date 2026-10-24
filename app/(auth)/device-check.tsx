@@ -76,7 +76,7 @@ export default function DeviceCheck() {
   };
 
   return (
-    <ScreenBg glowTop={0.2} glowSize={420}>
+    <ScreenBg>
       <View
         style={[
           { flex: 1, justifyContent: 'center', alignItems: 'center' },
