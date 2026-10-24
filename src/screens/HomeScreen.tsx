@@ -10,6 +10,7 @@ import ScreenBg from '../components/ScreenBg';
 import SignInWall from '../components/SignInWall';
 import XPBar from '../components/XPBar';
 import { Meta, Sticker } from '../components/Urban';
+import MomentModal, { Moment, nextMoment } from '../components/Moments';
 import { useSession } from '../hooks/useSession';
 import { tiers } from '../lib/demo';
 import { MatchEvent, fetchTeamNext, formatKickoff } from '../lib/sports';
@@ -30,6 +31,7 @@ type Profile = {
   vip_tier: string;
   xp_points: number;
   streak_days: number | null;
+  birthday: string | null;
   favourite_team: string | null;
   favourite_team_id: string | null;
 };
@@ -59,6 +61,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [fixtures, setFixtures] = useState<MatchEvent[]>([]);
   const [loadingFixtures, setLoadingFixtures] = useState(false);
+  const [moment, setMoment] = useState<Moment | null>(null);
 
   // Reload on focus so XP/tier earned in chat or on daily open show up here.
   useFocusEffect(useCallback(() => { loadProfile(); }, []));
@@ -69,10 +72,14 @@ export default function Home() {
       if (!user) { setLoading(false); return; }
       const { data } = await supabase
         .from('profiles')
-        .select('name, vip_tier, xp_points, streak_days, favourite_team, favourite_team_id')
+        .select('name, vip_tier, xp_points, streak_days, birthday, favourite_team, favourite_team_id')
         .eq('id', user.id)
         .maybeSingle();
-      if (data) setProfile(data);
+      if (data) {
+        setProfile(data);
+        // Tier-up / birthday moments fire once (see Moments.tsx).
+        nextMoment(data).then((m) => { if (m) setMoment(m); });
+      }
     } catch (e) {
       console.error('Profile load error:', e);
     } finally {
@@ -251,6 +258,7 @@ export default function Home() {
           </View>
         </View>
       </ScrollView>
+      <MomentModal moment={moment} name={firstName} onClose={() => setMoment(null)} />
     </ScreenBg>
   );
 }

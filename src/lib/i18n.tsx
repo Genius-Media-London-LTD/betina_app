@@ -199,6 +199,13 @@ type Translations = {
   tabTipps: string;
   tabNews: string;
   tabMenu: string;
+  momentTierLine: string;
+  momentCashback: string;
+  momentCelebrate: string;
+  momentBdayTitle: string;
+  momentBdayLine: string;
+  momentBdayTag: string;
+  momentThanks: string;
   notifAll: string;
   loginHeadline: string;
   loginSticker: string;
@@ -669,6 +676,13 @@ const T: Record<LangCode, Translations> = {
     interestsHeadline: "What do you love?",
     welcomeHi: "Hi",
     notifAll: "All",
+    momentTierLine: "{name}, you're {tier} now. I knew it.",
+    momentCashback: "Cashback on GeniusBet",
+    momentCelebrate: "Celebrate",
+    momentBdayTitle: "Happy B-day,",
+    momentBdayLine: "Today is all about you, {name}. Enjoy your day — I'll be right here.",
+    momentBdayTag: "Your day",
+    momentThanks: "Thanks, BETina",
   },
   de: {
     welcomeTitle: 'Willkommen',
@@ -978,6 +992,13 @@ const T: Record<LangCode, Translations> = {
     interestsHeadline: "Was feierst du?",
     welcomeHi: "Hi",
     notifAll: "Alle",
+    momentTierLine: "{name}, du bist jetzt {tier}. Ich hab’s gewusst.",
+    momentCashback: "Cashback auf GeniusBet",
+    momentCelebrate: "Feiern",
+    momentBdayTitle: "Happy B-Day,",
+    momentBdayLine: "Heute dreht sich alles um dich, {name}. Genieß deinen Tag – ich bin da.",
+    momentBdayTag: "Dein Tag",
+    momentThanks: "Danke, BETina",
   },
   es: {
     welcomeTitle: 'Bienvenido',
@@ -1287,6 +1308,13 @@ const T: Record<LangCode, Translations> = {
     interestsHeadline: "¿Qué te flipa?",
     welcomeHi: "Hola",
     notifAll: "Todas",
+    momentTierLine: "{name}, ya eres {tier}. Lo sabía.",
+    momentCashback: "Cashback en GeniusBet",
+    momentCelebrate: "Celebrar",
+    momentBdayTitle: "¡Feliz cumple,",
+    momentBdayLine: "Hoy todo gira en torno a ti, {name}. Disfruta tu día: aquí estoy.",
+    momentBdayTag: "Tu día",
+    momentThanks: "Gracias, BETina",
   },
   pt: {
     welcomeTitle: 'Bem-vindo',
@@ -1596,6 +1624,13 @@ const T: Record<LangCode, Translations> = {
     interestsHeadline: "O que curtes?",
     welcomeHi: "Olá",
     notifAll: "Todas",
+    momentTierLine: "{name}, agora és {tier}. Eu sabia.",
+    momentCashback: "Cashback no GeniusBet",
+    momentCelebrate: "Celebrar",
+    momentBdayTitle: "Parabéns,",
+    momentBdayLine: "Hoje é tudo sobre ti, {name}. Aproveita o teu dia — eu estou aqui.",
+    momentBdayTag: "O teu dia",
+    momentThanks: "Obrigado, BETina",
   },
   fr: {
     welcomeTitle: 'Bienvenue',
@@ -1905,6 +1940,13 @@ const T: Record<LangCode, Translations> = {
     interestsHeadline: "Qu'est-ce qui te fait vibrer ?",
     welcomeHi: "Salut",
     notifAll: "Toutes",
+    momentTierLine: "{name}, te voilà {tier}. Je le savais.",
+    momentCashback: "Cashback sur GeniusBet",
+    momentCelebrate: "Fêter",
+    momentBdayTitle: "Joyeux anniv,",
+    momentBdayLine: "Aujourd’hui, tout tourne autour de toi, {name}. Profite — je suis là.",
+    momentBdayTag: "Ton jour",
+    momentThanks: "Merci, BETina",
   },
   it: {
     welcomeTitle: 'Benvenuto',
@@ -2214,6 +2256,13 @@ const T: Record<LangCode, Translations> = {
     interestsHeadline: "Cosa ti piace?",
     welcomeHi: "Ciao",
     notifAll: "Tutte",
+    momentTierLine: "{name}, ora sei {tier}. Lo sapevo.",
+    momentCashback: "Cashback su GeniusBet",
+    momentCelebrate: "Festeggia",
+    momentBdayTitle: "Buon compleanno,",
+    momentBdayLine: "Oggi è tutto per te, {name}. Goditi la giornata: io sono qui.",
+    momentBdayTag: "Il tuo giorno",
+    momentThanks: "Grazie, BETina",
   },
   ro: {
     welcomeTitle: 'Bun venit',
@@ -2523,6 +2572,13 @@ const T: Record<LangCode, Translations> = {
     interestsHeadline: "Ce-ți place?",
     welcomeHi: "Salut",
     notifAll: "Toate",
+    momentTierLine: "{name}, acum ești {tier}. Știam eu.",
+    momentCashback: "Cashback pe GeniusBet",
+    momentCelebrate: "Sărbătorește",
+    momentBdayTitle: "La mulți ani,",
+    momentBdayLine: "Azi totul e despre tine, {name}. Bucură-te de ziua ta — sunt aici.",
+    momentBdayTag: "Ziua ta",
+    momentThanks: "Mersi, BETina",
   },
 };
 
