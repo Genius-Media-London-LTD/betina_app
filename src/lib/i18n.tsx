@@ -199,6 +199,17 @@ type Translations = {
   tabTipps: string;
   tabNews: string;
   tabMenu: string;
+  journeyHeadline: string;
+  journeyKicker: string;
+  journeyCurrent: string;
+  journeyLeft: string;
+  journeyReached: string;
+  journeyYouAreHere: string;
+  journeyXpLeft: string;
+  journeyLocked: string;
+  journeyAllTiers: string;
+  tiersHeadline: string;
+  tiersYou: string;
   tipBoomTitle: string;
   tipBoomExact: string;
   tipBoomQuote: string;
@@ -629,6 +640,17 @@ const T: Record<LangCode, Translations> = {
     tipBoomQuote: "Told you, {name}. Exact score — I might have to take notes from you.",
     tipBoomMore: "Keep tipping",
     tipBoomCelebrate: "Celebrate with BETina",
+    journeyHeadline: "Your way.",
+    journeyKicker: "My journey · {n} days in",
+    journeyCurrent: "Current tier",
+    journeyLeft: "{xp} XP · {n} to {tier}",
+    journeyReached: "Reached",
+    journeyYouAreHere: "You are here",
+    journeyXpLeft: "{n} XP to go",
+    journeyLocked: "Locked",
+    journeyAllTiers: "All tiers & rewards",
+    tiersHeadline: "Tiers & rewards.",
+    tiersYou: "You",
   },
   de: {
     welcomeTitle: 'Willkommen',
@@ -918,6 +940,17 @@ const T: Record<LangCode, Translations> = {
     tipBoomQuote: "Hab ich doch gesagt, {name}. Exakt getroffen – ich glaub, ich nehm bei dir Nachhilfe.",
     tipBoomMore: "Weiter tippen",
     tipBoomCelebrate: "Mit BETina feiern",
+    journeyHeadline: "Dein Weg.",
+    journeyKicker: "My Journey · seit {n} Tagen",
+    journeyCurrent: "Aktueller Tier",
+    journeyLeft: "{xp} XP · noch {n} bis {tier}",
+    journeyReached: "Erreicht",
+    journeyYouAreHere: "Du bist hier",
+    journeyXpLeft: "noch {n} XP",
+    journeyLocked: "Gesperrt",
+    journeyAllTiers: "Alle Tiers & Rewards",
+    tiersHeadline: "Tiers & Rewards.",
+    tiersYou: "Du",
   },
   es: {
     welcomeTitle: 'Bienvenido',
@@ -1207,6 +1240,17 @@ const T: Record<LangCode, Translations> = {
     tipBoomQuote: "Te lo dije, {name}. Resultado exacto: voy a tener que tomar apuntes de ti.",
     tipBoomMore: "Seguir",
     tipBoomCelebrate: "Celebrar con BETina",
+    journeyHeadline: "Tu camino.",
+    journeyKicker: "Mi camino · {n} días",
+    journeyCurrent: "Nivel actual",
+    journeyLeft: "{xp} XP · faltan {n} para {tier}",
+    journeyReached: "Logrado",
+    journeyYouAreHere: "Estás aquí",
+    journeyXpLeft: "faltan {n} XP",
+    journeyLocked: "Bloqueado",
+    journeyAllTiers: "Niveles y recompensas",
+    tiersHeadline: "Niveles y premios.",
+    tiersYou: "Tú",
   },
   pt: {
     welcomeTitle: 'Bem-vindo',
@@ -1496,6 +1540,17 @@ const T: Record<LangCode, Translations> = {
     tipBoomQuote: "Eu disse, {name}. Resultado exato — vou ter de tirar apontamentos contigo.",
     tipBoomMore: "Continuar",
     tipBoomCelebrate: "Celebrar com a BETina",
+    journeyHeadline: "O teu caminho.",
+    journeyKicker: "O meu caminho · {n} dias",
+    journeyCurrent: "Nível atual",
+    journeyLeft: "{xp} XP · faltam {n} para {tier}",
+    journeyReached: "Alcançado",
+    journeyYouAreHere: "Estás aqui",
+    journeyXpLeft: "faltam {n} XP",
+    journeyLocked: "Bloqueado",
+    journeyAllTiers: "Níveis e recompensas",
+    tiersHeadline: "Níveis e prémios.",
+    tiersYou: "Tu",
   },
   fr: {
     welcomeTitle: 'Bienvenue',
@@ -1785,6 +1840,17 @@ const T: Record<LangCode, Translations> = {
     tipBoomQuote: "Je te l’avais dit, {name}. Score exact — je vais prendre des notes avec toi.",
     tipBoomMore: "Continuer",
     tipBoomCelebrate: "Fêter avec BETina",
+    journeyHeadline: "Ton parcours.",
+    journeyKicker: "Mon parcours · {n} jours",
+    journeyCurrent: "Niveau actuel",
+    journeyLeft: "{xp} XP · encore {n} avant {tier}",
+    journeyReached: "Atteint",
+    journeyYouAreHere: "Tu es ici",
+    journeyXpLeft: "encore {n} XP",
+    journeyLocked: "Verrouillé",
+    journeyAllTiers: "Niveaux et récompenses",
+    tiersHeadline: "Niveaux & bonus.",
+    tiersYou: "Toi",
   },
   it: {
     welcomeTitle: 'Benvenuto',
@@ -2074,6 +2140,17 @@ const T: Record<LangCode, Translations> = {
     tipBoomQuote: "Te l’avevo detto, {name}. Risultato esatto: quasi quasi prendo appunti da te.",
     tipBoomMore: "Continua",
     tipBoomCelebrate: "Festeggia con BETina",
+    journeyHeadline: "Il tuo percorso.",
+    journeyKicker: "Il mio percorso · {n} giorni",
+    journeyCurrent: "Livello attuale",
+    journeyLeft: "{xp} XP · mancano {n} a {tier}",
+    journeyReached: "Raggiunto",
+    journeyYouAreHere: "Sei qui",
+    journeyXpLeft: "mancano {n} XP",
+    journeyLocked: "Bloccato",
+    journeyAllTiers: "Livelli e premi",
+    tiersHeadline: "Livelli & premi.",
+    tiersYou: "Tu",
   },
   ro: {
     welcomeTitle: 'Bun venit',
@@ -2363,6 +2440,17 @@ const T: Record<LangCode, Translations> = {
     tipBoomQuote: "Ți-am zis, {name}. Scor exact — cred că iau notițe de la tine.",
     tipBoomMore: "Continuă",
     tipBoomCelebrate: "Sărbătorește cu BETina",
+    journeyHeadline: "Drumul tău.",
+    journeyKicker: "Drumul meu · {n} zile",
+    journeyCurrent: "Nivel actual",
+    journeyLeft: "{xp} XP · încă {n} până la {tier}",
+    journeyReached: "Atins",
+    journeyYouAreHere: "Ești aici",
+    journeyXpLeft: "încă {n} XP",
+    journeyLocked: "Blocat",
+    journeyAllTiers: "Niveluri și recompense",
+    tiersHeadline: "Niveluri & bonusuri.",
+    tiersYou: "Tu",
   },
 };
 

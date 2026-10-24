@@ -9,10 +9,12 @@ type Props = {
   delay?: number;
   /** Number of segments (urban look: 20, 24 on the splash). */
   segments?: number;
+  /** On a lime surface: black filled squares on a darker lime track. */
+  onLime?: boolean;
 };
 
 /** Segmented XP bar — lime squares fill up one after another. */
-export default function XPBar({ progress, height = 8, delay = 300, segments = 20 }: Props) {
+export default function XPBar({ progress, height = 8, delay = 300, segments = 20, onLime = false }: Props) {
   const target = Math.round(Math.max(0, Math.min(1, progress)) * segments);
   const [filled, setFilled] = useState(0);
 
@@ -37,7 +39,7 @@ export default function XPBar({ progress, height = 8, delay = 300, segments = 20
   return (
     <View style={styles.row}>
       {Array.from({ length: segments }, (_, i) => (
-        <View key={i} style={[styles.seg, { height }, i < filled && styles.on]} />
+        <View key={i} style={[styles.seg, { height }, onLime && styles.segLime, i < filled && (onLime ? styles.onLime : styles.on)]} />
       ))}
     </View>
   );
@@ -47,4 +49,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 2, width: '100%' },
   seg: { flex: 1, backgroundColor: Colors.line },
   on: { backgroundColor: Colors.primary },
+  segLime: { backgroundColor: Colors.primaryDim },
+  onLime: { backgroundColor: Colors.black },
 });
