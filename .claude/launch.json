@@ -4,20 +4,47 @@
     {
       "name": "expo",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["expo", "start"],
+      "runtimeArgs": [
+        "expo",
+        "start"
+      ],
       "port": 8081
     },
     {
       "name": "expo-web",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["expo", "start", "--web", "--port", "8082"],
+      "runtimeArgs": [
+        "expo",
+        "start",
+        "--web",
+        "--port",
+        "8082"
+      ],
       "port": 8082
     },
     {
       "name": "web-dist",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8099", "--directory", "dist"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8099",
+        "--directory",
+        "dist"
+      ],
       "port": 8099
+    },
+    {
+      "name": "design-handoff",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8098",
+        "--directory",
+        "C:/Users/heral/AppData/Local/Temp/claude/C--Users-heral-OneDrive-Desktop-betina-app/059ac7a1-1fe2-4b56-99f9-08d3a2c1f557/scratchpad/design-2026-10-24/design_handoff_betina_urban"
+      ],
+      "port": 8098
     }
   ]
 }

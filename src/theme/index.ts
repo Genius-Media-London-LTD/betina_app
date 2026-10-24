@@ -9,69 +9,77 @@ export function withAlpha(hex: string, alpha: number): string {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
 }
 
-// Urban palette (2026-10-24): true black + graphite, neon lime as the signal
-// colour, electric cyan as the second accent (replaces the old violet).
+// Urban redesign (Claude Design handoff "BETina – Urban", 2026-10-24): pure
+// black, GeniusBet lime, white type, hard edges. No glass, no gradients except
+// photo fades, border radius 0 everywhere.
 const PALETTE = {
   black: '#000000',
   white: '#FFFFFF',
-  background: '#060607',
-  surface: '#0D0D10',
-  card: '#121216',
-  cardElevated: '#1B1B21',
-  lime: '#B8E926',
-  cyan: '#2FE3F0',
+  lime: '#C0FA32',     // matches the GeniusBet logo
+  surface: '#0A0A0A',  // inputs, logo boxes
+  surface2: '#111111', // cards, BETina bubbles
+  surface3: '#141414', // keys, pressed rows
+  line: '#1E1E1E',     // dividers, empty XP segments
+  border: '#262626',   // card borders
+  borderStrong: '#333333',
+  liveRed: '#FF3B30',
   gold: '#FFD700',
-  danger: '#FF6B6B',
 } as const;
 
 export const Colors = {
   black: PALETTE.black,
   white: PALETTE.white,
 
-  // Backgrounds — true black + graphite
-  background: PALETTE.background,
+  // Backgrounds
+  background: PALETTE.black,
   surface: PALETTE.surface,
-  card: PALETTE.card,
-  cardElevated: PALETTE.cardElevated,
+  card: PALETTE.surface2,
+  cardElevated: PALETTE.surface3,
+
+  // Lines
+  line: PALETTE.line,
+  border: PALETTE.border,
+  borderStrong: PALETTE.borderStrong,
 
   // Brand
-  primary: PALETTE.lime,   // Neon-Lime — CTAs, Live, aktive Elemente
-  primaryLight: '#D4FF4D', // Helles Neon für Highlights
-  primaryDim: '#9BC21E',   // Gedämpftes Grün für Hover/Pressed
-  accent: PALETTE.cyan,    // Electric Cyan — zweiter Akzent, BETina-Glow
-  accentLight: '#8CF2F8',  // Helleres Cyan
-  gold: PALETTE.gold,      // VIP, Premium
+  primary: PALETTE.lime,   // Lime — CTAs, active states, stickers
+  primaryLight: '#E2FF8A', // link hover / highlights
+  primaryDim: '#9FD11F',   // pressed
+  accent: PALETTE.white,   // second accent is plain white in the urban look
+  accentLight: '#DDDDDD',
+  gold: PALETTE.gold,      // Tippspiel podium / exact hits
   goldLight: '#FFE666',
-  goldDim: '#B8A000',      // Gedämpftes Gold
+  goldDim: '#B8A000',
   silver: '#C9CED8',       // Podest Platz 2 (Tippspiel)
   bronze: '#D08A52',       // Podest Platz 3 (Tippspiel)
 
-  // Text — neutral greys
-  textPrimary: '#F4F4F5',
-  textSecondary: '#A1A1AA',
-  textMuted: '#62626C',
+  // Text
+  textPrimary: PALETTE.white,
+  textSecondary: '#BBBBBB', // body copy on black
+  textMuted: '#777777',     // meta, inactive
+  textFaint: '#555555',
 
   // Status
-  success: '#00FF88',
-  danger: PALETTE.danger,
+  success: PALETTE.lime,
+  live: PALETTE.liveRed,
+  danger: PALETTE.liveRed,
   dangerDeep: '#2A0A0A',
   warning: '#FFAA00',
   info: '#00AAFF',
 
   // Overlays
-  overlay: withAlpha(PALETTE.black, 0.7),
+  overlay: withAlpha(PALETTE.black, 0.75),
   overlayLight: withAlpha(PALETTE.black, 0.4),
-  glowGreen: withAlpha(PALETTE.lime, 0.14),
-  glowAccent: withAlpha(PALETTE.cyan, 0.14),
-  glowGold: withAlpha(PALETTE.gold, 0.18),
+  glowGreen: withAlpha(PALETTE.lime, 0.12),
+  glowAccent: withAlpha(PALETTE.white, 0.06),
+  glowGold: withAlpha(PALETTE.gold, 0.16),
 
-  // Glass
-  glass: withAlpha(PALETTE.white, 0.04),
-  glassBorder: withAlpha(PALETTE.white, 0.09),
+  // Flat surfaces (names kept from the glass era)
+  glass: PALETTE.surface,
+  glassBorder: PALETTE.border,
 } as const;
 
-// Font families (Archivo, loaded in app/_layout.tsx). The landing-page
-// signature is Archivo Black italic uppercase for big titles / the wordmark.
+// Font families (loaded in app/_layout.tsx; web: src/theme/webFonts.ts).
 export const Fonts = {
   regular: 'Archivo_400Regular',
   medium: 'Archivo_500Medium',
@@ -80,6 +88,17 @@ export const Fonts = {
   extrabold: 'Archivo_800ExtraBold',
   black: 'Archivo_900Black',
   blackItalic: 'Archivo_900Black_Italic',
+  /** Headlines — Anton, uppercase, tight line height. */
+  display: 'Anton_400Regular',
+  /** Wordmark ("BETINA"). */
+  wordmark: 'ArchivoBlack_400Regular',
+  /** Labels, buttons, list titles — Archivo Narrow, uppercase. */
+  label: 'ArchivoNarrow_700Bold',
+  labelSemi: 'ArchivoNarrow_600SemiBold',
+  labelRegular: 'ArchivoNarrow_400Regular',
+  /** Meta / data — Space Mono, uppercase, wide tracking. */
+  mono: 'SpaceMono_400Regular',
+  monoBold: 'SpaceMono_700Bold',
 } as const;
 
 export const Typography = {
@@ -120,44 +139,25 @@ export const Spacing = {
   '5xl': 64,
 } as const;
 
+// Hard edges are core to the urban look: no rounded corners anywhere.
 export const BorderRadius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  '2xl': 28,
-  full: 999,
+  sm: 0,
+  md: 0,
+  lg: 0,
+  xl: 0,
+  '2xl': 0,
+  full: 0,
 } as const;
 
+// No soft glows in the urban look — only the hard offset shadow stickers use.
+const NONE = { shadowColor: Colors.black, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0, shadowRadius: 0, elevation: 0 };
 export const Shadows = {
-  green: {
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  accent: {
-    shadowColor: Colors.accent,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  gold: {
-    shadowColor: Colors.gold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 20,
-    elevation: 12,
-  },
-  card: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
+  green: NONE,
+  accent: NONE,
+  gold: NONE,
+  card: NONE,
+  /** Sticker shadow: 4px 4px 0 #000. */
+  hard: { shadowColor: Colors.black, shadowOffset: { width: 4, height: 4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 6 },
 } as const;
 
 export const Animation = {

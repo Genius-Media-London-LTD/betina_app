@@ -89,14 +89,14 @@ const styles = StyleSheet.create({
   title: { color: Colors.textPrimary, fontSize: Typography.xl, fontFamily: Fonts.extrabold },
   body: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, marginBottom: 4 },
   row: {
-    flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 0,
     backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.glassBorder,
   },
   rowOn: { borderColor: Colors.primary, backgroundColor: Colors.glowGreen },
   name: { flex: 1, color: Colors.textSecondary, fontSize: Typography.md, fontFamily: Fonts.bold },
   nameOn: { color: Colors.textPrimary },
   check: {
-    width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center',
+    width: 28, height: 28, borderRadius: 0, alignItems: 'center', justifyContent: 'center',
     borderWidth: 1.5, borderColor: Colors.glassBorder,
   },
   checkOn: { backgroundColor: Colors.primary, borderColor: Colors.primary },

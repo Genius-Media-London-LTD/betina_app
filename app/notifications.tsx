@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
     backgroundColor: withAlpha(Colors.primary, 0.14),
     borderWidth: 1,
     borderColor: withAlpha(Colors.primary, 0.4),
-    borderRadius: 999,
+    borderRadius: 0,
     paddingVertical: 5,
     paddingHorizontal: 11,
   },
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
   iconBox: {
     width: 42,
     height: 42,
-    borderRadius: 14,
+    borderRadius: 0,
     backgroundColor: Colors.glass,
     borderWidth: 1,
     borderColor: Colors.glassBorder,
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   cardTitle: { flex: 1, color: Colors.white, fontSize: Typography.sm + 1, fontFamily: Fonts.bold },
   cardTitleGold: { color: Colors.gold },
   timeWrap: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.primary },
+  unreadDot: { width: 8, height: 8, borderRadius: 0, backgroundColor: Colors.primary },
   time: { color: Colors.textMuted, fontSize: Typography.xs, fontFamily: Fonts.semibold },
   cardText: {
     color: Colors.textSecondary,

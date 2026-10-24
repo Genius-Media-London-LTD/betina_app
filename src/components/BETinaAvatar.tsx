@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { Image, StyleSheet, View, ViewStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -9,52 +8,44 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { Colors, withAlpha } from '../theme';
+import { Colors } from '../theme';
 
 type Props = {
   size?: number;
-  /** Show expanding pulse rings around the avatar */
+  /** Show expanding square pulse outlines around the avatar */
   pulse?: boolean;
-  /** Online dot in the bottom-right corner */
+  /** Online marker in the bottom-right corner */
   online?: boolean;
-  /** Ring gradient variant */
+  /** Frame colour */
   variant?: 'default' | 'gold' | 'celebrate';
   style?: ViewStyle;
 };
 
-const RING_COLORS: Record<NonNullable<Props['variant']>, [string, string, ...string[]]> = {
-  default: [Colors.primary, withAlpha(Colors.accent, 0.9)],
-  gold: [Colors.gold, Colors.primary, withAlpha(Colors.accent, 0.9)],
-  celebrate: [Colors.primary, Colors.primaryLight, withAlpha(Colors.accent, 0.9)],
+const FRAME: Record<NonNullable<Props['variant']>, string> = {
+  default: Colors.primary,
+  gold: Colors.gold,
+  celebrate: Colors.primaryLight,
 };
 
-function PulseRing({ size, delay, color }: { size: number; delay: number; color: string }) {
+function Pulse({ delay, color }: { delay: number; color: string }) {
   const progress = useSharedValue(0);
 
   useEffect(() => {
     progress.value = withDelay(
       delay,
-      withRepeat(withTiming(1, { duration: 2600, easing: Easing.out(Easing.quad) }), -1),
+      withRepeat(withTiming(1, { duration: 2400, easing: Easing.out(Easing.quad) }), -1),
     );
   }, [delay, progress]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: 0.7 * (1 - progress.value),
-    transform: [{ scale: 0.92 + progress.value * 0.33 }],
+    opacity: 0.8 * (1 - progress.value),
+    transform: [{ scale: 1 + progress.value * 0.28 }],
   }));
 
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        StyleSheet.absoluteFill,
-        { borderRadius: size / 2, borderWidth: 1, borderColor: color },
-        animatedStyle,
-      ]}
-    />
-  );
+  return <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderWidth: 1.5, borderColor: color }, animatedStyle]} />;
 }
 
+/** BETina's square portrait (urban look: hard edges, lime frame). */
 export default function BETinaAvatar({
   size = 52,
   pulse = false,
@@ -62,44 +53,30 @@ export default function BETinaAvatar({
   variant = 'default',
   style,
 }: Props) {
-  const pad = Math.max(2, size * 0.02);
+  const frame = FRAME[variant];
   return (
     <View style={[{ width: size, height: size }, style]}>
       {pulse && (
         <>
-          <PulseRing size={size} delay={0} color={withAlpha(Colors.primary, 0.5)} />
-          <PulseRing size={size} delay={1300} color={withAlpha(Colors.accent, 0.6)} />
+          <Pulse delay={0} color={frame} />
+          <Pulse delay={1200} color={frame} />
         </>
       )}
-      <LinearGradient
-        colors={RING_COLORS[variant]}
-        start={{ x: 0.1, y: 0 }}
-        end={{ x: 0.9, y: 1 }}
-        style={{ width: size, height: size, borderRadius: size / 2, padding: pad }}
-      >
-        <Image
-          source={require('../../assets/betina-avatar.png')}
-          style={{ width: '100%', height: '100%', borderRadius: size / 2 }}
-          resizeMode="cover"
-        />
-      </LinearGradient>
-      {online && (
-        <View
-          style={[
-            styles.onlineDot,
-            { width: size * 0.24, height: size * 0.24, borderRadius: size * 0.12 },
-          ]}
-        />
-      )}
+      <View style={[styles.frame, { borderColor: frame, borderWidth: size >= 40 ? 1.5 : 1 }]}>
+        <Image source={require('../../assets/urban/betina-avatar.jpg')} style={styles.image} resizeMode="cover" />
+      </View>
+      {online && <View style={[styles.online, { width: size * 0.22, height: size * 0.22 }]} />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  onlineDot: {
+  frame: { flex: 1, overflow: 'hidden', backgroundColor: Colors.surface },
+  image: { width: '100%', height: '100%' },
+  online: {
     position: 'absolute',
-    right: 0,
-    bottom: 2,
+    right: -2,
+    bottom: -2,
     backgroundColor: Colors.primary,
     borderWidth: 2,
     borderColor: Colors.background,

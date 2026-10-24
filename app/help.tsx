@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   onlineDot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: 0,
     backgroundColor: Colors.primary,
   },
   onlineLabel: {
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
-    borderRadius: 16,
+    borderRadius: 0,
     paddingVertical: 13,
     paddingHorizontal: 15,
   },

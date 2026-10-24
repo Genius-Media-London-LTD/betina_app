@@ -120,14 +120,14 @@ const styles = StyleSheet.create({
   initialsText: { color: Colors.textSecondary, fontFamily: Fonts.bold },
   badge: {
     minWidth: 34, paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 999, borderWidth: 1, alignItems: 'center',
+    borderRadius: 0, borderWidth: 1, alignItems: 'center',
   },
   badgeText: { fontSize: Typography.xs + 1, fontFamily: Fonts.extrabold },
   chips: { gap: 8, paddingVertical: 2 },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 14, paddingVertical: 8,
-    borderRadius: 999, backgroundColor: Colors.glass,
+    borderRadius: 0, backgroundColor: Colors.glass,
     borderWidth: 1, borderColor: Colors.glassBorder,
   },
   chipActive: { backgroundColor: Colors.glowGreen, borderColor: Colors.primary },

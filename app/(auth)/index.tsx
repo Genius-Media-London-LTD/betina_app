@@ -139,13 +139,13 @@ const styles = StyleSheet.create({
   loadTrack: {
     width: '100%',
     height: 4,
-    borderRadius: 999,
+    borderRadius: 0,
     backgroundColor: withAlpha(Colors.white, 0.08),
     overflow: 'hidden',
   },
   loadFill: {
     height: '100%',
-    borderRadius: 999,
+    borderRadius: 0,
     overflow: 'hidden',
   },
 });

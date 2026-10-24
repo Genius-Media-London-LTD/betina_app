@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   qPoints: { color: Colors.gold, fontSize: Typography.sm, fontFamily: Fonts.extrabold },
   qMeta: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
   choice: {
-    flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14,
+    flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 0,
     backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.glassBorder,
   },
   choiceSet: { borderColor: Colors.primary },
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   team: {
     width: '31.5%', alignItems: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 4,
-    borderRadius: 12, backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
+    borderRadius: 0, backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
   },
   teamActive: { backgroundColor: Colors.glowGreen, borderColor: Colors.primary },
   teamPressed: { opacity: 0.7 },

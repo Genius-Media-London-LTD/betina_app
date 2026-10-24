@@ -1,40 +1,15 @@
-import React, { useEffect } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import Animated, {
-  interpolateColor,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
-import { Animation, Colors, withAlpha } from '../theme';
+import { Colors } from '../theme';
 
 type Props = {
   value: boolean;
   onValueChange?: (v: boolean) => void;
 };
 
-/** Custom neon toggle matching the design (46×28, knob flips color). */
+/** Square urban toggle (46×24, 17px knob): on = lime track + black knob. */
 export default function Toggle({ value, onValueChange }: Props) {
-  const progress = useSharedValue(value ? 1 : 0);
-
-  useEffect(() => {
-    progress.value = withSpring(value ? 1 : 0, Animation.spring.snappy);
-  }, [value, progress]);
-
-  const trackStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(
-      progress.value,
-      [0, 1],
-      [withAlpha(Colors.white, 0.12), Colors.primary],
-    ),
-  }));
-
-  const knobStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: progress.value * 18 }],
-    backgroundColor: interpolateColor(progress.value, [0, 1], [Colors.textMuted, Colors.background]),
-  }));
-
   return (
     <Pressable
       onPress={() => {
@@ -42,25 +17,21 @@ export default function Toggle({ value, onValueChange }: Props) {
         onValueChange?.(!value);
       }}
       hitSlop={6}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
     >
-      <Animated.View style={[styles.track, trackStyle]}>
-        <Animated.View style={[styles.knob, knobStyle]} />
-      </Animated.View>
+      <View style={[styles.track, value ? styles.trackOn : styles.trackOff]}>
+        <View style={[styles.knob, value ? styles.knobOn : styles.knobOff]} />
+      </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  track: {
-    width: 46,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-  },
-  knob: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-  },
+  track: { width: 46, height: 24, justifyContent: 'center', paddingHorizontal: 2.5 },
+  trackOn: { backgroundColor: Colors.primary, borderWidth: 1.5, borderColor: Colors.primary },
+  trackOff: { backgroundColor: Colors.black, borderWidth: 1.5, borderColor: Colors.borderStrong },
+  knob: { width: 17, height: 17 },
+  knobOn: { backgroundColor: Colors.black, alignSelf: 'flex-end' },
+  knobOff: { backgroundColor: Colors.textFaint, alignSelf: 'flex-start' },
 });

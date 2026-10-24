@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   },
   progress: { flexDirection: 'row', gap: 6 },
   progressSeg: {
-    width: 22, height: 4, borderRadius: 999,
+    width: 22, height: 4, borderRadius: 0,
     backgroundColor: withAlpha(Colors.white, 0.12),
   },
   progressActive: { backgroundColor: Colors.primary },
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
     backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-    borderRadius: 999, paddingVertical: 11, paddingHorizontal: 18,
+    borderRadius: 0, paddingVertical: 11, paddingHorizontal: 18,
   },
   chipActive: { backgroundColor: withAlpha(Colors.primary, 0.14), borderColor: withAlpha(Colors.primary, 0.6) },
   chipLabel: { color: Colors.textSecondary, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   teamPickerBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-    borderRadius: 20, paddingVertical: 16, paddingHorizontal: 18,
+    borderRadius: 0, paddingVertical: 16, paddingHorizontal: 18,
   },
   teamPickerBtnActive: { borderColor: withAlpha(Colors.primary, 0.45) },
   teamPickerPlaceholder: {
@@ -318,8 +318,8 @@ const styles = StyleSheet.create({
   // Modal
   modalOverlay: { flex: 1, backgroundColor: withAlpha(Colors.black, 0.75), justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: Colors.card, borderTopLeftRadius: 28,
-    borderTopRightRadius: 28, paddingTop: 20, maxHeight: '85%',
+    backgroundColor: Colors.card, borderTopLeftRadius: 0,
+    borderTopRightRadius: 0, paddingTop: 20, maxHeight: '85%',
   },
   modalTitle: {
     color: Colors.white, fontSize: Typography.base, fontFamily: Fonts.bold,
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     marginHorizontal: 20, marginBottom: 12,
     backgroundColor: Colors.glass, borderWidth: 1,
-    borderColor: withAlpha(Colors.primary, 0.4), borderRadius: 16,
+    borderColor: withAlpha(Colors.primary, 0.4), borderRadius: 0,
     paddingHorizontal: 16,
   },
   searchInput: {
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   },
   teamBadge: { width: 36, height: 36, resizeMode: 'contain' },
   teamBadgePlaceholder: {
-    backgroundColor: Colors.glass, borderRadius: 8,
+    backgroundColor: Colors.glass, borderRadius: 0,
     alignItems: 'center', justifyContent: 'center',
   },
   teamInfo: { flex: 1 },

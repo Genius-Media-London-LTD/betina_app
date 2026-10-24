@@ -97,9 +97,9 @@ function ConfettiPiece({ spec, color }: { spec: ParticleSpec; color: string }) {
           position: 'absolute',
           left: `${spec.left}%`,
           top: `${spec.top}%`,
-          width: 7,
-          height: 13,
-          borderRadius: 2,
+          width: 9,
+          height: 9,
+          borderRadius: 0,
           backgroundColor: color,
         },
         style,
@@ -113,7 +113,8 @@ const PALETTES = {
   gold: [Colors.gold, Colors.goldLight, Colors.goldLight],
 };
 
-const CONFETTI_COLORS = [Colors.primary, Colors.accent, Colors.gold, Colors.primaryLight, Colors.white];
+// Urban moments: lime, white and black squares only.
+const CONFETTI_COLORS = [Colors.primary, Colors.white, Colors.primaryLight, Colors.white];
 
 // Deterministic pseudo-random layout so the field is stable across renders.
 function makeSpecs(count: number, palette: string[], seed: number): ParticleSpec[] {
@@ -136,9 +137,11 @@ function makeSpecs(count: number, palette: string[], seed: number): ParticleSpec
   return specs;
 }
 
-/** Ambient floating particle field (+ optional confetti) behind screen content. */
+/**
+ * Confetti for celebration moments. The urban design has no ambient glow
+ * particles, so without `confetti` this renders nothing.
+ */
 export default function ParticlesBg({ count = 10, variant = 'green', confetti = false }: Props) {
-  const specs = useMemo(() => makeSpecs(count, PALETTES[variant], 7), [count, variant]);
   const confettiSpecs = useMemo(
     () =>
       confetti
@@ -149,9 +152,6 @@ export default function ParticlesBg({ count = 10, variant = 'green', confetti = 
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      {specs.map((spec, i) => (
-        <Particle key={`p${i}`} spec={spec} />
-      ))}
       {confettiSpecs.map((spec, i) => (
         <ConfettiPiece key={`c${i}`} spec={spec} color={CONFETTI_COLORS[i % CONFETTI_COLORS.length]} />
       ))}

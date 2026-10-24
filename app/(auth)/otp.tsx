@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.glass,
     borderWidth: 1,
     borderColor: Colors.glassBorder,
-    borderRadius: 16,
+    borderRadius: 0,
   },
   otpBoxActive: {
     borderColor: withAlpha(Colors.primary, 0.55),
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
   cursor: {
     width: 2,
     height: 26,
-    borderRadius: 1,
+    borderRadius: 0,
     backgroundColor: Colors.primary,
   },
   hiddenInput: {
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 22,
     height: 22,
-    borderRadius: 6,
+    borderRadius: 0,
     borderWidth: 1.5,
     borderColor: Colors.glassBorder,
     backgroundColor: Colors.glass,

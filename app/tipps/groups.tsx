@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   groupName: { color: Colors.textPrimary, fontSize: Typography.md, fontFamily: Fonts.bold },
   groupMeta: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, letterSpacing: 0.5 },
   leaveBtn: {
-    width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center',
+    width: 30, height: 30, borderRadius: 0, alignItems: 'center', justifyContent: 'center',
     backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
   },
   leaveText: { color: Colors.textMuted, fontSize: Typography.sm, fontFamily: Fonts.bold },
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   formCard: { padding: 16, gap: 10 },
   formTitle: { color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.bold },
   input: {
-    backgroundColor: Colors.surface, borderRadius: 12, borderWidth: 1, borderColor: Colors.glassBorder,
+    backgroundColor: Colors.surface, borderRadius: 0, borderWidth: 1, borderColor: Colors.glassBorder,
     color: Colors.textPrimary, fontSize: Typography.base, fontFamily: Fonts.semibold,
     paddingHorizontal: 14, paddingVertical: 12,
   },

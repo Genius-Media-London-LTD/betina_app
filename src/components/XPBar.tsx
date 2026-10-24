@@ -1,62 +1,50 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withTiming,
-} from 'react-native-reanimated';
-import { Animation, Colors, withAlpha } from '../theme';
+import { Colors } from '../theme';
 
 type Props = {
   /** 0..1 */
   progress: number;
   height?: number;
   delay?: number;
+  /** Number of segments (urban look: 20, 24 on the splash). */
+  segments?: number;
 };
 
-/** Neon XP progress bar — fills with an animated sweep on mount. */
-export default function XPBar({ progress, height = 8, delay = 300 }: Props) {
-  const width = useSharedValue(0);
+/** Segmented XP bar — lime squares fill up one after another. */
+export default function XPBar({ progress, height = 8, delay = 300, segments = 20 }: Props) {
+  const target = Math.round(Math.max(0, Math.min(1, progress)) * segments);
+  const [filled, setFilled] = useState(0);
 
   useEffect(() => {
-    width.value = withDelay(
-      delay,
-      withTiming(progress, { duration: Animation.cinematic, easing: Easing.out(Easing.cubic) }),
-    );
-  }, [progress, delay, width]);
-
-  const fillStyle = useAnimatedStyle(() => ({
-    width: `${width.value * 100}%`,
-  }));
+    setFilled(0);
+    if (target === 0) return;
+    let n = 0;
+    let tick: ReturnType<typeof setInterval> | undefined;
+    const start = setTimeout(() => {
+      tick = setInterval(() => {
+        n += 1;
+        setFilled(n);
+        if (n >= target && tick) clearInterval(tick);
+      }, 40);
+    }, delay);
+    return () => {
+      clearTimeout(start);
+      if (tick) clearInterval(tick);
+    };
+  }, [target, delay]);
 
   return (
-    <View style={[styles.track, { height, borderRadius: height }]}>
-      <Animated.View style={[styles.fill, { height, borderRadius: height }, fillStyle]}>
-        <LinearGradient
-          colors={[Colors.primaryDim, Colors.primary]}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={[StyleSheet.absoluteFill, { borderRadius: height }]}
-        />
-      </Animated.View>
+    <View style={styles.row}>
+      {Array.from({ length: segments }, (_, i) => (
+        <View key={i} style={[styles.seg, { height }, i < filled && styles.on]} />
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  track: {
-    width: '100%',
-    backgroundColor: withAlpha(Colors.white, 0.08),
-    overflow: 'hidden',
-  },
-  fill: {
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 4,
-  },
+  row: { flexDirection: 'row', gap: 2, width: '100%' },
+  seg: { flex: 1, backgroundColor: Colors.line },
+  on: { backgroundColor: Colors.primary },
 });

@@ -199,6 +199,12 @@ type Translations = {
   tabTipps: string;
   tabNews: string;
   tabMenu: string;
+  menuTeam: string;
+  menuStreak: string;
+  menuDaysActive: string;
+  menuXpToNext: string;
+  menuMaxTier: string;
+  menuResponsible: string;
   tipTitle: string;
   tipHostOpen: string;
   tipHostDone: string;
@@ -573,6 +579,12 @@ const T: Record<LangCode, Translations> = {
     tipTeamPlayers: '{n} tipped',
     tabNews: 'News',
     tabMenu: 'Menu',
+    menuTeam: 'Favourite team',
+    menuStreak: 'Streak',
+    menuDaysActive: 'days active',
+    menuXpToNext: '{n} to {tier}',
+    menuMaxTier: 'top tier reached',
+    menuResponsible: '18+ · PLAY RESPONSIBLY',
   },
   de: {
     welcomeTitle: 'Willkommen',
@@ -834,6 +846,12 @@ const T: Record<LangCode, Translations> = {
     tipTeamPlayers: '{n} getippt',
     tabNews: 'News',
     tabMenu: 'Menü',
+    menuTeam: 'Lieblingsteam',
+    menuStreak: 'Streak',
+    menuDaysActive: 'Tage aktiv',
+    menuXpToNext: 'noch {n} bis {tier}',
+    menuMaxTier: 'höchste Stufe erreicht',
+    menuResponsible: '18+ · SPIEL VERANTWORTUNGSVOLL',
   },
   es: {
     welcomeTitle: 'Bienvenido',
@@ -1095,6 +1113,12 @@ const T: Record<LangCode, Translations> = {
     tipTeamPlayers: '{n} pronosticaron',
     tabNews: 'Noticias',
     tabMenu: 'Menú',
+    menuTeam: 'Equipo favorito',
+    menuStreak: 'Racha',
+    menuDaysActive: 'días activo',
+    menuXpToNext: 'faltan {n} para {tier}',
+    menuMaxTier: 'nivel máximo',
+    menuResponsible: '18+ · JUEGA CON RESPONSABILIDAD',
   },
   pt: {
     welcomeTitle: 'Bem-vindo',
@@ -1356,6 +1380,12 @@ const T: Record<LangCode, Translations> = {
     tipTeamPlayers: '{n} com palpite',
     tabNews: 'Notícias',
     tabMenu: 'Menu',
+    menuTeam: 'Equipa favorita',
+    menuStreak: 'Sequência',
+    menuDaysActive: 'dias ativo',
+    menuXpToNext: 'faltam {n} para {tier}',
+    menuMaxTier: 'nível máximo',
+    menuResponsible: '18+ · JOGA COM RESPONSABILIDADE',
   },
   fr: {
     welcomeTitle: 'Bienvenue',
@@ -1617,6 +1647,12 @@ const T: Record<LangCode, Translations> = {
     tipTeamPlayers: '{n} ont pronostiqué',
     tabNews: 'Actu',
     tabMenu: 'Menu',
+    menuTeam: 'Équipe favorite',
+    menuStreak: 'Série',
+    menuDaysActive: 'jours actifs',
+    menuXpToNext: 'encore {n} avant {tier}',
+    menuMaxTier: 'niveau maximum',
+    menuResponsible: '18+ · JOUE RESPONSABLE',
   },
   it: {
     welcomeTitle: 'Benvenuto',
@@ -1878,6 +1914,12 @@ const T: Record<LangCode, Translations> = {
     tipTeamPlayers: '{n} hanno pronosticato',
     tabNews: 'Notizie',
     tabMenu: 'Menu',
+    menuTeam: 'Squadra del cuore',
+    menuStreak: 'Serie',
+    menuDaysActive: 'giorni attivi',
+    menuXpToNext: 'mancano {n} a {tier}',
+    menuMaxTier: 'livello massimo',
+    menuResponsible: '18+ · GIOCA RESPONSABILMENTE',
   },
   ro: {
     welcomeTitle: 'Bun venit',
@@ -2139,6 +2181,12 @@ const T: Record<LangCode, Translations> = {
     tipTeamPlayers: '{n} au pronosticat',
     tabNews: 'Știri',
     tabMenu: 'Meniu',
+    menuTeam: 'Echipa favorită',
+    menuStreak: 'Serie',
+    menuDaysActive: 'zile active',
+    menuXpToNext: 'încă {n} până la {tier}',
+    menuMaxTier: 'nivel maxim',
+    menuResponsible: '18+ · JOACĂ RESPONSABIL',
   },
 };
 

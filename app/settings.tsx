@@ -12,6 +12,7 @@ import Toggle from '../src/components/Toggle';
 import { useProfile } from '../src/hooks/useProfile';
 import { useSession } from '../src/hooks/useSession';
 import { LANGUAGES, LangCode, useI18n } from '../src/lib/i18n';
+import { signOut } from '../src/lib/session';
 import { supabase } from '../src/lib/supabase';
 import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
 
@@ -108,15 +109,7 @@ export default function Settings() {
   };
 
   const logout = async () => {
-    // Clear device token (SecureStore is unavailable on web — don't let it
-    // throw and block sign-out).
-    try {
-      await SecureStore.deleteItemAsync('betina_device_token');
-      await SecureStore.deleteItemAsync('betina_device_phone');
-    } catch {
-      // no-op on web
-    }
-    await supabase.auth.signOut();
+    await signOut();
     router.replace('/(auth)/login');
   };
 
@@ -309,7 +302,7 @@ const styles = StyleSheet.create({
   title: { color: Colors.white, fontSize: 26, fontFamily: Fonts.bold },
   profileCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 14, paddingHorizontal: 16 },
   profileInitial: {
-    width: 48, height: 48, borderRadius: 24,
+    width: 48, height: 48, borderRadius: 0,
     backgroundColor: withAlpha(Colors.primary, 0.12), borderWidth: 1, borderColor: withAlpha(Colors.primary, 0.35),
     alignItems: 'center', justifyContent: 'center',
   },
@@ -320,9 +313,9 @@ const styles = StyleSheet.create({
   tierPill: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: withAlpha(Colors.primary, 0.1), borderWidth: 1, borderColor: withAlpha(Colors.primary, 0.3),
-    borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12,
+    borderRadius: 0, paddingVertical: 6, paddingHorizontal: 12,
   },
-  tierDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: Colors.primary },
+  tierDot: { width: 7, height: 7, borderRadius: 0, backgroundColor: Colors.primary },
   tierPillLabel: { color: Colors.primary, fontSize: Typography.xs, fontFamily: Fonts.bold, letterSpacing: 0.6 },
   section: { gap: Spacing.sm },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 12, paddingHorizontal: 16 },
@@ -336,16 +329,16 @@ const styles = StyleSheet.create({
   // Modal
   modalBackdrop: { flex: 1, backgroundColor: withAlpha(Colors.black, 0.6) },
   modalSheet: {
-    backgroundColor: Colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: Colors.surface, borderTopLeftRadius: 0, borderTopRightRadius: 0,
     borderWidth: 1, borderColor: withAlpha(Colors.white, 0.08),
     paddingHorizontal: Spacing.lg, paddingTop: 12, maxHeight: '75%',
   },
-  modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: Colors.textMuted, alignSelf: 'center', marginBottom: 16 },
+  modalHandle: { width: 36, height: 4, borderRadius: 0, backgroundColor: Colors.textMuted, alignSelf: 'center', marginBottom: 16 },
   modalTitle: { color: Colors.white, fontSize: Typography.lg, fontFamily: Fonts.bold, marginBottom: 16 },
   langList: { maxHeight: 380 },
   langRow: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    paddingVertical: 14, paddingHorizontal: 12, borderRadius: 12, marginBottom: 4,
+    paddingVertical: 14, paddingHorizontal: 12, borderRadius: 0, marginBottom: 4,
   },
   langRowActive: { backgroundColor: withAlpha(Colors.primary, 0.08), borderWidth: 1, borderColor: withAlpha(Colors.primary, 0.2) },
   langFlag: { fontSize: 28 },
@@ -355,7 +348,7 @@ const styles = StyleSheet.create({
   langCheck: { color: Colors.primary, fontSize: Typography.base + 2, fontFamily: Fonts.bold },
   saveBtn: {
     marginTop: 12, backgroundColor: Colors.primary,
-    borderRadius: 999, paddingVertical: 14, alignItems: 'center',
+    borderRadius: 0, paddingVertical: 14, alignItems: 'center',
   },
   saveBtnLabel: { color: Colors.black, fontFamily: Fonts.bold, fontSize: Typography.base },
 
@@ -365,7 +358,7 @@ const styles = StyleSheet.create({
   deleteCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: withAlpha(Colors.black, 0.65), padding: 28 },
   deleteDialog: {
     width: '100%', maxWidth: 380, backgroundColor: Colors.surface,
-    borderRadius: 22, borderWidth: 1, borderColor: withAlpha(Colors.danger, 0.3),
+    borderRadius: 0, borderWidth: 1, borderColor: withAlpha(Colors.danger, 0.3),
     paddingHorizontal: 22, paddingTop: 22, paddingBottom: 14, alignItems: 'center',
   },
   deleteDialogEmoji: { fontSize: 34, marginBottom: 10 },
@@ -374,7 +367,7 @@ const styles = StyleSheet.create({
   deleteDialogError: { color: Colors.danger, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center', marginBottom: 14 },
   deleteConfirmBtn: {
     width: '100%', backgroundColor: Colors.danger,
-    borderRadius: 999, paddingVertical: 14, alignItems: 'center', marginBottom: 4,
+    borderRadius: 0, paddingVertical: 14, alignItems: 'center', marginBottom: 4,
   },
   deleteConfirmLabel: { color: Colors.dangerDeep, fontFamily: Fonts.bold, fontSize: Typography.base },
   deleteCancelBtn: { width: '100%', paddingVertical: 14, alignItems: 'center' },

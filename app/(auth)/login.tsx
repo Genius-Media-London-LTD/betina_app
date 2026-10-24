@@ -229,14 +229,14 @@ const styles = StyleSheet.create({
   dialCode: {
     flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
     backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-    borderRadius: 20, paddingHorizontal: 14,
+    borderRadius: 0, paddingHorizontal: 14,
   },
   dialFlag: { fontSize: 18 },
   dialText: { color: Colors.white, fontSize: Typography.md - 1, fontFamily: Fonts.semibold },
   dialCaret: { color: Colors.textMuted, fontSize: 11 },
   inputWrap: {
     flex: 1, backgroundColor: Colors.glass, borderWidth: 1,
-    borderColor: withAlpha(Colors.primary, 0.45), borderRadius: 20, paddingHorizontal: 18,
+    borderColor: withAlpha(Colors.primary, 0.45), borderRadius: 0, paddingHorizontal: 18,
   },
   input: {
     color: Colors.white, fontSize: Typography.md - 1,
@@ -252,8 +252,8 @@ const styles = StyleSheet.create({
   // Modal
   modalOverlay: { flex: 1, backgroundColor: withAlpha(Colors.black, 0.7), justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: Colors.card, borderTopLeftRadius: 28,
-    borderTopRightRadius: 28, paddingTop: 20, maxHeight: '80%',
+    backgroundColor: Colors.card, borderTopLeftRadius: 0,
+    borderTopRightRadius: 0, paddingTop: 20, maxHeight: '80%',
   },
   modalTitle: {
     color: Colors.white, fontSize: Typography.base, fontFamily: Fonts.bold,

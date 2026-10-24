@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
 
   backBtn: {
     position: 'absolute', left: Spacing.lg, zIndex: 100,
-    width: 42, height: 42, borderRadius: 21,
+    width: 42, height: 42, borderRadius: 0,
     backgroundColor: withAlpha(Colors.background, 0.75),
     borderWidth: 1, borderColor: withAlpha(Colors.white, 0.18),
     alignItems: 'center', justifyContent: 'center',
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   loadingText: { color: Colors.textSecondary, fontFamily: Fonts.medium, fontSize: Typography.sm, marginTop: 8 },
   errorText: { color: Colors.textSecondary, fontFamily: Fonts.medium, fontSize: Typography.base, textAlign: 'center' },
   retryBtn: {
-    paddingHorizontal: 24, paddingVertical: 12, borderRadius: 999,
+    paddingHorizontal: 24, paddingVertical: 12, borderRadius: 0,
     backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
   },
   retryLabel: { color: Colors.white, fontFamily: Fonts.semibold, fontSize: Typography.sm },
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 16, right: 16,
     backgroundColor: withAlpha(Colors.background, 0.75),
     borderWidth: 1, borderColor: withAlpha(Colors.white, 0.15),
-    borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5,
+    borderRadius: 0, paddingHorizontal: 12, paddingVertical: 5,
   },
   sourcePillText: { color: Colors.white, fontSize: Typography.xs, fontFamily: Fonts.semibold },
 
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   headerBlock: { paddingHorizontal: Spacing.lg, paddingTop: 12, gap: 10 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   metaText: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
-  metaDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: Colors.textSecondary },
+  metaDot: { width: 3, height: 3, borderRadius: 0, backgroundColor: Colors.textSecondary },
   title: {
     color: Colors.white, fontSize: Typography.xl + 3,
     fontFamily: Fonts.bold, lineHeight: 36, letterSpacing: -0.3,
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: Spacing.lg, gap: 16 },
   openBtn: {
     alignSelf: 'flex-start', marginTop: 4,
-    paddingHorizontal: 20, paddingVertical: 12, borderRadius: 999,
+    paddingHorizontal: 20, paddingVertical: 12, borderRadius: 0,
     backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
   },
   openLabel: { color: Colors.white, fontFamily: Fonts.semibold, fontSize: Typography.sm },
@@ -309,10 +309,10 @@ const styles = StyleSheet.create({
   },
   pullQuoteWrap: { marginVertical: 4 },
   pullQuote: {
-    flexDirection: 'row', borderRadius: 12, overflow: 'hidden',
+    flexDirection: 'row', borderRadius: 0, overflow: 'hidden',
     padding: 16, gap: 12, alignItems: 'flex-start',
   },
-  pullQuoteBar: { width: 3, borderRadius: 2, backgroundColor: Colors.primary, alignSelf: 'stretch' },
+  pullQuoteBar: { width: 3, borderRadius: 0, backgroundColor: Colors.primary, alignSelf: 'stretch' },
   pullQuoteText: {
     flex: 1, color: withAlpha(Colors.white, 0.9), fontSize: Typography.base + 1,
     fontFamily: Fonts.semibold, lineHeight: 26, fontStyle: 'italic',
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   ctaWrap: { margin: Spacing.lg, marginTop: 24 },
   ctaCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderRadius: 16, padding: 16,
+    borderRadius: 0, padding: 16,
     borderWidth: 1, borderColor: withAlpha(Colors.primary, 0.2),
   },
   ctaLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   ctaTitle: { color: Colors.white, fontFamily: Fonts.bold, fontSize: Typography.sm + 1 },
   ctaDesc: { color: Colors.textSecondary, fontFamily: Fonts.medium, fontSize: Typography.xs + 1, marginTop: 2 },
   ctaBtn: {
-    paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999,
+    paddingHorizontal: 18, paddingVertical: 10, borderRadius: 0,
     backgroundColor: Colors.primary,
   },
   ctaBtnLabel: { color: Colors.black, fontFamily: Fonts.bold, fontSize: Typography.sm },

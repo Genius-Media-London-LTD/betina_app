@@ -14,7 +14,12 @@ import {
   Archivo_900Black_Italic,
   useFonts,
 } from '@expo-google-fonts/archivo';
+import { Anton_400Regular } from '@expo-google-fonts/anton';
+import { ArchivoBlack_400Regular } from '@expo-google-fonts/archivo-black';
+import { ArchivoNarrow_400Regular, ArchivoNarrow_600SemiBold, ArchivoNarrow_700Bold } from '@expo-google-fonts/archivo-narrow';
+import { SpaceMono_400Regular, SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
 import { Colors } from '../src/theme';
+import { WEB_FONT_CSS } from '../src/theme/webFonts';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -27,15 +32,7 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
   if (!document.getElementById(id)) {
     const style = document.createElement('style');
     style.id = id;
-    style.textContent = `
-      @font-face { font-family: 'Archivo_400Regular'; font-style: normal; font-weight: 400; font-display: swap; src: url('https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTTNDNp8A.ttf') format('truetype'); }
-      @font-face { font-family: 'Archivo_500Medium'; font-style: normal; font-weight: 500; font-display: swap; src: url('https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTTBjNp8A.ttf') format('truetype'); }
-      @font-face { font-family: 'Archivo_600SemiBold'; font-style: normal; font-weight: 600; font-display: swap; src: url('https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTT6jRp8A.ttf') format('truetype'); }
-      @font-face { font-family: 'Archivo_700Bold'; font-style: normal; font-weight: 700; font-display: swap; src: url('https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTT0zRp8A.ttf') format('truetype'); }
-      @font-face { font-family: 'Archivo_800ExtraBold'; font-style: normal; font-weight: 800; font-display: swap; src: url('https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTTtDRp8A.ttf') format('truetype'); }
-      @font-face { font-family: 'Archivo_900Black'; font-style: normal; font-weight: 900; font-display: swap; src: url('https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTTnTRp8A.ttf') format('truetype'); }
-      @font-face { font-family: 'Archivo_900Black_Italic'; font-style: italic; font-weight: 900; font-display: swap; src: url('https://fonts.gstatic.com/s/archivo/v25/k3k8o8UDI-1M0wlSfdzyIEkpwTM29hr-8mTYIRyOSVz60_PG_HAotBds.ttf') format('truetype'); }
-    `;
+    style.textContent = WEB_FONT_CSS;
     document.head.appendChild(style);
   }
 }
@@ -55,6 +52,13 @@ export default function RootLayout() {
           Archivo_800ExtraBold,
           Archivo_900Black,
           Archivo_900Black_Italic,
+          Anton_400Regular,
+          ArchivoBlack_400Regular,
+          ArchivoNarrow_400Regular,
+          ArchivoNarrow_600SemiBold,
+          ArchivoNarrow_700Bold,
+          SpaceMono_400Regular,
+          SpaceMono_700Bold,
         },
   );
 

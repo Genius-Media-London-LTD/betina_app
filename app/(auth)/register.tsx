@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   },
   progress: { flexDirection: 'row', gap: 6 },
   progressSeg: {
-    width: 22, height: 4, borderRadius: 999,
+    width: 22, height: 4, borderRadius: 0,
     backgroundColor: withAlpha(Colors.white, 0.12),
   },
   progressActive: { backgroundColor: Colors.primary },
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   selectRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-    borderRadius: 20, paddingVertical: 16, paddingHorizontal: 18,
+    borderRadius: 0, paddingVertical: 16, paddingHorizontal: 18,
   },
   selectLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm + 2 },
   flag: { fontSize: 20 },
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   caret: { color: Colors.textMuted, fontSize: 12 },
   inputWrap: {
     backgroundColor: Colors.glass, borderWidth: 1,
-    borderColor: withAlpha(Colors.primary, 0.45), borderRadius: 20, paddingHorizontal: 18,
+    borderColor: withAlpha(Colors.primary, 0.45), borderRadius: 0, paddingHorizontal: 18,
   },
   input: {
     color: Colors.white, fontSize: Typography.md - 1,
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   },
   hintAccent: { color: Colors.primary, fontFamily: Fonts.semibold },
   birthdayRow: { flexDirection: 'row', gap: Spacing.sm + 2 },
-  birthdayBox: { backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder, borderRadius: 20 },
+  birthdayBox: { backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder, borderRadius: 0 },
   birthdayInput: { color: Colors.white, fontSize: Typography.md - 1, fontFamily: Fonts.semibold, paddingVertical: 16, textAlign: 'center' },
   ageHint: { color: Colors.textMuted, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
   birthdayErr: { color: Colors.danger, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
@@ -314,8 +314,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: Colors.card, borderTopLeftRadius: 28,
-    borderTopRightRadius: 28, paddingTop: 20, maxHeight: '75%',
+    backgroundColor: Colors.card, borderTopLeftRadius: 0,
+    borderTopRightRadius: 0, paddingTop: 20, maxHeight: '75%',
   },
   modalTitle: {
     color: Colors.white, fontSize: Typography.base,

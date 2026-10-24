@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   bell: {
     width: 38,
     height: 38,
-    borderRadius: 19,
+    borderRadius: 0,
     backgroundColor: Colors.glass,
     borderWidth: 1,
     borderColor: Colors.glassBorder,
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   formChip: {
     width: 22,
     height: 22,
-    borderRadius: 7,
+    borderRadius: 0,
     backgroundColor: withAlpha(Colors.white, 0.08),
     borderWidth: 1,
     borderColor: withAlpha(Colors.white, 0.15),

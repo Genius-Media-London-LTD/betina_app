@@ -1,18 +1,18 @@
 import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 import BETinaAvatar from './BETinaAvatar';
-import { BorderRadius, Colors, Fonts, Spacing, Typography, withAlpha } from '../theme';
+import { Colors, Fonts, Spacing, Typography } from '../theme';
 
 type Props = {
   role: 'user' | 'assistant';
   children: React.ReactNode;
-  /** Hide the small avatar next to assistant bubbles (e.g. hint bubbles) */
+  /** Show BETina's small portrait next to her bubble */
   showAvatar?: boolean;
   style?: ViewStyle;
 };
 
-/** Chat bubble in BETina style — purple glass for BETina, neon glass for the user. */
-export default function ChatBubble({ role, children, showAvatar = true, style }: Props) {
+/** Urban chat bubble — BETina: #111 with a graphite border; player: lime with black text. */
+export default function ChatBubble({ role, children, showAvatar = false, style }: Props) {
   const content =
     typeof children === 'string' ? (
       <Text style={[styles.text, role === 'user' && styles.userText]}>{children}</Text>
@@ -25,10 +25,8 @@ export default function ChatBubble({ role, children, showAvatar = true, style }:
   }
   return (
     <View style={[styles.row, style]}>
-      {showAvatar && <BETinaAvatar size={30} />}
-      <View style={[styles.bubble, styles.assistant, !showAvatar && { marginLeft: 0 }]}>
-        {content}
-      </View>
+      {showAvatar && <BETinaAvatar size={28} />}
+      <View style={[styles.bubble, styles.assistant]}>{content}</View>
     </View>
   );
 }
@@ -38,40 +36,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: Spacing.sm,
-    maxWidth: '85%',
+    maxWidth: '86%',
   },
   bubble: {
-    borderRadius: BorderRadius.xl,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.base,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
   },
   assistant: {
-    backgroundColor: withAlpha(Colors.accent, 0.16),
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.accent, 0.3),
-    borderBottomLeftRadius: 4,
+    backgroundColor: Colors.card,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
     flexShrink: 1,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 14,
-    elevation: 3,
   },
   user: {
     alignSelf: 'flex-end',
-    maxWidth: '78%',
-    backgroundColor: withAlpha(Colors.primary, 0.14),
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.primary, 0.45),
-    borderBottomRightRadius: 4,
+    maxWidth: '80%',
+    backgroundColor: Colors.primary,
   },
   text: {
     color: Colors.textPrimary,
-    fontSize: Typography.base - 1,
-    fontFamily: Fonts.medium,
+    fontSize: Typography.base,
+    fontFamily: Fonts.regular,
     lineHeight: 21,
   },
   userText: {
-    color: Colors.primaryLight,
+    color: Colors.black,
+    fontFamily: Fonts.semibold,
   },
 });

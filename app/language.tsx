@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   check: {
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: 0,
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     backgroundColor: withAlpha(Colors.accent, 0.18),
     borderWidth: 1,
     borderColor: withAlpha(Colors.accent, 0.4),
-    borderRadius: 16,
+    borderRadius: 0,
     paddingVertical: 12,
     paddingHorizontal: 14,
   },
