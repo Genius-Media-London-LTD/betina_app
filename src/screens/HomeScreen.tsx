@@ -1,37 +1,27 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useI18n } from '../lib/i18n';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import AnimatedNumber from '../components/AnimatedNumber';
-import BETinaAvatar from '../components/BETinaAvatar';
-import GlowCard from '../components/GlowCard';
-import ParticlesBg from '../components/ParticlesBg';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import ScreenBg from '../components/ScreenBg';
 import SignInWall from '../components/SignInWall';
 import XPBar from '../components/XPBar';
+import { Meta, Sticker } from '../components/Urban';
 import { useSession } from '../hooks/useSession';
 import { tiers } from '../lib/demo';
 import { MatchEvent, fetchTeamNext, formatKickoff } from '../lib/sports';
 import { supabase } from '../lib/supabase';
 import { useChrome } from '../components/chrome';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../theme';
-
-function getGreeting(t: { homeMorning: string; homeAfternoon: string; homeEvening: string }) {
-  const h = new Date().getHours();
-  if (h < 12) return t.homeMorning;
-  if (h < 18) return t.homeAfternoon;
-  return t.homeEvening;
-}
+import { Colors, Fonts } from '../theme';
 
 function getTierInfo(xp: number) {
   const current = [...tiers].reverse().find((t) => xp >= t.minXp) ?? tiers[0];
   const currentIdx = tiers.findIndex((t) => t.name === current.name);
   const next = tiers[currentIdx + 1] ?? null;
-  const progress = next
-    ? (xp - current.minXp) / (next.minXp - current.minXp)
-    : 1;
+  const progress = next ? (xp - current.minXp) / (next.minXp - current.minXp) : 1;
   return { current, next, progress };
 }
 
@@ -39,11 +29,25 @@ type Profile = {
   name: string;
   vip_tier: string;
   xp_points: number;
+  streak_days: number | null;
   favourite_team: string | null;
   favourite_team_id: string | null;
-  favourite_sport: string | null;
-  country: string | null;
 };
+
+const kickoffDate = (e: MatchEvent) => new Date(`${e.date}T${e.time || '00:00:00'}`);
+
+/** Days / hours / minutes / seconds until kickoff, ticking every second. */
+function useCountdown(target: Date | null) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!target) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [target]);
+  if (!target) return null;
+  const s = Math.max(0, Math.floor((target.getTime() - now) / 1000));
+  return { hoursTotal: Math.floor(s / 3600), parts: [Math.floor(s / 86400), Math.floor(s / 3600) % 24, Math.floor(s / 60) % 60, s % 60] };
+}
 
 export default function Home() {
   const { t, lang } = useI18n();
@@ -65,7 +69,7 @@ export default function Home() {
       if (!user) { setLoading(false); return; }
       const { data } = await supabase
         .from('profiles')
-        .select('name, vip_tier, xp_points, favourite_team, favourite_team_id, favourite_sport, country')
+        .select('name, vip_tier, xp_points, streak_days, favourite_team, favourite_team_id')
         .eq('id', user.id)
         .maybeSingle();
       if (data) setProfile(data);
@@ -89,26 +93,45 @@ export default function Home() {
     return () => { active = false; };
   }, [teamId]);
 
+  const nextMatch = fixtures.find((e) => kickoffDate(e).getTime() > Date.now()) ?? null;
+  const countdown = useCountdown(nextMatch ? kickoffDate(nextMatch) : null);
+
   const xp = profile?.xp_points ?? 0;
-  const name = profile?.name ?? '...';
-  const tier = profile?.vip_tier ?? 'INITIATE';
+  const name = profile?.name ?? '';
+  const firstName = name.split(' ')[0] || name;
   const team = profile?.favourite_team;
-  const { next, progress } = getTierInfo(xp);
+  const streak = profile?.streak_days ?? 0;
+  const { current, next, progress } = getTierInfo(xp);
+  const tier = profile?.vip_tier ?? current.name;
 
   const betinaSays = team
-    ? t.homeBetinaTeam.replace('{name}', name).replace('{team}', team)
-    : t.homeBetinaNoTeam.replace('{name}', name);
+    ? t.homeBetinaTeam.replace('{name}', firstName).replace('{team}', team)
+    : t.homeBetinaNoTeam.replace('{name}', firstName);
 
-  const kickoff = (e: MatchEvent) =>
-    formatKickoff(e.date, e.time, lang, { today: t.homeToday, tomorrow: t.homeTomorrow });
+  const go = (path: Parameters<typeof router.push>[0]) => {
+    Haptics.selectionAsync();
+    router.push(path);
+  };
+
+  const now = new Date();
+  const stamp = `${now.toLocaleDateString(lang, { weekday: 'short' }).replace('.', '')} · ${now.toLocaleDateString(lang, { day: '2-digit', month: '2-digit' })} · ${now.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' })}`;
+  const units = t.homeCountdownUnits.split('|');
+  const nameSize = firstName.length > 9 ? 52 : firstName.length > 6 ? 64 : 76;
+
+  const tiles = [
+    { label: t.tabNews, meta: 'BETINA NEWS', path: '/(tabs)/live' as const },
+    { label: t.tabTipps, meta: 'BEAT BETINA', path: '/(tabs)/tippspiel' as const },
+    { label: 'Chat', meta: 'Online', path: '/(tabs)/chat' as const },
+    { label: t.tabJourney, meta: tier, path: '/(tabs)/journey' as const },
+  ];
 
   // Guest (no session) → gate the personalised home behind sign-in. Non-account
-  // content (news/articles) stays open on the Live tab.
+  // content (news/articles) stays open on the News tab.
   if (session === null) return <SignInWall />;
 
   if (loading || session === undefined) {
     return (
-      <ScreenBg glowTop={0.16} glowSize={460}>
+      <ScreenBg>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={Colors.primary} />
         </View>
@@ -117,127 +140,116 @@ export default function Home() {
   }
 
   return (
-    <ScreenBg glowTop={0.16} glowSize={460}>
-      <ParticlesBg count={8} />
+    <ScreenBg>
       <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingTop: chrome.top + Spacing.xs, paddingBottom: insets.bottom + Spacing['2xl'] },
-        ]}
+        contentContainerStyle={{ paddingTop: chrome.top, paddingBottom: insets.bottom + 40 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* greeting header */}
-        <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
-          <View style={styles.headerLeft}>
-            <BETinaAvatar size={52} />
-            <View style={styles.greetingBlock}>
-              <Text style={styles.greeting}>{getGreeting(t)}</Text>
-              <Text style={styles.name}>{name} ⚡</Text>
-            </View>
-          </View>
-          <View style={styles.headerRight}>
-            <View style={styles.tierPill}>
-              <View style={styles.tierDot} />
-              <Text style={styles.tierLabel}>{tier}</Text>
+        {/* Photo header */}
+        <Animated.View entering={FadeIn.duration(500)} style={styles.photo}>
+          <Image source={require('../../assets/urban/betina-home.jpg')} style={styles.photoImage} resizeMode="cover" />
+          <LinearGradient
+            colors={['transparent', Colors.black]}
+            locations={[0.35, 0.92]}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+          <View style={styles.greeting}>
+            <Meta color={Colors.primary} size={11}>{stamp}</Meta>
+            <Text style={[styles.yo, { fontSize: 76, lineHeight: 70 }]}>{t.homeYo.toUpperCase()},</Text>
+            <View style={styles.nameRow}>
+              <Text style={[styles.yo, styles.yoName, { fontSize: nameSize, lineHeight: Math.round(nameSize * 0.92) }]} numberOfLines={1}>
+                {firstName.toUpperCase()}.
+              </Text>
+              <Sticker text={tier} rotate={-4} style={styles.tierSticker} />
             </View>
           </View>
         </Animated.View>
 
-        {/* BETina says */}
-        <Animated.View entering={FadeInDown.delay(100).duration(500)}>
-          <Pressable onPress={() => router.push('/(tabs)/chat')} style={styles.betinaSays}>
-            <Text style={styles.betinaSaysText}>
-              {betinaSays}{' '}
-              <Text style={styles.betinaSaysLink}>{t.homeAskMe}</Text>
-            </Text>
+        <View style={styles.body}>
+          {/* XP progress */}
+          <Pressable onPress={() => go('/tiers')} style={styles.xp}>
+            <View style={styles.xpTop}>
+              <Meta color={Colors.white}>{next ? `${current.name} → ${next.name}` : t.homeMaxTier}</Meta>
+              <Meta color={Colors.primary}>
+                {next ? `${xp.toLocaleString(lang)} / ${next.minXp.toLocaleString(lang)} XP` : `${xp.toLocaleString(lang)} XP`}
+              </Meta>
+            </View>
+            <XPBar progress={progress} />
           </Pressable>
-        </Animated.View>
 
-        {/* XP card */}
-        <Animated.View entering={FadeInDown.delay(180).duration(500)}>
-          <Pressable onPress={() => router.push('/tiers')}>
-            <GlowCard style={styles.xpCard}>
-              <View style={styles.xpTop}>
-                <View style={styles.xpValueRow}>
-                  <AnimatedNumber value={xp} style={styles.xpValue} />
-                  <Text style={styles.xpUnit}>XP</Text>
+          {/* BETina says */}
+          <Animated.View entering={FadeInDown.delay(100).duration(450)} style={styles.message}>
+            <Meta color={Colors.primary}>{`BETINA · ${t.liveJustNow}`}</Meta>
+            <Text style={styles.messageText}>{betinaSays}</Text>
+            <Pressable onPress={() => go('/(tabs)/chat')} style={({ pressed }) => [styles.reply, pressed && styles.replyPressed]}>
+              <Text style={styles.replyText}>{t.homeReply.toUpperCase()} →</Text>
+            </Pressable>
+          </Animated.View>
+
+          {/* Your game */}
+          <Animated.View entering={FadeInDown.delay(180).duration(450)}>
+            <View style={styles.sectionRow}>
+              <Text style={styles.section}>{t.homeYourGame.toUpperCase()}</Text>
+              {countdown && <Meta color={Colors.primary}>{t.homeInHours.replace('{n}', String(countdown.hoursTotal))}</Meta>}
+            </View>
+            {!teamId ? (
+              <Pressable onPress={() => go('/settings')} style={styles.emptyCard}>
+                <Text style={styles.emptyText}>{t.homePickTeam}</Text>
+              </Pressable>
+            ) : loadingFixtures ? (
+              <View style={styles.emptyCard}><ActivityIndicator color={Colors.primary} /></View>
+            ) : !nextMatch ? (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyText}>{t.homeNoFixtures.replace('{team}', team ?? '')}</Text>
+              </View>
+            ) : (
+              <View style={styles.game}>
+                <Meta color={Colors.black} style={{ fontFamily: Fonts.monoBold }}>
+                  {`${nextMatch.league} · ${formatKickoff(nextMatch.date, nextMatch.time, lang, { today: t.homeToday, tomorrow: t.homeTomorrow })}`}
+                </Meta>
+                <View style={styles.teams}>
+                  <Text style={styles.team} numberOfLines={2} adjustsFontSizeToFit>{nextMatch.home.toUpperCase()}</Text>
+                  <Text style={styles.vs}>VS</Text>
+                  <Text style={[styles.team, { textAlign: 'right' }]} numberOfLines={2} adjustsFontSizeToFit>{nextMatch.away.toUpperCase()}</Text>
                 </View>
-                {next && (
-                  <Text style={styles.xpNext}>
-                    {next.minXp - xp} {t.homeXpTo}{' '}
-                    <Text style={styles.xpNextTier}>{next.name}</Text>
-                  </Text>
+                {countdown && (
+                  <View style={styles.countdown}>
+                    {countdown.parts.map((v, i) => (
+                      <View key={i} style={styles.cdBox}>
+                        <Text style={styles.cdValue}>{String(v).padStart(2, '0')}</Text>
+                        <Text style={styles.cdUnit}>{(units[i] ?? '').toUpperCase()}</Text>
+                      </View>
+                    ))}
+                  </View>
                 )}
               </View>
-              <XPBar progress={progress} />
-              <View style={styles.xpLabels}>
-                <Text style={styles.xpTierLabel}>{tier}</Text>
-                {next && <Text style={styles.xpTierLabel}>{next.name}</Text>}
-              </View>
-            </GlowCard>
-          </Pressable>
-        </Animated.View>
+            )}
+          </Animated.View>
 
-        {/* upcoming fixtures for the favourite team */}
-        <Animated.View entering={FadeInDown.delay(260).duration(500)} style={styles.eventsBlock}>
-          <View style={styles.sectionRow}>
-            <Text style={styles.sectionTitle}>{t.homeUpcoming}</Text>
-            <Pressable onPress={() => router.push('/(tabs)/live')} hitSlop={8}>
-              <Text style={styles.sectionLink}>{t.homeSeeAll}</Text>
-            </Pressable>
+          {/* Tiles */}
+          <View style={styles.tiles}>
+            {tiles.map((tile) => (
+              <Pressable key={tile.path} onPress={() => go(tile.path)} style={({ pressed }) => [styles.tile, pressed && styles.tilePressed]}>
+                <Meta color={Colors.primary}>{tile.meta}</Meta>
+                <Text style={styles.tileLabel} numberOfLines={1} adjustsFontSizeToFit>{tile.label.toUpperCase()}</Text>
+              </Pressable>
+            ))}
           </View>
 
-          {!teamId ? (
-            <GlowCard style={styles.eventCard}>
-              <Text style={styles.emptyText}>{t.homePickTeam}</Text>
-            </GlowCard>
-          ) : loadingFixtures ? (
-            <GlowCard style={styles.loadingCard}>
-              <ActivityIndicator color={Colors.primary} />
-            </GlowCard>
-          ) : fixtures.length === 0 ? (
-            <GlowCard style={styles.eventCard}>
-              <Text style={styles.emptyText}>
-                {t.homeNoFixtures.replace('{team}', team ?? '')}
-              </Text>
-            </GlowCard>
-          ) : (
-            <>
-              {/* featured: next match */}
-              <Pressable onPress={() => router.push('/(tabs)/live')}>
-                <GlowCard variant="accent" style={styles.featuredCard}>
-                  <View style={styles.featuredTop}>
-                    <Text style={styles.featuredLeague} numberOfLines={1}>
-                      {fixtures[0].league}
-                    </Text>
-                    <Text style={styles.featuredTime}>{kickoff(fixtures[0])}</Text>
-                  </View>
-                  <View style={styles.featuredTeams}>
-                    <Text style={styles.teamName} numberOfLines={1}>{fixtures[0].home}</Text>
-                    <Text style={styles.vs}>vs</Text>
-                    <Text style={[styles.teamName, styles.teamNameRight]} numberOfLines={1}>{fixtures[0].away}</Text>
-                  </View>
-                </GlowCard>
-              </Pressable>
-
-              {/* second upcoming match, if any */}
-              {fixtures[1] && (
-                <GlowCard style={styles.eventCard}>
-                  <View style={styles.eventInfo}>
-                    <Text style={styles.eventLeague} numberOfLines={1}>
-                      {fixtures[1].league}
-                    </Text>
-                    <Text style={styles.eventName} numberOfLines={1}>
-                      {fixtures[1].home} vs {fixtures[1].away}
-                    </Text>
-                  </View>
-                  <Text style={styles.eventTime}>{kickoff(fixtures[1])}</Text>
-                </GlowCard>
-              )}
-            </>
-          )}
-        </Animated.View>
-
+          {/* Streak */}
+          <View style={styles.streak}>
+            <View style={styles.sectionRow}>
+              <Text style={styles.streakTitle}>{t.homeStreakDays.replace('{n}', String(streak)).toUpperCase()}</Text>
+              {streak > 0 && <Meta color={Colors.primary}>{t.homeStreakXp.replace('{n}', String(5 + streak))}</Meta>}
+            </View>
+            <View style={styles.streakGrid}>
+              {Array.from({ length: 14 }, (_, i) => (
+                <View key={i} style={[styles.streakCell, i < Math.min(streak, 14) && styles.streakOn]} />
+              ))}
+            </View>
+          </View>
+        </View>
       </ScrollView>
     </ScreenBg>
   );
@@ -245,74 +257,49 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { paddingHorizontal: Spacing.lg, gap: 18 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  greetingBlock: { gap: 2 },
-  greeting: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium },
-  name: { color: Colors.white, fontSize: Typography.lg + 1, fontFamily: Fonts.black },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  tierPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-    borderRadius: 0, paddingVertical: 8, paddingHorizontal: 14,
+
+  photo: { height: 400, justifyContent: 'flex-end', backgroundColor: Colors.surface, overflow: 'hidden' },
+  photoImage: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
+  greeting: { paddingHorizontal: 16, paddingBottom: 6, gap: 4 },
+  yo: { color: Colors.white, fontFamily: Fonts.display },
+  nameRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 },
+  yoName: { color: Colors.primary, flexShrink: 1 },
+  tierSticker: { marginBottom: 10 },
+
+  body: { paddingHorizontal: 16, gap: 20, paddingTop: 12 },
+  xp: { gap: 10 },
+  xpTop: { flexDirection: 'row', justifyContent: 'space-between' },
+
+  message: { backgroundColor: Colors.card, borderWidth: 1.5, borderColor: Colors.border, padding: 16, gap: 12 },
+  messageText: { color: Colors.white, fontSize: 17, lineHeight: 25, fontFamily: Fonts.medium },
+  reply: { alignSelf: 'flex-start', backgroundColor: Colors.primary, paddingHorizontal: 14, paddingVertical: 10 },
+  replyPressed: { opacity: 0.85 },
+  replyText: { color: Colors.black, fontSize: 15, fontFamily: Fonts.label, letterSpacing: 0.6 },
+
+  sectionRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 },
+  section: { color: Colors.white, fontSize: 34, fontFamily: Fonts.display },
+  emptyCard: { borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, padding: 18, minHeight: 80, justifyContent: 'center' },
+  emptyText: { color: Colors.textSecondary, fontSize: 15, lineHeight: 21, fontFamily: Fonts.medium },
+  game: { backgroundColor: Colors.primary, padding: 16, gap: 12 },
+  teams: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  team: { flex: 1, color: Colors.black, fontSize: 40, lineHeight: 40, fontFamily: Fonts.display },
+  vs: { color: Colors.black, opacity: 0.45, fontSize: 18, fontFamily: Fonts.display },
+  countdown: { flexDirection: 'row', gap: 8 },
+  cdBox: { flex: 1, backgroundColor: Colors.black, paddingVertical: 8, alignItems: 'center' },
+  cdValue: { color: Colors.primary, fontSize: 30, lineHeight: 32, fontFamily: Fonts.display },
+  cdUnit: { color: Colors.white, fontSize: 9, fontFamily: Fonts.mono, letterSpacing: 1 },
+
+  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  tile: {
+    width: '48.5%', minHeight: 96, justifyContent: 'space-between', padding: 14,
+    borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface,
   },
-  tierDot: { width: 8, height: 8, borderRadius: 0, backgroundColor: Colors.primary },
-  tierLabel: { color: Colors.white, fontSize: Typography.xs + 1, fontFamily: Fonts.bold, letterSpacing: 0.7 },
-  bell: {
-    width: 38, height: 38, borderRadius: 0,
-    backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  bellEmoji: { fontSize: 16 },
-  bellDot: {
-    position: 'absolute', top: 5, right: 6,
-    width: 9, height: 9, borderRadius: 0,
-    backgroundColor: Colors.primary, borderWidth: 2, borderColor: Colors.background,
-  },
-  betinaSays: {
-    alignSelf: 'flex-start',
-    backgroundColor: withAlpha(Colors.accent, 0.22),
-    borderWidth: 1, borderColor: withAlpha(Colors.accent, 0.45),
-    borderRadius: 0, borderTopLeftRadius: 0,
-    paddingVertical: 13, paddingHorizontal: 16,
-  },
-  betinaSaysText: { color: Colors.textPrimary, fontSize: Typography.sm + 1, fontFamily: Fonts.medium, lineHeight: 21 },
-  betinaSaysLink: { color: Colors.primary },
-  xpCard: { padding: 18, gap: Spacing.md },
-  xpTop: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  xpValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: Spacing.sm },
-  xpValue: {
-    color: Colors.primary,
-    fontSize: Typography.xl + 4,
-    fontFamily: Fonts.blackItalic,
-    letterSpacing: -0.5,
-    textShadowColor: withAlpha(Colors.primary, 0.4),
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
-  },
-  xpUnit: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.semibold },
-  xpNext: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
-  xpNextTier: { color: Colors.white, fontFamily: Fonts.bold },
-  xpLabels: { flexDirection: 'row', justifyContent: 'space-between' },
-  xpTierLabel: { color: Colors.textMuted, fontSize: Typography.xs, fontFamily: Fonts.semibold, letterSpacing: 0.9 },
-  eventsBlock: { gap: Spacing.sm + 2 },
-  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { color: Colors.white, fontSize: Typography.base + 1, fontFamily: Fonts.bold },
-  sectionLink: { color: Colors.primary, fontSize: Typography.sm, fontFamily: Fonts.semibold },
-  featuredCard: { padding: 18, gap: Spacing.sm + 2 },
-  featuredTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  featuredLeague: { color: Colors.primary, fontSize: Typography.xs, fontFamily: Fonts.bold, letterSpacing: 1.1 },
-  featuredTime: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.semibold },
-  featuredTeams: { flexDirection: 'row', alignItems: 'center' },
-  teamName: { flex: 1, color: Colors.white, fontSize: Typography.base, fontFamily: Fonts.bold },
-  teamNameRight: { textAlign: 'right' },
-  vs: { color: Colors.textMuted, fontSize: Typography.sm, fontFamily: Fonts.bold, marginHorizontal: 10 },
-  eventCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, paddingHorizontal: 18, gap: 10 },
-  eventInfo: { flex: 1, gap: 3 },
-  eventLeague: { color: Colors.textSecondary, fontSize: Typography.xs, fontFamily: Fonts.semibold, letterSpacing: 0.7 },
-  eventName: { color: Colors.white, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
-  eventTime: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.semibold },
-  emptyText: { flex: 1, color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, lineHeight: 20 },
-  loadingCard: { alignItems: 'center', justifyContent: 'center', paddingVertical: 28 },
+  tilePressed: { borderColor: Colors.primary },
+  tileLabel: { color: Colors.white, fontSize: 34, lineHeight: 36, fontFamily: Fonts.display },
+
+  streak: { borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, padding: 14 },
+  streakTitle: { color: Colors.white, fontSize: 26, fontFamily: Fonts.display },
+  streakGrid: { flexDirection: 'row', gap: 4 },
+  streakCell: { flex: 1, height: 18, backgroundColor: Colors.line },
+  streakOn: { backgroundColor: Colors.primary },
 });

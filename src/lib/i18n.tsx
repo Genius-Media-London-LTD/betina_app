@@ -199,6 +199,14 @@ type Translations = {
   tabTipps: string;
   tabNews: string;
   tabMenu: string;
+  homeYo: string;
+  homeReply: string;
+  homeYourGame: string;
+  homeInHours: string;
+  homeCountdownUnits: string;
+  homeStreakDays: string;
+  homeStreakXp: string;
+  homeMaxTier: string;
   newsTopStory: string;
   newsBreaking: string;
   newsTop5: string;
@@ -601,6 +609,14 @@ const T: Record<LangCode, Translations> = {
     newsMore: 'More news',
     newsSource: 'Source',
     newsTeamNews: 'News about {team}',
+    homeYo: "Yo",
+    homeReply: "Reply",
+    homeYourGame: "Your game",
+    homeInHours: "in {n} h",
+    homeCountdownUnits: "Day|Hrs|Min|Sec",
+    homeStreakDays: "{n} day streak",
+    homeStreakXp: "+{n} XP today",
+    homeMaxTier: "Top tier",
   },
   de: {
     welcomeTitle: 'Willkommen',
@@ -876,6 +892,14 @@ const T: Record<LangCode, Translations> = {
     newsMore: 'Mehr News',
     newsSource: 'Quelle',
     newsTeamNews: 'News zu {team}',
+    homeYo: "Yo",
+    homeReply: "Antworten",
+    homeYourGame: "Dein Spiel",
+    homeInHours: "in {n} Std",
+    homeCountdownUnits: "Tag|Std|Min|Sek",
+    homeStreakDays: "{n} Tage Streak",
+    homeStreakXp: "+{n} XP heute",
+    homeMaxTier: "Höchste Stufe",
   },
   es: {
     welcomeTitle: 'Bienvenido',
@@ -1151,6 +1175,14 @@ const T: Record<LangCode, Translations> = {
     newsMore: 'Más noticias',
     newsSource: 'Fuente',
     newsTeamNews: 'Noticias de {team}',
+    homeYo: "Hola",
+    homeReply: "Responder",
+    homeYourGame: "Tu partido",
+    homeInHours: "en {n} h",
+    homeCountdownUnits: "Día|Hrs|Min|Seg",
+    homeStreakDays: "Racha de {n} días",
+    homeStreakXp: "+{n} XP hoy",
+    homeMaxTier: "Nivel máximo",
   },
   pt: {
     welcomeTitle: 'Bem-vindo',
@@ -1426,6 +1458,14 @@ const T: Record<LangCode, Translations> = {
     newsMore: 'Mais notícias',
     newsSource: 'Fonte',
     newsTeamNews: 'Notícias do {team}',
+    homeYo: "Olá",
+    homeReply: "Responder",
+    homeYourGame: "O teu jogo",
+    homeInHours: "em {n} h",
+    homeCountdownUnits: "Dia|Hrs|Min|Seg",
+    homeStreakDays: "Sequência de {n} dias",
+    homeStreakXp: "+{n} XP hoje",
+    homeMaxTier: "Nível máximo",
   },
   fr: {
     welcomeTitle: 'Bienvenue',
@@ -1701,6 +1741,14 @@ const T: Record<LangCode, Translations> = {
     newsMore: "Plus d'actus",
     newsSource: 'Source',
     newsTeamNews: 'Actus {team}',
+    homeYo: "Salut",
+    homeReply: "Répondre",
+    homeYourGame: "Ton match",
+    homeInHours: "dans {n} h",
+    homeCountdownUnits: "Jour|H|Min|Sec",
+    homeStreakDays: "Série de {n} jours",
+    homeStreakXp: "+{n} XP aujourd'hui",
+    homeMaxTier: "Niveau max",
   },
   it: {
     welcomeTitle: 'Benvenuto',
@@ -1976,6 +2024,14 @@ const T: Record<LangCode, Translations> = {
     newsMore: 'Altre news',
     newsSource: 'Fonte',
     newsTeamNews: 'News su {team}',
+    homeYo: "Ciao",
+    homeReply: "Rispondi",
+    homeYourGame: "La tua partita",
+    homeInHours: "tra {n} h",
+    homeCountdownUnits: "Gg|Ore|Min|Sec",
+    homeStreakDays: "Serie di {n} giorni",
+    homeStreakXp: "+{n} XP oggi",
+    homeMaxTier: "Livello max",
   },
   ro: {
     welcomeTitle: 'Bun venit',
@@ -2251,6 +2307,14 @@ const T: Record<LangCode, Translations> = {
     newsMore: 'Mai multe știri',
     newsSource: 'Sursa',
     newsTeamNews: 'Știri despre {team}',
+    homeYo: "Salut",
+    homeReply: "Răspunde",
+    homeYourGame: "Meciul tău",
+    homeInHours: "în {n} h",
+    homeCountdownUnits: "Zi|Ore|Min|Sec",
+    homeStreakDays: "Serie de {n} zile",
+    homeStreakXp: "+{n} XP azi",
+    homeMaxTier: "Nivel maxim",
   },
 };
 

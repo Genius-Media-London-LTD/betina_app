@@ -10,15 +10,12 @@ import { Headline, Meta, OutlineNumber, Sticker, Ticker } from '../components/Ur
 import { useProfile } from '../hooks/useProfile';
 import { SPORT_KEYS, useI18n } from '../lib/i18n';
 import { fetchNewsFeed, NewsCard, PAGE_SIZE, timeAgo } from '../lib/news';
+import { fetchTeamLast, fetchTeamNext, MatchEvent } from '../lib/sports';
 import { useChrome } from '../components/chrome';
 import { Colors, Fonts, Typography, withAlpha } from '../theme';
 
-const API = 'https://intelligence.geniusbet.com';
-
 // Sport filters, in the order shown; the player's interests come first.
 const ALL_SPORT_TABS = ['sport', 'football', 'tennis', 'basketball', 'nfl', 'mma', 'cricket', 'rugby', 'golf', 'athletics'];
-
-type MatchEvent = { id: string; name: string; home: string; away: string; homeScore: string | null; awayScore: string | null; date: string; time: string; league: string };
 
 function formatMatchDate(dateStr: string, timeStr: string, locale: string) {
   const d = new Date(`${dateStr}T${timeStr || '00:00:00'}`);
@@ -101,16 +98,9 @@ export default function NewsScreen() {
   const loadTeam = useCallback(async () => {
     if (teamName) fetchNewsFeed({ lang, team: teamName, limit: 8 }).then(setTeamNews).catch(() => setTeamNews([]));
     if (!teamId) return;
-    try {
-      const [nextR, lastR] = await Promise.all([
-        fetch(`${API}/api/sports/team/${teamId}/next`),
-        fetch(`${API}/api/sports/team/${teamId}/last`),
-      ]);
-      setNextEvents((await nextR.json()).events ?? []);
-      setLastEvents((await lastR.json()).events ?? []);
-    } catch {
-      // team block just stays empty
-    }
+    const [next, last] = await Promise.all([fetchTeamNext(teamId), fetchTeamLast(teamId)]);
+    setNextEvents(next);
+    setLastEvents(last);
   }, [lang, teamId, teamName]);
 
   useEffect(() => { loadFirst(); }, [loadFirst]);
