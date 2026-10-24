@@ -7,7 +7,7 @@ import { extractArticle } from './extract.js';
 import { G2PError, getArticle, isConfigured, listArticles } from './g2p.js';
 import { markdownToParagraphs } from './markdown.js';
 import { fetchFeed } from './rss.js';
-import { BETTING_TITLE, feedFor, LIVE_LINK, LIVE_TITLE } from './sources.js';
+import { BETTING_TITLE, FEEDS, feedFor, LIVE_LINK, LIVE_TITLE } from './sources.js';
 
 const feedCache = createCache({ ttlMs: 10 * 60_000 });
 const g2pCache = createCache({ ttlMs: 30 * 60_000 });
@@ -154,4 +154,26 @@ export async function newsArticle({ url }) {
   }
   if (result.status === 200) articleCache.set(url, result.body);
   return { ...result, cache: 'miss' };
+}
+
+// ---- Pool ----------------------------------------------------------------------
+// Everything every outlet currently has, in every language — the input of
+// BETina's own news desk (Supabase function news-desk), which writes its own
+// articles from it. Same filters as the list; deduped per language only (the
+// desk merges the same story across languages itself).
+export async function newsPool() {
+  const groups = await Promise.all(
+    Object.entries(FEEDS).map(async ([lang, cfg]) => {
+      const feeds = [cfg.general, ...Object.values(cfg.sports)];
+      const unique = [...new Map(feeds.map((f) => [f.url, f])).values()];
+      const [g2p, ...rss] = await Promise.all([freshG2P(lang), ...unique.map(cachedFeed)]);
+      const items = dedupe(
+        [...g2p, ...rss.flatMap((r) => r.items)]
+          .filter((it) => !BETTING_TITLE.test(it.title) && !LIVE_TITLE.test(it.title) && !LIVE_LINK.test(it.link))
+          .sort((a, b) => (Date.parse(b.pubDate) || 0) - (Date.parse(a.pubDate) || 0)),
+      );
+      return items.map((it) => ({ ...it, lang }));
+    }),
+  );
+  return { status: 200, body: { items: groups.flat() } };
 }

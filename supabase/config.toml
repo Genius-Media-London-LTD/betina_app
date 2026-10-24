@@ -18,3 +18,7 @@ verify_jwt = false
 
 [functions.reminders-due]
 verify_jwt = false
+
+# Cron-invoked BETina News desk (public; news_desk_claim() rate-limits it).
+[functions.news-desk]
+verify_jwt = false

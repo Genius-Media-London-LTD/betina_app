@@ -1,337 +1,220 @@
 import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Dimensions,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Dimensions, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import BackButton from '../src/components/BackButton';
+import BETinaAvatar from '../src/components/BETinaAvatar';
+import GlowButton from '../src/components/GlowButton';
+import { Headline, Meta, Sticker } from '../src/components/Urban';
 import { useI18n } from '../src/lib/i18n';
+import { fetchNewsArticle, fetchNewsFeed, NewsArticle, NewsCard, readingMinutes, timeAgo } from '../src/lib/news';
 import { cleanFeedText, fetchNewsApi } from '../src/lib/sports';
 import { safeGenius2PlayCanonical } from '../src/lib/genius2playCanonical';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
+import { Colors, Fonts, withAlpha } from '../src/theme';
 
-const { width: W, height: H } = Dimensions.get('window');
+const { height: H } = Dimensions.get('window');
 
-type Article = {
-  title: string;
-  image: string;
-  description: string;
-  paragraphs: string[];
-  source: string;
-  url: string;
-  canonical?: string;
-};
+type Shown = NewsArticle & { canonical?: string };
 
-function readingTime(paragraphs?: string[]) {
-  if (!paragraphs?.length) return 1;
-  const words = paragraphs.join(' ').split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words / 200));
-}
-
-function formatDate(rssDate: string) {
-  try {
-    return new Date(rssDate).toLocaleDateString('en-GB', {
-      weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
-    });
-  } catch { return rssDate; }
+/** Older links (push notifications, chat) still point at a publisher URL. */
+async function loadLegacy(url: string, title?: string, image?: string): Promise<Shown | null> {
+  const d = await fetchNewsApi('article', `url=${encodeURIComponent(url)}`);
+  const body = (Array.isArray(d?.paragraphs) ? d.paragraphs : [])
+    .filter((p: unknown) => typeof p === 'string').map((p: string) => cleanFeedText(p)).filter(Boolean);
+  if (d?.error || (!body.length && !d?.title && !title)) return null;
+  return {
+    id: 0,
+    kicker: 'NEWS',
+    headline: cleanFeedText(d?.title ?? title ?? ''),
+    teaser: cleanFeedText(typeof d?.description === 'string' ? d.description : ''),
+    body,
+    take: null,
+    image: (typeof d?.image === 'string' && d.image) || image || null,
+    published_at: '',
+    sport: null,
+    source_name: typeof d?.source === 'string' ? d.source : '',
+    source_url: typeof d?.url === 'string' ? d.url : url,
+    canonical: safeGenius2PlayCanonical(d?.canonical),
+  };
 }
 
 export default function ArticleScreen() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { url, title: paramTitle, pubDate, image: paramImage } = useLocalSearchParams<{
-    url: string; title?: string; pubDate?: string; image?: string;
-  }>();
-  const [article, setArticle] = useState<Article | null>(null);
+  const { id, url, title, image } = useLocalSearchParams<{ id?: string; url?: string; title?: string; image?: string }>();
+  const [article, setArticle] = useState<Shown | null>(null);
+  const [more, setMore] = useState<NewsCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!url) return;
-    fetchNewsApi('article', `url=${encodeURIComponent(url)}`)
-      .then((d) => {
-        // The scraper can fail (e.g. Google News redirect links) and return an
-        // error object or partial data. Normalise, and only error out if there
-        // is nothing at all to show.
-        const paragraphs = (Array.isArray(d?.paragraphs)
-          ? d.paragraphs.filter((p: unknown) => typeof p === 'string')
-          : []
-        ).map((p: string) => cleanFeedText(p)).filter(Boolean);
-        const hasContent = !d?.error && (paragraphs.length > 0 || d?.title || paramTitle);
-        if (!hasContent) {
-          setError(true);
-        } else {
-          setArticle({
-            title: cleanFeedText(d?.title ?? paramTitle ?? ''),
-            image: typeof d?.image === 'string' ? d.image : '',
-            description: cleanFeedText(typeof d?.description === 'string' ? d.description : ''),
-            paragraphs,
-            source: typeof d?.source === 'string' ? d.source : '',
-            url: typeof d?.url === 'string' ? d.url : url,
-            canonical: safeGenius2PlayCanonical(d?.canonical),
-          });
+    let alive = true;
+    setLoading(true);
+    setError(false);
+    const load = id ? fetchNewsArticle(Number(id), lang) : url ? loadLegacy(url, title, image) : Promise.resolve(null);
+    load
+      .then((a) => {
+        if (!alive) return;
+        if (!a) setError(true);
+        setArticle(a);
+        if (a && id) {
+          fetchNewsFeed({ lang, sport: a.sport, limit: 6 })
+            .then((list) => alive && setMore(list.filter((c) => c.id !== a.id).slice(0, 4)))
+            .catch(() => {});
         }
-        setLoading(false);
       })
-      .catch(() => { setError(true); setLoading(false); });
-  }, [url]);
+      .catch(() => alive && setError(true))
+      .finally(() => alive && setLoading(false));
+    return () => { alive = false; };
+  }, [id, url, lang]);
+
+  const date = article?.published_at
+    ? new Date(article.published_at).toLocaleString(lang, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : '';
 
   return (
     <View style={styles.root}>
-      {/* Back button — always visible */}
-      <Pressable onPress={() => router.back()} style={[styles.backBtn, { top: insets.top + 12 }]}>
-        <Text style={styles.backIcon}>←</Text>
-      </Pressable>
+      <View style={[styles.back, { top: insets.top + 10 }]}>
+        <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/live'))} />
+      </View>
 
       {loading && (
         <View style={styles.center}>
           <ActivityIndicator color={Colors.primary} size="large" />
-          <Text style={styles.loadingText}>{t.articleLoading}</Text>
         </View>
       )}
 
-      {error && (
+      {!loading && (error || !article) && (
         <View style={styles.center}>
-          <Text style={{ fontSize: 48 }}>📡</Text>
-          <Text style={styles.errorText}>{t.articleError}</Text>
-          <Pressable onPress={() => router.back()} style={styles.retryBtn}>
-            <Text style={styles.retryLabel}>← {t.articleBack}</Text>
-          </Pressable>
+          <Headline text={t.articleError} size={34} accent="last" style={{ textAlign: 'center' }} />
+          <GlowButton label={t.articleBack} variant="ghost" onPress={() => router.back()} />
         </View>
       )}
 
-      {article && !loading && (
-        <>
+      {!loading && article && (
+        <Animated.View entering={FadeIn.duration(250)} style={{ flex: 1 }}>
           {article.canonical ? (
             <Head>
               <link rel="canonical" href={article.canonical} />
             </Head>
           ) : null}
-          <Animated.View entering={FadeIn.duration(250)} style={{ flex: 1 }}>
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 48 }}>
-
-            {/* ── HERO ── */}
-            <View style={styles.heroWrap}>
-              {(article.image || paramImage) ? (
-                <Image source={{ uri: article.image || paramImage }} style={styles.heroImage} resizeMode="cover" />
+            {/* Hero */}
+            <View style={styles.hero}>
+              {article.image ? (
+                <Image source={{ uri: article.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
               ) : (
-                <View style={[styles.heroImage, styles.heroFallback]}>
-                  <Text style={{ fontSize: 72 }}>📰</Text>
-                </View>
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.card }]} />
               )}
-              {/* Deep gradient so text is readable */}
               <LinearGradient
-                colors={['transparent', withAlpha(Colors.background, 0.5), Colors.background]}
-                locations={[0.3, 0.7, 1]}
-                style={styles.heroGradient}
+                colors={[withAlpha(Colors.black, 0.35), withAlpha(Colors.black, 0), withAlpha(Colors.black, 0.6), Colors.black]}
+                locations={[0, 0.25, 0.7, 1]}
+                style={StyleSheet.absoluteFill}
+                pointerEvents="none"
               />
-              {/* Source pill over hero */}
-              <Animated.View entering={FadeInUp.delay(200).duration(400)} style={styles.sourcePill}>
-                <Text style={styles.sourcePillText}>📡 {article.source || 'News'}</Text>
-              </Animated.View>
             </View>
 
-            {/* ── HEADER BLOCK ── */}
-            <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.headerBlock}>
-              {/* Meta row */}
+            {/* Headline block */}
+            <Animated.View entering={FadeInDown.delay(80).duration(400)} style={styles.head}>
+              <Sticker text={article.kicker} />
+              <Headline text={article.headline} size={40} accent="first" />
+              {!!article.teaser && <Text style={styles.teaser}>{article.teaser}</Text>}
               <View style={styles.metaRow}>
-                <Text style={styles.metaText}>
-                  {pubDate ? formatDate(pubDate) : 'Latest'}
-                </Text>
-                <View style={styles.metaDot} />
-                <Text style={styles.metaText}>
-                  {readingTime(article.paragraphs)} min read
-                </Text>
+                <Meta color={Colors.primary}>BETINA NEWS</Meta>
+                {!!date && <Meta>{`· ${date}`}</Meta>}
+                {article.body.length > 0 && <Meta>{`· ${readingMinutes(article.body)} MIN`}</Meta>}
               </View>
-
-              {/* Title */}
-              <Text style={styles.title}>{article.title || paramTitle || 'Article'}</Text>
-
-              {/* Lead / description */}
-              {article.description ? (
-                <Text style={styles.lead}>{article.description}</Text>
-              ) : null}
             </Animated.View>
+            <View style={styles.rule} />
 
-            {/* ── DIVIDER ── */}
-            <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.dividerWrap}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerIcon}>⚡</Text>
-              <View style={styles.dividerLine} />
-            </Animated.View>
-
-            {/* ── BODY ── */}
+            {/* Body */}
             <View style={styles.body}>
-              {article.paragraphs.length === 0 && (
-                <>
-                  {article.description ? null : (
-                    <Text style={styles.para}>{t.articleError}</Text>
-                  )}
-                  <Pressable onPress={() => WebBrowser.openBrowserAsync(article.url)} style={styles.openBtn}>
-                    <Text style={styles.openLabel}>Read full article ↗</Text>
-                  </Pressable>
-                </>
-              )}
-              {article.paragraphs.map((para, i) => {
-                // Every ~4 paragraphs: pull-quote style for a sentence
-                const isPullQuote = i > 0 && i % 4 === 0 && para.length > 80;
-                return isPullQuote ? (
-                  <Animated.View
-                    key={i}
-                    entering={FadeInDown.delay(Math.min(i * 40, 400)).duration(400)}
-                    style={styles.pullQuoteWrap}
-                  >
-                    <LinearGradient
-                      colors={[withAlpha(Colors.primary, 0.06), withAlpha(Colors.accent, 0.06)]}
-                      style={styles.pullQuote}
-                    >
-                      <View style={styles.pullQuoteBar} />
-                      <Text style={styles.pullQuoteText}>
-                        "{para.split('.')[0]}."
-                      </Text>
-                    </LinearGradient>
-                  </Animated.View>
-                ) : (
-                  <Animated.Text
-                    key={i}
-                    entering={FadeInDown.delay(Math.min(i * 30, 400)).duration(400)}
-                    style={styles.para}
-                  >
-                    {para}
-                  </Animated.Text>
-                );
-              })}
+              {article.body.map((p, i) => (
+                <Text key={i} style={i === 0 ? styles.lead : styles.para}>{p}</Text>
+              ))}
             </View>
 
-            {/* ── BETINA CTA ── */}
-            <Animated.View entering={FadeInDown.delay(500).duration(400)} style={styles.ctaWrap}>
-              <LinearGradient
-                colors={[withAlpha(Colors.primary, 0.1), withAlpha(Colors.accent, 0.12)]}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={styles.ctaCard}
-              >
-                <View style={styles.ctaLeft}>
-                  <Text style={styles.ctaEmoji}>⚡</Text>
-                  <View>
-                    <Text style={styles.ctaTitle}>Ask BETina about this</Text>
-                    <Text style={styles.ctaDesc}>Analysis, predictions & more</Text>
-                  </View>
+            {/* BETina's take */}
+            {!!article.take && (
+              <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.take}>
+                <View style={styles.takeHead}>
+                  <BETinaAvatar size={44} />
+                  <Headline text={t.newsTake} size={26} accent="last" />
                 </View>
-                <Pressable onPress={() => router.push('/(tabs)/chat')} style={styles.ctaBtn}>
-                  <Text style={styles.ctaBtnLabel}>Chat →</Text>
-                </Pressable>
-              </LinearGradient>
-            </Animated.View>
+                <Text style={styles.takeText}>{article.take}</Text>
+                <GlowButton
+                  label={t.articleAsk}
+                  onPress={() => { Haptics.selectionAsync(); router.push('/(tabs)/chat'); }}
+                />
+              </Animated.View>
+            )}
 
+            {/* Source credit */}
+            {!!article.source_name && (
+              <Pressable onPress={() => article.source_url && WebBrowser.openBrowserAsync(article.source_url)} style={styles.source}>
+                <Meta>{`${t.newsSource}: ${article.source_name} ↗`}</Meta>
+              </Pressable>
+            )}
+
+            {/* More news */}
+            {more.length > 0 && (
+              <View style={styles.more}>
+                <Headline text={t.newsMore} size={30} accent="last" />
+                {more.map((c) => (
+                  <Pressable
+                    key={c.id}
+                    onPress={() => { Haptics.selectionAsync(); router.push({ pathname: '/article', params: { id: String(c.id) } }); }}
+                    style={({ pressed }) => [styles.moreRow, pressed && { backgroundColor: Colors.card }]}
+                  >
+                    <View style={{ flex: 1, gap: 5 }}>
+                      <Meta color={Colors.primary}>{c.kicker}</Meta>
+                      <Text style={styles.moreTitle} numberOfLines={3}>{c.headline.toUpperCase()}</Text>
+                      <Meta>{timeAgo(c.published_at, t)}</Meta>
+                    </View>
+                    {c.image && <Image source={{ uri: c.image }} style={styles.moreThumb} resizeMode="cover" />}
+                  </Pressable>
+                ))}
+              </View>
+            )}
           </ScrollView>
-          </Animated.View>
-        </>
+        </Animated.View>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.background },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32 },
+  root: { flex: 1, backgroundColor: Colors.black },
+  back: { position: 'absolute', left: 16, zIndex: 10, backgroundColor: Colors.black },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20, padding: 32 },
 
-  backBtn: {
-    position: 'absolute', left: Spacing.lg, zIndex: 100,
-    width: 42, height: 42, borderRadius: 0,
-    backgroundColor: withAlpha(Colors.background, 0.75),
-    borderWidth: 1, borderColor: withAlpha(Colors.white, 0.18),
-    alignItems: 'center', justifyContent: 'center',
-  },
-  backIcon: { color: Colors.white, fontSize: 22, fontFamily: Fonts.bold, marginTop: -1 },
+  hero: { height: Math.round(H * 0.42), backgroundColor: Colors.card },
+  head: { paddingHorizontal: 16, marginTop: -40, gap: 12 },
+  teaser: { color: Colors.white, fontSize: 19, lineHeight: 25, fontFamily: Fonts.labelSemi },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  rule: { height: 3, width: 56, backgroundColor: Colors.primary, marginHorizontal: 16, marginTop: 20, marginBottom: 6 },
 
-  loadingText: { color: Colors.textSecondary, fontFamily: Fonts.medium, fontSize: Typography.sm, marginTop: 8 },
-  errorText: { color: Colors.textSecondary, fontFamily: Fonts.medium, fontSize: Typography.base, textAlign: 'center' },
-  retryBtn: {
-    paddingHorizontal: 24, paddingVertical: 12, borderRadius: 0,
-    backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-  },
-  retryLabel: { color: Colors.white, fontFamily: Fonts.semibold, fontSize: Typography.sm },
+  body: { paddingHorizontal: 16, paddingTop: 14, gap: 18 },
+  lead: { color: Colors.white, fontSize: 18, lineHeight: 29, fontFamily: Fonts.semibold },
+  para: { color: Colors.accentLight, fontSize: 17, lineHeight: 28, fontFamily: Fonts.regular },
 
-  /* Hero */
-  heroWrap: { width: W, height: H * 0.45, position: 'relative' },
-  heroImage: { width: '100%', height: '100%' },
-  heroFallback: { backgroundColor: Colors.cardElevated, alignItems: 'center', justifyContent: 'center' },
-  heroGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '65%' },
-  sourcePill: {
-    position: 'absolute', top: 16, right: 16,
-    backgroundColor: withAlpha(Colors.background, 0.75),
-    borderWidth: 1, borderColor: withAlpha(Colors.white, 0.15),
-    borderRadius: 0, paddingHorizontal: 12, paddingVertical: 5,
+  take: {
+    margin: 16, marginTop: 32, padding: 16, gap: 14,
+    borderWidth: 1.5, borderColor: Colors.primary, backgroundColor: Colors.surface,
   },
-  sourcePillText: { color: Colors.white, fontSize: Typography.xs, fontFamily: Fonts.semibold },
+  takeHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  takeText: { color: Colors.white, fontSize: 18, lineHeight: 26, fontFamily: Fonts.medium },
 
-  /* Header block */
-  headerBlock: { paddingHorizontal: Spacing.lg, paddingTop: 12, gap: 10 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  metaText: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium },
-  metaDot: { width: 3, height: 3, borderRadius: 0, backgroundColor: Colors.textSecondary },
-  title: {
-    color: Colors.white, fontSize: Typography.xl + 3,
-    fontFamily: Fonts.bold, lineHeight: 36, letterSpacing: -0.3,
-  },
-  lead: {
-    color: withAlpha(Colors.white, 0.7), fontSize: Typography.base + 1,
-    fontFamily: Fonts.medium, lineHeight: 26, fontStyle: 'italic',
-  },
+  source: { paddingHorizontal: 16, paddingVertical: 10 },
 
-  /* Divider */
-  dividerWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: Spacing.lg, marginVertical: 20 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: withAlpha(Colors.white, 0.08) },
-  dividerIcon: { fontSize: 14, color: Colors.primary },
-
-  /* Body */
-  body: { paddingHorizontal: Spacing.lg, gap: 16 },
-  openBtn: {
-    alignSelf: 'flex-start', marginTop: 4,
-    paddingHorizontal: 20, paddingVertical: 12, borderRadius: 0,
-    backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-  },
-  openLabel: { color: Colors.white, fontFamily: Fonts.semibold, fontSize: Typography.sm },
-  para: {
-    color: withAlpha(Colors.white, 0.82), fontSize: Typography.sm + 2,
-    fontFamily: Fonts.regular, lineHeight: 28,
-  },
-  pullQuoteWrap: { marginVertical: 4 },
-  pullQuote: {
-    flexDirection: 'row', borderRadius: 0, overflow: 'hidden',
-    padding: 16, gap: 12, alignItems: 'flex-start',
-  },
-  pullQuoteBar: { width: 3, borderRadius: 0, backgroundColor: Colors.primary, alignSelf: 'stretch' },
-  pullQuoteText: {
-    flex: 1, color: withAlpha(Colors.white, 0.9), fontSize: Typography.base + 1,
-    fontFamily: Fonts.semibold, lineHeight: 26, fontStyle: 'italic',
-  },
-
-  /* BETina CTA */
-  ctaWrap: { margin: Spacing.lg, marginTop: 24 },
-  ctaCard: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderRadius: 0, padding: 16,
-    borderWidth: 1, borderColor: withAlpha(Colors.primary, 0.2),
-  },
-  ctaLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  ctaEmoji: { fontSize: 28 },
-  ctaTitle: { color: Colors.white, fontFamily: Fonts.bold, fontSize: Typography.sm + 1 },
-  ctaDesc: { color: Colors.textSecondary, fontFamily: Fonts.medium, fontSize: Typography.xs + 1, marginTop: 2 },
-  ctaBtn: {
-    paddingHorizontal: 18, paddingVertical: 10, borderRadius: 0,
-    backgroundColor: Colors.primary,
-  },
-  ctaBtnLabel: { color: Colors.black, fontFamily: Fonts.bold, fontSize: Typography.sm },
+  more: { paddingHorizontal: 16, paddingTop: 24, gap: 4 },
+  moreRow: { flexDirection: 'row', gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.line },
+  moreTitle: { color: Colors.white, fontSize: 18, lineHeight: 20, fontFamily: Fonts.label },
+  moreThumb: { width: 84, height: 84 },
 });

@@ -4,7 +4,7 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { G2PError } from './g2p.js';
-import { newsArticle, newsList } from './news.js';
+import { newsArticle, newsList, newsPool } from './news.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const VERSION = process.env.BETINA_API_VERSION ?? 'dev';
@@ -36,6 +36,9 @@ app.get('/v1/news', async (c) => {
   const { sport, count, lang } = c.req.query();
   return send(c, await newsList({ sport, count, lang }), 300);
 });
+
+// All outlets in all languages, for the news desk (see newsPool).
+app.get('/v1/pool', async (c) => send(c, await newsPool(), 300));
 
 app.get('/v1/article', async (c) => {
   const { url } = c.req.query();

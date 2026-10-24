@@ -199,6 +199,14 @@ type Translations = {
   tabTipps: string;
   tabNews: string;
   tabMenu: string;
+  newsTopStory: string;
+  newsBreaking: string;
+  newsTop5: string;
+  newsAll: string;
+  newsTake: string;
+  newsMore: string;
+  newsSource: string;
+  newsTeamNews: string;
   menuTeam: string;
   menuStreak: string;
   menuDaysActive: string;
@@ -585,6 +593,14 @@ const T: Record<LangCode, Translations> = {
     menuXpToNext: '{n} to {tier}',
     menuMaxTier: 'top tier reached',
     menuResponsible: '18+ · PLAY RESPONSIBLY',
+    newsTopStory: 'Top story',
+    newsBreaking: 'Breaking',
+    newsTop5: 'Top 5',
+    newsAll: 'All news',
+    newsTake: "BETina's take",
+    newsMore: 'More news',
+    newsSource: 'Source',
+    newsTeamNews: 'News about {team}',
   },
   de: {
     welcomeTitle: 'Willkommen',
@@ -852,6 +868,14 @@ const T: Record<LangCode, Translations> = {
     menuXpToNext: 'noch {n} bis {tier}',
     menuMaxTier: 'höchste Stufe erreicht',
     menuResponsible: '18+ · SPIEL VERANTWORTUNGSVOLL',
+    newsTopStory: 'Top-Meldung',
+    newsBreaking: 'Breaking',
+    newsTop5: 'Top 5',
+    newsAll: 'Alle News',
+    newsTake: 'BETinas Take',
+    newsMore: 'Mehr News',
+    newsSource: 'Quelle',
+    newsTeamNews: 'News zu {team}',
   },
   es: {
     welcomeTitle: 'Bienvenido',
@@ -1119,6 +1143,14 @@ const T: Record<LangCode, Translations> = {
     menuXpToNext: 'faltan {n} para {tier}',
     menuMaxTier: 'nivel máximo',
     menuResponsible: '18+ · JUEGA CON RESPONSABILIDAD',
+    newsTopStory: 'Noticia principal',
+    newsBreaking: 'Última hora',
+    newsTop5: 'Top 5',
+    newsAll: 'Todas las noticias',
+    newsTake: 'La opinión de BETina',
+    newsMore: 'Más noticias',
+    newsSource: 'Fuente',
+    newsTeamNews: 'Noticias de {team}',
   },
   pt: {
     welcomeTitle: 'Bem-vindo',
@@ -1386,6 +1418,14 @@ const T: Record<LangCode, Translations> = {
     menuXpToNext: 'faltam {n} para {tier}',
     menuMaxTier: 'nível máximo',
     menuResponsible: '18+ · JOGA COM RESPONSABILIDADE',
+    newsTopStory: 'Destaque',
+    newsBreaking: 'Última hora',
+    newsTop5: 'Top 5',
+    newsAll: 'Todas as notícias',
+    newsTake: 'A opinião da BETina',
+    newsMore: 'Mais notícias',
+    newsSource: 'Fonte',
+    newsTeamNews: 'Notícias do {team}',
   },
   fr: {
     welcomeTitle: 'Bienvenue',
@@ -1653,6 +1693,14 @@ const T: Record<LangCode, Translations> = {
     menuXpToNext: 'encore {n} avant {tier}',
     menuMaxTier: 'niveau maximum',
     menuResponsible: '18+ · JOUE RESPONSABLE',
+    newsTopStory: 'À la une',
+    newsBreaking: 'Flash info',
+    newsTop5: 'Top 5',
+    newsAll: 'Toutes les news',
+    newsTake: "L'avis de BETina",
+    newsMore: "Plus d'actus",
+    newsSource: 'Source',
+    newsTeamNews: 'Actus {team}',
   },
   it: {
     welcomeTitle: 'Benvenuto',
@@ -1920,6 +1968,14 @@ const T: Record<LangCode, Translations> = {
     menuXpToNext: 'mancano {n} a {tier}',
     menuMaxTier: 'livello massimo',
     menuResponsible: '18+ · GIOCA RESPONSABILMENTE',
+    newsTopStory: 'Notizia principale',
+    newsBreaking: "Ultim'ora",
+    newsTop5: 'Top 5',
+    newsAll: 'Tutte le news',
+    newsTake: 'Il parere di BETina',
+    newsMore: 'Altre news',
+    newsSource: 'Fonte',
+    newsTeamNews: 'News su {team}',
   },
   ro: {
     welcomeTitle: 'Bun venit',
@@ -2187,6 +2243,14 @@ const T: Record<LangCode, Translations> = {
     menuXpToNext: 'încă {n} până la {tier}',
     menuMaxTier: 'nivel maxim',
     menuResponsible: '18+ · JOACĂ RESPONSABIL',
+    newsTopStory: 'Știrea zilei',
+    newsBreaking: 'Breaking',
+    newsTop5: 'Top 5',
+    newsAll: 'Toate știrile',
+    newsTake: 'Părerea BETinei',
+    newsMore: 'Mai multe știri',
+    newsSource: 'Sursa',
+    newsTeamNews: 'Știri despre {team}',
   },
 };
 
