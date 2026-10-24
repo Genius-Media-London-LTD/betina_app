@@ -2,42 +2,34 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import GlowCard from '../components/GlowCard';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import ScreenBg from '../components/ScreenBg';
+import { Headline, Meta, OutlineNumber, Sticker, Ticker } from '../components/Urban';
 import { useProfile } from '../hooks/useProfile';
 import { SPORT_KEYS, useI18n } from '../lib/i18n';
 import { cleanFeedText, fetchNewsApi, mentionsTeam } from '../lib/sports';
 import { useChrome } from '../components/chrome';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../theme';
+import { Colors, Fonts, Typography, withAlpha } from '../theme';
 
 const API = 'https://intelligence.geniusbet.com';
 
-const ALL_SPORT_TABS = [
-  { id: 'football',   emoji: '⚽' },
-  { id: 'tennis',     emoji: '🎾' },
-  { id: 'basketball', emoji: '🏀' },
-  { id: 'cricket',    emoji: '🏏' },
-  { id: 'rugby',      emoji: '🏉' },
-  { id: 'athletics',  emoji: '🏃' },
-  { id: 'golf',       emoji: '⛳' },
-  { id: 'sport',      emoji: '🌍' },
-];
+const ALL_SPORT_TABS = ['football', 'tennis', 'basketball', 'cricket', 'rugby', 'athletics', 'golf', 'sport'];
 
-// Map app sport IDs to BBC feed IDs
-const SPORT_TO_BBC: Record<string, string> = {
+// Map app sport IDs to the news feeds' sport IDs
+const SPORT_TO_FEED: Record<string, string> = {
   football: 'football', tennis: 'tennis', basketball: 'sport',
   cricket: 'cricket', rugby: 'rugby', athletics: 'athletics',
   golf: 'golf', nfl: 'sport', mma: 'sport', esports: 'sport',
 };
 
-// Fallback for the "· <source>" label under each headline when an item has no
-// source of its own (the news gateway sets one per item).
+// Fallback source label when an item has none (the news gateway sets one per item).
 const SOURCE_BY_LANG: Record<string, string> = {
   en: 'BBC Sport', de: 'Sportschau', es: 'Marca', fr: 'RMC Sport', pt: 'Record',
 };
 
-type NewsItem = { title: string; description: string; link: string; pubDate: string; image?: string };
+type NewsItem = { title: string; description: string; link: string; pubDate: string; image?: string; source?: string };
 type MatchEvent = { id: string; name: string; home: string; away: string; homeScore: string | null; awayScore: string | null; date: string; time: string; league: string };
 
 function timeAgo(dateStr: string, t: { liveJustNow: string; liveAgoHours: string; liveAgoDays: string }) {
@@ -48,51 +40,39 @@ function timeAgo(dateStr: string, t: { liveJustNow: string; liveAgoHours: string
   return t.liveAgoDays.replace('{n}', String(Math.floor(diff / 24)));
 }
 
-function formatMatchDate(dateStr: string, timeStr: string) {
+function formatMatchDate(dateStr: string, timeStr: string, locale: string) {
   const d = new Date(`${dateStr}T${timeStr || '00:00:00'}`);
-  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) +
+  return d.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' }) +
     (timeStr ? ' · ' + timeStr.slice(0, 5) : '');
 }
 
-export default function Live() {
+export default function NewsScreen() {
   const { t, lang } = useI18n();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const chrome = useChrome();
   const { profile } = useProfile();
   const [sport, setSport] = useState('football');
-  const [activeTabs, setActiveTabs] = useState(ALL_SPORT_TABS);
+  const [tabs, setTabs] = useState(ALL_SPORT_TABS);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [nextEvents, setNextEvents] = useState<MatchEvent[]>([]);
   const [lastEvents, setLastEvents] = useState<MatchEvent[]>([]);
   const [loadingNews, setLoadingNews] = useState(true);
-  const [loadingTeam, setLoadingTeam] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const teamId = (profile as any)?.favourite_team_id ?? null;
+  const teamId = profile?.favourite_team_id ?? null;
   const teamName = profile?.favourite_team ?? null;
-  const newsSource = SOURCE_BY_LANG[lang] ?? 'BBC Sport';
+  const fallbackSource = SOURCE_BY_LANG[lang] ?? 'BBC Sport';
 
+  // Sport tabs follow the player's interests (+ "all sports" at the end).
   useEffect(() => {
-    if (!profile) return;
-    const saved = (profile as any)?.favourite_sports as string | null;
+    const saved = profile?.favourite_sports;
     if (!saved) return;
-    const sportIds = saved.split(',').filter(Boolean);
-    // Map user sport IDs to BBC tab IDs, deduplicate
-    const bbcIds = [...new Set(sportIds.map((s) => SPORT_TO_BBC[s] ?? 'sport'))];
-    // Build tabs: matching BBC tabs + always add "All Sports" at end
-    const allSportsTab = ALL_SPORT_TABS[ALL_SPORT_TABS.length - 1];
-    const filtered = ALL_SPORT_TABS.filter(
-      (t) => t.id !== 'sport' && bbcIds.includes(t.id)
-    );
-    const tabs = filtered.length > 0 ? [...filtered, allSportsTab] : ALL_SPORT_TABS;
-    setActiveTabs(tabs);
-    // Default to first matched tab
-    setSport(filtered[0]?.id ?? 'sport');
+    const ids = [...new Set(saved.split(',').filter(Boolean).map((s) => SPORT_TO_FEED[s] ?? 'sport'))];
+    const picked = ALL_SPORT_TABS.filter((id) => id !== 'sport' && ids.includes(id));
+    setTabs(picked.length ? [...picked, 'sport'] : ALL_SPORT_TABS);
+    setSport(picked[0] ?? 'sport');
   }, [profile?.favourite_sports]);
-
-  useEffect(() => { fetchNews(); }, [sport, lang]);
-  useEffect(() => { if (teamId) fetchTeamData(); }, [teamId]);
 
   const fetchNews = async () => {
     setLoadingNews(true);
@@ -103,13 +83,11 @@ export default function Live() {
         title: cleanFeedText(it.title),
         description: cleanFeedText(it.description),
       }));
-      // Surface anything about the player's team first (source is sport-wide)
-      if (teamName) {
-        items.sort(
-          (a, b) => Number(mentionsTeam(b, teamName)) - Number(mentionsTeam(a, teamName)),
-        );
-      }
+      // Surface anything about the player's team first (the feed is sport-wide).
+      if (teamName) items.sort((a, b) => Number(mentionsTeam(b, teamName)) - Number(mentionsTeam(a, teamName)));
       setNews(items);
+    } catch {
+      setNews([]);
     } finally {
       setLoadingNews(false);
     }
@@ -117,220 +95,182 @@ export default function Live() {
 
   const fetchTeamData = async () => {
     if (!teamId) return;
-    setLoadingTeam(true);
     try {
       const [nextR, lastR] = await Promise.all([
         fetch(`${API}/api/sports/team/${teamId}/next`),
         fetch(`${API}/api/sports/team/${teamId}/last`),
       ]);
-      const nextD = await nextR.json();
-      const lastD = await lastR.json();
-      setNextEvents(nextD.events ?? []);
-      setLastEvents(lastD.events ?? []);
-    } finally {
-      setLoadingTeam(false);
+      setNextEvents((await nextR.json()).events ?? []);
+      setLastEvents((await lastR.json()).events ?? []);
+    } catch {
+      // team block just stays empty
     }
   };
 
+  useEffect(() => { fetchNews(); }, [sport, lang]);
+  useEffect(() => { if (teamId) fetchTeamData(); }, [teamId]);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([fetchNews(), teamId ? fetchTeamData() : Promise.resolve()]);
+    await Promise.all([fetchNews(), fetchTeamData()]);
     setRefreshing(false);
   };
 
+  const open = (item: NewsItem) => {
+    if (!item.link) return;
+    Haptics.selectionAsync();
+    router.push({ pathname: '/article', params: { url: item.link, title: item.title, pubDate: item.pubDate, image: item.image ?? '' } });
+  };
+
+  const hero = news[0];
+  const stories = news.slice(1);
+  const nextMatch = nextEvents[0];
+
   return (
-    <ScreenBg glowTop={0.14} glowSize={460}>
+    <ScreenBg>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: chrome.top + Spacing.xs, paddingBottom: insets.bottom + Spacing['2xl'] }]}
+        contentContainerStyle={{ paddingTop: chrome.top, paddingBottom: insets.bottom + 40 }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} progressViewOffset={chrome.top} />}
       >
-        {/* Header */}
+        {news.length > 0 && <Ticker label="Breaking" items={news.slice(0, 6).map((n) => n.title)} />}
 
-        {/* YOUR TEAM section */}
-        {teamName && (
-          <Animated.View entering={FadeInDown.delay(60).duration(500)} style={styles.section}>
-            <Text style={styles.sectionTitle}>🏟 {teamName}</Text>
-
-            {loadingTeam ? (
-              <ActivityIndicator color={Colors.primary} style={{ marginTop: 12 }} />
-            ) : (
-              <>
-                {nextEvents.length > 0 && (
-                  <GlowCard style={styles.matchCard}>
-                    <Text style={styles.matchLabel}>{t.liveUpcoming}</Text>
-                    {nextEvents.slice(0, 3).map((e) => (
-                      <View key={e.id} style={styles.matchRow}>
-                        <View style={styles.matchTeams}>
-                          <Text style={styles.matchTeam}>{e.home}</Text>
-                          <Text style={styles.matchVs}>vs</Text>
-                          <Text style={styles.matchTeam}>{e.away}</Text>
-                        </View>
-                        <View style={styles.matchMeta}>
-                          <Text style={styles.matchLeague}>{e.league}</Text>
-                          <Text style={styles.matchDate}>{formatMatchDate(e.date, e.time)}</Text>
-                        </View>
-                      </View>
-                    ))}
-                  </GlowCard>
-                )}
-
-                {lastEvents.length > 0 && (
-                  <GlowCard style={styles.matchCard}>
-                    <Text style={styles.matchLabel}>{t.liveResults}</Text>
-                    {lastEvents.slice(0, 3).map((e) => (
-                      <View key={e.id} style={styles.matchRow}>
-                        <View style={styles.matchTeams}>
-                          <Text style={styles.matchTeam}>{e.home}</Text>
-                          <Text style={[styles.matchScore, styles.matchScoreBig]}>
-                            {e.homeScore ?? '?'} – {e.awayScore ?? '?'}
-                          </Text>
-                          <Text style={styles.matchTeam}>{e.away}</Text>
-                        </View>
-                        <Text style={styles.matchDate}>{e.date}</Text>
-                      </View>
-                    ))}
-                  </GlowCard>
-                )}
-
-                {!nextEvents.length && !lastEvents.length && (
-                  <GlowCard style={styles.emptyCard}>
-                    <Text style={styles.emptyText}>No upcoming fixtures found for {teamName}</Text>
-                  </GlowCard>
-                )}
-              </>
-            )}
-          </Animated.View>
-        )}
-
-        {/* Sport tab pills */}
-        <Animated.View entering={FadeInDown.delay(100).duration(500)}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
-            {activeTabs.map((tab) => (
+        {/* Sport filter */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          {tabs.map((id) => {
+            const on = sport === id;
+            return (
               <Pressable
-                key={tab.id}
-                onPress={() => setSport(tab.id)}
-                style={[styles.tab, sport === tab.id && styles.tabActive]}
+                key={id}
+                onPress={() => { Haptics.selectionAsync(); setSport(id); }}
+                style={({ pressed }) => [styles.chip, on && styles.chipOn, pressed && !on && styles.chipPressed]}
               >
-                <Text style={[styles.tabLabel, sport === tab.id && styles.tabLabelActive]}>
-                  {tab.emoji} {SPORT_KEYS[tab.id] ? t[SPORT_KEYS[tab.id]] : tab.id}
+                <Text style={[styles.chipText, on && styles.chipTextOn]}>
+                  {(SPORT_KEYS[id] ? String(t[SPORT_KEYS[id]]) : id).toUpperCase()}
                 </Text>
               </Pressable>
-            ))}
-          </ScrollView>
-        </Animated.View>
+            );
+          })}
+        </ScrollView>
 
-        {/* News */}
-        <Animated.View entering={FadeInDown.delay(150).duration(500)} style={styles.section}>
-          <Text style={styles.sectionTitle}>📰 {t.liveLatestNews}</Text>
+        {loadingNews && news.length === 0 ? (
+          <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />
+        ) : !hero ? (
+          <View style={styles.empty}>
+            <Headline text={t.liveNoNews} size={34} accent="none" />
+          </View>
+        ) : (
+          <>
+            {/* Lead story */}
+            <Animated.View entering={FadeIn.duration(400)}>
+              <Pressable onPress={() => open(hero)} style={styles.hero}>
+                {hero.image ? (
+                  <Image source={{ uri: hero.image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                ) : (
+                  <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.card }]} />
+                )}
+                <LinearGradient
+                  colors={[withAlpha(Colors.black, 0), withAlpha(Colors.black, 0.85), Colors.black]}
+                  locations={[0.3, 0.7, 1]}
+                  style={StyleSheet.absoluteFill}
+                  pointerEvents="none"
+                />
+                <Sticker text={t.liveTopStory} style={styles.heroSticker} />
+                <View style={styles.heroText}>
+                  <Headline text={hero.title} size={44} accent="first" numberOfLines={5} />
+                  {!!hero.description && <Text style={styles.heroTeaser} numberOfLines={3}>{hero.description}</Text>}
+                  <Meta color={Colors.primary}>{`${hero.source ?? fallbackSource} · ${timeAgo(hero.pubDate, t)}`}</Meta>
+                </View>
+              </Pressable>
+            </Animated.View>
 
-          {loadingNews ? (
-            <ActivityIndicator color={Colors.primary} style={{ marginTop: 16 }} />
-          ) : news.length === 0 ? (
-            <GlowCard style={styles.emptyCard}>
-              <Text style={styles.emptyText}>{t.liveNoNews}</Text>
-            </GlowCard>
-          ) : (
-            <>
-              {/* First item: featured large card */}
-              {news[0] && (
-                <Pressable onPress={() => news[0].link && router.push({ pathname: '/article', params: { url: news[0].link, title: news[0].title, pubDate: news[0].pubDate, image: news[0].image ?? '' } })}>
-                  <GlowCard style={styles.featuredCard}>
-                    {news[0].image ? (
-                      <Image source={{ uri: news[0].image }} style={styles.featuredImage} resizeMode="cover" />
+            {/* Your team */}
+            {teamName && (nextMatch || lastEvents.length > 0) && (
+              <Animated.View entering={FadeInDown.delay(80).duration(400)} style={styles.block}>
+                <View style={styles.sectionHead}>
+                  <Headline text={teamName} size={30} accent="last" numberOfLines={1} style={{ flex: 1 }} />
+                </View>
+                {nextMatch && (
+                  <View style={styles.matchCard}>
+                    <Meta color={Colors.black} style={{ fontFamily: Fonts.monoBold }}>{`${t.liveUpcoming} · ${nextMatch.league}`}</Meta>
+                    <Text style={styles.matchTeams} numberOfLines={2}>
+                      {nextMatch.home.toUpperCase()} <Text style={styles.matchVs}>VS</Text> {nextMatch.away.toUpperCase()}
+                    </Text>
+                    <Meta color={Colors.black} style={{ fontFamily: Fonts.monoBold }}>
+                      {formatMatchDate(nextMatch.date, nextMatch.time, lang)}
+                    </Meta>
+                  </View>
+                )}
+                {lastEvents.slice(0, 3).map((e) => (
+                  <View key={e.id} style={styles.resultRow}>
+                    <Text style={styles.resultTeam} numberOfLines={1}>{e.home.toUpperCase()}</Text>
+                    <Text style={styles.resultScore}>{e.homeScore ?? '–'}:{e.awayScore ?? '–'}</Text>
+                    <Text style={[styles.resultTeam, { textAlign: 'right' }]} numberOfLines={1}>{e.away.toUpperCase()}</Text>
+                  </View>
+                ))}
+              </Animated.View>
+            )}
+
+            {/* Top stories */}
+            <View style={styles.sectionHead}>
+              <Headline text={t.liveLatestNews} size={34} accent="none" />
+            </View>
+            <View style={styles.list}>
+              {stories.map((s, i) => (
+                <Animated.View key={s.link || i} entering={FadeInDown.delay(Math.min(i, 8) * 40).duration(350)}>
+                  <Pressable onPress={() => open(s)} style={({ pressed }) => [styles.story, pressed && styles.storyPressed]}>
+                    <View style={styles.storyNum}>
+                      <OutlineNumber value={String(i + 1).padStart(2, '0')} size={40} />
+                    </View>
+                    <View style={styles.storyBody}>
+                      <Meta color={Colors.primary}>{s.source ?? fallbackSource}</Meta>
+                      <Text style={styles.storyTitle} numberOfLines={3}>{s.title.toUpperCase()}</Text>
+                      <Meta>{timeAgo(s.pubDate, t)}</Meta>
+                    </View>
+                    {s.image ? (
+                      <Image source={{ uri: s.image }} style={styles.thumb} resizeMode="cover" />
                     ) : (
-                      <View style={[styles.featuredImage, styles.imagePlaceholder]}>
-                        <Text style={styles.imagePlaceholderEmoji}>📰</Text>
-                      </View>
+                      <View style={[styles.thumb, { backgroundColor: Colors.card }]} />
                     )}
-                    <View style={styles.featuredBadge}>
-                      <Text style={styles.featuredBadgeText}>{t.liveTopStory}</Text>
-                    </View>
-                    <View style={styles.featuredContent}>
-                      <Text style={styles.featuredTitle} numberOfLines={3}>{news[0].title}</Text>
-                      <Text style={styles.newsTime}>{timeAgo(news[0].pubDate, t)} · {(news[0] as any).source ?? newsSource}</Text>
-                    </View>
-                  </GlowCard>
-                </Pressable>
-              )}
-              {/* Rest: compact horizontal image + text */}
-              {news.slice(1).map((item, idx) => (
-                <Pressable key={idx + 1} onPress={() => item.link && router.push({ pathname: '/article', params: { url: item.link, title: item.title, pubDate: item.pubDate, image: item.image ?? '' } })}>
-                  <GlowCard style={styles.newsCard}>
-                    {item.image && (
-                      <Image source={{ uri: item.image }} style={styles.newsThumb} resizeMode="cover" />
-                    )}
-                    <View style={styles.newsBody}>
-                      <Text style={styles.newsTitle} numberOfLines={2}>{item.title}</Text>
-                      <Text style={styles.newsTime}>{timeAgo(item.pubDate, t)} · {(item as any).source ?? newsSource}</Text>
-                    </View>
-                  </GlowCard>
-                </Pressable>
+                  </Pressable>
+                </Animated.View>
               ))}
-            </>
-          )}
-        </Animated.View>
+            </View>
+          </>
+        )}
       </ScrollView>
     </ScreenBg>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: Spacing.lg, gap: 16 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { color: Colors.white, fontSize: Typography.xl - 2, fontFamily: Fonts.bold },
-  bell: {
-    width: 38, height: 38, borderRadius: 0,
-    backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder,
-    alignItems: 'center', justifyContent: 'center',
+  chips: { gap: 6, paddingHorizontal: 16, paddingVertical: 14 },
+  chip: { borderWidth: 1.5, borderColor: Colors.borderStrong, paddingHorizontal: 12, paddingVertical: 7 },
+  chipOn: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  chipPressed: { borderColor: Colors.primary },
+  chipText: { color: Colors.textSecondary, fontSize: 14, fontFamily: Fonts.label, letterSpacing: 0.6 },
+  chipTextOn: { color: Colors.black },
+  empty: { padding: 16, paddingTop: 40 },
+  hero: { height: 440, backgroundColor: Colors.card, overflow: 'hidden' },
+  heroSticker: { position: 'absolute', left: 16, top: 16 },
+  heroText: { position: 'absolute', left: 16, right: 16, bottom: 18, gap: 10 },
+  heroTeaser: { color: Colors.accentLight, fontSize: Typography.base, lineHeight: 20, fontFamily: Fonts.medium },
+  block: { paddingTop: 8 },
+  sectionHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 22, paddingBottom: 6 },
+  matchCard: { marginHorizontal: 16, marginTop: 6, backgroundColor: Colors.primary, padding: 16, gap: 6 },
+  matchTeams: { color: Colors.black, fontSize: 36, lineHeight: 36, fontFamily: Fonts.display },
+  matchVs: { color: Colors.black, fontSize: 18, fontFamily: Fonts.label },
+  resultRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16,
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.line,
   },
-  bellEmoji: { fontSize: 16 },
-  bellDot: {
-    position: 'absolute', top: 5, right: 6, width: 9, height: 9,
-    borderRadius: 0, backgroundColor: Colors.primary, borderWidth: 2, borderColor: Colors.background,
-  },
-  section: { gap: 10 },
-  sectionTitle: { color: Colors.white, fontSize: Typography.base + 1, fontFamily: Fonts.bold, paddingLeft: 2 },
-  tabs: { gap: 8, paddingVertical: 2 },
-  tab: {
-    paddingHorizontal: 16, paddingVertical: 9,
-    borderRadius: 0, backgroundColor: Colors.glass,
-    borderWidth: 1, borderColor: Colors.glassBorder,
-  },
-  tabActive: { backgroundColor: withAlpha(Colors.primary, 0.14), borderColor: withAlpha(Colors.primary, 0.6) },
-  tabLabel: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.semibold },
-  tabLabelActive: { color: Colors.white },
-  matchCard: { gap: 12, padding: 16 },
-  matchLabel: {
-    color: Colors.primary, fontSize: Typography.xs, fontFamily: Fonts.bold,
-    letterSpacing: 1.2, textTransform: 'uppercase',
-  },
-  matchRow: { gap: 4 },
-  matchTeams: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  matchTeam: { flex: 1, color: Colors.white, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },
-  matchVs: { color: Colors.textMuted, fontSize: Typography.xs + 1, fontFamily: Fonts.bold },
-  matchScore: { color: Colors.primary, fontFamily: Fonts.bold },
-  matchScoreBig: { fontSize: Typography.base, paddingHorizontal: 4 },
-  matchMeta: { gap: 2 },
-  matchLeague: { color: Colors.textSecondary, fontSize: Typography.xs, fontFamily: Fonts.medium },
-  matchDate: { color: Colors.textSecondary, fontSize: Typography.xs, fontFamily: Fonts.medium },
-  featuredCard: { padding: 0, overflow: 'hidden', gap: 0 },
-  featuredImage: { width: '100%', height: 200, borderTopLeftRadius: 0, borderTopRightRadius: 0 },
-  imagePlaceholder: { backgroundColor: Colors.cardElevated, alignItems: 'center', justifyContent: 'center' },
-  imagePlaceholderEmoji: { fontSize: 40 },
-  featuredBadge: {
-    position: 'absolute', top: 12, left: 12,
-    backgroundColor: withAlpha(Colors.primary, 0.9), borderRadius: 0,
-    paddingHorizontal: 10, paddingVertical: 4,
-  },
-  featuredBadgeText: { color: Colors.black, fontSize: Typography.xs - 1, fontFamily: Fonts.bold, letterSpacing: 0.8 },
-  featuredContent: { padding: 14, gap: 6 },
-  featuredTitle: { color: Colors.white, fontSize: Typography.base + 1, fontFamily: Fonts.bold, lineHeight: 24 },
-  newsCard: { flexDirection: 'row', gap: 12, padding: 12, alignItems: 'center' },
-  newsThumb: { width: 80, height: 80, borderRadius: 0 },
-  newsBody: { flex: 1, gap: 6 },
-  newsTitle: { color: Colors.white, fontSize: Typography.sm, fontFamily: Fonts.semibold, lineHeight: 20 },
-  newsTime: { color: Colors.textMuted, fontSize: Typography.xs, fontFamily: Fonts.medium },
-  emptyCard: { padding: 20, alignItems: 'center' },
-  emptyText: { color: Colors.textSecondary, fontSize: Typography.sm, fontFamily: Fonts.medium, textAlign: 'center' },
+  resultTeam: { flex: 1, color: Colors.white, fontSize: 16, fontFamily: Fonts.label, letterSpacing: 0.3 },
+  resultScore: { color: Colors.primary, fontSize: 24, fontFamily: Fonts.display, minWidth: 54, textAlign: 'center' },
+  list: { paddingHorizontal: 16 },
+  story: { flexDirection: 'row', gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.line, alignItems: 'flex-start' },
+  storyPressed: { backgroundColor: Colors.card },
+  storyNum: { width: 40 },
+  storyBody: { flex: 1, gap: 6, minWidth: 0 },
+  storyTitle: { color: Colors.white, fontSize: 19, lineHeight: 20, fontFamily: Fonts.label },
+  thumb: { width: 78, height: 78 },
 });
