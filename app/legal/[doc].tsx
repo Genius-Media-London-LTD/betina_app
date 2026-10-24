@@ -13,7 +13,7 @@ export default function LegalDocScreen() {
   const content = LEGAL_DOCS[doc as LegalDocKey] ?? LEGAL_DOCS.about;
 
   return (
-    <ScreenBg glowTop={0.1} glowSize={420}>
+    <ScreenBg>
       <ScrollView
         contentContainerStyle={[
           styles.content,
@@ -42,9 +42,9 @@ export default function LegalDocScreen() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.lg, gap: Spacing.base },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingTop: Spacing.sm },
-  title: { color: Colors.white, fontSize: Typography.lg + 2, fontFamily: Fonts.bold, flex: 1 },
-  updated: { color: Colors.textMuted, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, marginTop: -6 },
+  title: { color: Colors.white, fontSize: 34, lineHeight: 36, fontFamily: Fonts.display, textTransform: 'uppercase', flex: 1 },
+  updated: { color: Colors.textMuted, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: -6 },
   section: { gap: 6 },
-  heading: { color: Colors.primary, fontSize: Typography.base, fontFamily: Fonts.bold },
+  heading: { color: Colors.primary, fontSize: 17, fontFamily: Fonts.label, textTransform: 'uppercase', letterSpacing: 0.4 },
   body: { color: Colors.textSecondary, fontSize: Typography.sm + 1, fontFamily: Fonts.medium, lineHeight: 22 },
 });
