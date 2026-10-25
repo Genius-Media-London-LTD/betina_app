@@ -10,3 +10,9 @@ dist/
 
 expo-env.d.ts
 # @end expo-cli
+.vercel
+.env*
+
+# Copied from supabase/functions/_shared at deploy time (server/deploy.sh)
+server/api/src/persona.js
+server/api/.state/
