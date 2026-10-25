@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import Animated, {
@@ -70,6 +71,7 @@ export default function Chat() {
   const userName = profile?.name ?? 'friend';
   const quickReplies = [t.chatQuick1, t.chatQuick2, t.chatQuick3];
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const chrome = useChrome();
   const [messages, setMessages] = useState<Message[]>([]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
@@ -287,6 +289,16 @@ export default function Chat() {
             ))}
           </ScrollView>
           <View style={styles.inputRow}>
+            {/* Voice chat with BETina (own page, app/voice.tsx) */}
+            <Pressable
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push('/voice'); }}
+              style={({ pressed }) => [styles.micButton, pressed && styles.micPressed]}
+              accessibilityLabel={t.voiceStart}
+            >
+              <View style={styles.micBody} />
+              <View style={styles.micCup} />
+              <View style={styles.micStand} />
+            </Pressable>
             <TextInput
               value={input}
               onChangeText={setInput}
@@ -343,6 +355,14 @@ const styles = StyleSheet.create({
     flex: 1, height: 50, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface,
     paddingHorizontal: 14, color: Colors.white, fontSize: 16, fontFamily: Fonts.medium,
   },
+  micButton: {
+    width: 50, height: 50, borderWidth: 1.5, borderColor: Colors.primary,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  micPressed: { backgroundColor: Colors.card },
+  micBody: { width: 10, height: 16, backgroundColor: Colors.primary },
+  micCup: { width: 18, height: 6, borderWidth: 2, borderTopWidth: 0, borderColor: Colors.primary, marginTop: -3 },
+  micStand: { width: 2, height: 5, backgroundColor: Colors.primary },
   sendButton: { width: 50, height: 50, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
   sendPressed: { opacity: 0.7 },
   sendLabel: { color: Colors.black, fontSize: 24, fontFamily: Fonts.display },

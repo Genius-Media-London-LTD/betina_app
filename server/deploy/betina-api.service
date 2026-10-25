@@ -11,6 +11,7 @@ WorkingDirectory=/opt/betina-api
 # Secrets (e.g. GENIUS2PLAY_API_KEY) live only on the server, never in git.
 EnvironmentFile=-/etc/betina/api.env
 ExecStart=/usr/bin/node src/index.js
+StateDirectory=betina-api
 Restart=always
 RestartSec=3
 

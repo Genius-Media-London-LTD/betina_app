@@ -6,6 +6,7 @@ import { cors } from 'hono/cors';
 import { G2PError } from './g2p.js';
 import { newsArticle, newsList, newsPool } from './news.js';
 import { lookupTeam, searchTeams, teamLast, teamNext } from './sportsdb.js';
+import { voiceBudget, voiceSession, voiceUsage } from './voice.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const VERSION = process.env.BETINA_API_VERSION ?? 'dev';
@@ -52,6 +53,11 @@ app.get('/v1/sports/team/:id/next', async (c) => send(c, await teamNext(c.req.pa
 app.get('/v1/sports/team/:id/last', async (c) => send(c, await teamLast(c.req.param('id')), 600));
 app.get('/v1/sports/team/:id', async (c) => send(c, await lookupTeam(c.req.param('id')), 86400));
 app.get('/v1/sports/teams', async (c) => send(c, await searchTeams(c.req.query('t')), 3600));
+
+// --- Voice chat (OpenAI Realtime, ephemeral secrets) -----------------------------
+app.get('/v1/voice/budget', voiceBudget);
+app.post('/v1/voice/session', voiceSession);
+app.post('/v1/voice/usage', voiceUsage);
 
 app.notFound((c) => c.json({ error: 'not_found' }, 404));
 app.onError((err, c) => {

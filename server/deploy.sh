@@ -8,6 +8,9 @@ cd "$(dirname "$0")"
 HOST=betina-server
 VERSION="$(git rev-parse --short HEAD)$(git diff --quiet -- . || echo '-dirty')"
 
+# BETina's persona is shared with the Supabase functions (voice chat uses it).
+node build-persona.mjs
+
 echo "==> shipping api ($VERSION)"
 tar -C api -cz --exclude node_modules . | ssh "$HOST" '
   set -e
