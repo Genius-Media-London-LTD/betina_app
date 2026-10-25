@@ -15,7 +15,9 @@ const SUPABASE_URL = 'https://djnmrvhdklpclbrhxxqs.supabase.co';
 // Public anon key (ships in the app); requests run with the player's own JWT.
 const SUPABASE_ANON = 'sb_publishable_YOv1ukkxjnHUN5LWYoJ--g_DJDtbCIY';
 const MODEL = 'gpt-realtime-2.1-mini';
-const VOICE = 'marin';
+const VOICE = 'coral';
+// Voices the app may ask for (e.g. to compare them); anything else falls back to VOICE.
+const VOICES = new Set(['coral', 'shimmer', 'sage', 'marin', 'ballad', 'alloy', 'verse', 'cedar', 'ash', 'echo']);
 export const DAILY_SECONDS = 5 * 60;
 
 // ── Usage book (small JSON file; systemd StateDirectory) ─────────────────────
@@ -133,7 +135,7 @@ export async function voiceSession(c) {
         max_output_tokens: 1024,
         audio: {
           input: { turn_detection: { type: 'semantic_vad' }, noise_reduction: { type: 'near_field' } },
-          output: { voice: VOICE },
+          output: { voice: VOICES.has(body.voice) ? body.voice : VOICE },
         },
       },
     }),

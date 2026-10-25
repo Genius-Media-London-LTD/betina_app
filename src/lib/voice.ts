@@ -44,6 +44,8 @@ export type VoiceCall = {
 
 export async function startVoice(opts: {
   lang: string;
+  /** Optional voice name (server whitelist), e.g. to compare voices. */
+  voice?: string;
   onState: (s: VoiceState) => void;
   onRemaining: (seconds: number) => void;
   onError: (e: VoiceError) => void;
@@ -58,7 +60,7 @@ export async function startVoice(opts: {
   let secret: string;
   let remaining: number;
   try {
-    const r = await api('session', token, { lang: opts.lang });
+    const r = await api('session', token, { lang: opts.lang, voice: opts.voice });
     if (r.status === 429) { onError('limit'); return null; }
     if (r.status === 401) { onError('auth'); return null; }
     if (!r.ok) { onError('network'); return null; }

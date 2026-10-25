@@ -1,61 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import Animated, {
-  FadeIn, FadeInDown, SharedValue, useAnimatedStyle, useSharedValue,
+  FadeIn, FadeInDown, useSharedValue,
 } from 'react-native-reanimated';
 import BackButton from '../src/components/BackButton';
-import BETinaAvatar from '../src/components/BETinaAvatar';
 import ScreenBg from '../src/components/ScreenBg';
+import VoiceStage from '../src/components/VoiceStage';
 import { Blink, Meta } from '../src/components/Urban';
 import { useI18n } from '../src/lib/i18n';
 import { startVoice, VoiceCall, VoiceError, VoiceState } from '../src/lib/voice';
 import { Colors, Fonts } from '../src/theme';
 
-const BARS = 24;
-const RINGS = [
-  { size: 210, turn: 1, lag: 0 },
-  { size: 260, turn: -1, lag: 0.35 },
-  { size: 310, turn: 1, lag: 0.7 },
-];
-
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, s) % 60).padStart(2, '0')}`;
-
-/** One square ring around BETina: breathes with the voice energy and turns slowly. */
-function Ring({ size, turn, lag, energy, time, lime }: {
-  size: number; turn: number; lag: number; energy: SharedValue<number>; time: SharedValue<number>; lime: SharedValue<number>;
-}) {
-  const style = useAnimatedStyle(() => {
-    const e = energy.value;
-    const wobble = Math.sin(time.value * 2.2 + lag * 6) * 0.04 * (0.3 + e);
-    return {
-      opacity: 0.25 + e * 0.75 - lag * 0.15,
-      borderColor: lime.value > 0.5 ? Colors.primary : Colors.white,
-      transform: [
-        { scale: 0.92 + e * (0.18 + lag * 0.12) + wobble },
-        { rotate: `${turn * (time.value * (8 + lag * 10)) % 360}deg` },
-      ],
-    };
-  });
-  return <Animated.View style={[styles.ring, { width: size, height: size, marginLeft: -size / 2, marginTop: -size / 2 }, style]} />;
-}
-
-/** Equalizer bar: height follows the energy with its own phase. */
-function Bar({ i, energy, time, lime }: { i: number; energy: SharedValue<number>; time: SharedValue<number>; lime: SharedValue<number> }) {
-  const style = useAnimatedStyle(() => {
-    const centre = 1 - Math.abs(i - (BARS - 1) / 2) / (BARS / 2);
-    const wave = (Math.sin(time.value * 9 + i * 0.9) + Math.sin(time.value * 5.3 + i * 1.7)) / 4 + 0.5;
-    const h = 4 + energy.value * centre * 70 * (0.35 + wave * 0.65);
-    return { height: h, backgroundColor: lime.value > 0.5 ? Colors.primary : Colors.white };
-  });
-  return <Animated.View style={[styles.bar, style]} />;
-}
 
 export default function Voice() {
   const { t, lang } = useI18n();
   const router = useRouter();
+  // /voice?voice=shimmer — try another voice without a new build.
+  const { voice, demo } = useLocalSearchParams<{ voice?: string; demo?: string }>();
   const insets = useSafeAreaInsets();
   const [state, setState] = useState<VoiceState>('connecting');
   const [error, setError] = useState<VoiceError | null>(null);
@@ -72,6 +37,7 @@ export default function Voice() {
     setError(null);
     call.current = await startVoice({
       lang,
+      voice,
       onState: (s) => { stateRef.current = s; setState(s); },
       onRemaining: setRemaining,
       onError: (e) => {
@@ -83,6 +49,15 @@ export default function Voice() {
   };
 
   useEffect(() => {
+    // Dev only: /voice?demo=1 cycles through the call states without a call
+    // (to tune the animation and for store screenshots).
+    if (__DEV__ && demo) {
+      const cycle: VoiceState[] = ['speaking', 'speaking', 'listening', 'userSpeaking', 'userSpeaking', 'listening'];
+      let i = 0;
+      setRemaining(272);
+      const id = setInterval(() => { const s = cycle[i++ % cycle.length]; stateRef.current = s; setState(s); }, 1600);
+      return () => clearInterval(id);
+    }
     begin();
     return () => call.current?.stop();
   }, []);
@@ -108,8 +83,6 @@ export default function Voice() {
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
   }, [energy, time, lime]);
-
-  const avatarStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 + energy.value * 0.08 }] }));
 
   const end = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -148,14 +121,7 @@ export default function Voice() {
 
         {/* The moving centre */}
         <View style={styles.stage}>
-          {RINGS.map((r) => <Ring key={r.size} {...r} energy={energy} time={time} lime={lime} />)}
-          <Animated.View style={[styles.avatar, avatarStyle]}>
-            <BETinaAvatar size={150} online={live} />
-          </Animated.View>
-        </View>
-
-        <View style={styles.eq}>
-          {Array.from({ length: BARS }, (_, i) => <Bar key={i} i={i} energy={energy} time={time} lime={lime} />)}
+          <VoiceStage energy={energy} time={time} lime={lime} />
         </View>
 
         <Text style={styles.hint}>{live ? t.voiceHint : ' '}</Text>
@@ -201,10 +167,6 @@ const styles = StyleSheet.create({
   status: { color: Colors.white, fontSize: 46, lineHeight: 46, fontFamily: Fonts.display },
   statusError: { fontSize: 22, lineHeight: 28, fontFamily: Fonts.semibold, color: Colors.white },
   stage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  ring: { position: 'absolute', left: '50%', top: '50%', borderWidth: 2 },
-  avatar: { alignItems: 'center', justifyContent: 'center' },
-  eq: { height: 80, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  bar: { width: 6 },
   hint: { color: Colors.textMuted, fontSize: 13, lineHeight: 18, fontFamily: Fonts.medium, textAlign: 'center', marginVertical: 14 },
   controls: { flexDirection: 'row', gap: 8 },
   mute: { borderWidth: 1.5, borderColor: Colors.borderStrong, paddingHorizontal: 18, justifyContent: 'center', minHeight: 58 },
