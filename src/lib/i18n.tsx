@@ -4503,7 +4503,7 @@ const COUNTRY_LANG: Record<string, LangCode> = {
   IT: 'it',
   RO: 'ro',
   TR: 'tr',
-  HR: 'hr', BA: 'hr', RS: 'hr', ME: 'hr',
+  HR: 'hr', BA: 'hr', RS: 'hr', ME: 'hr', XK: 'hr', MK: 'hr',
   GB: 'en', US: 'en', NG: 'en', TZ: 'en', KE: 'en', GH: 'en',
 };
 
@@ -4520,7 +4520,7 @@ const DIAL_LANG: Record<string, LangCode> = {
   '+39': 'it',
   '+40': 'ro',
   '+90': 'tr',
-  '+385': 'hr', '+387': 'hr', '+381': 'hr', '+382': 'hr',
+  '+385': 'hr', '+387': 'hr', '+381': 'hr', '+382': 'hr', '+383': 'hr', '+389': 'hr',
   '+44': 'en', '+1': 'en', '+234': 'en', '+255': 'en', '+254': 'en', '+233': 'en',
 };
 
