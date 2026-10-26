@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -10,7 +11,8 @@ import { Meta, Sticker } from '../src/components/Urban';
 import { tiers } from '../src/lib/demo';
 import { useI18n } from '../src/lib/i18n';
 import { useProfile } from '../src/hooks/useProfile';
-import { fetchNews, fetchTeamNext, formatKickoff, timeAgo } from '../src/lib/sports';
+import { fetchNewsFeed } from '../src/lib/news';
+import { fetchTeamNext, formatKickoff, timeAgo } from '../src/lib/sports';
 import { supabase } from '../src/lib/supabase';
 import { Colors, Fonts, displayType } from '../src/theme';
 
@@ -23,15 +25,28 @@ type FeedItem = {
   body: string;
   ts: number; // epoch ms — for sort + day grouping
   unread: boolean;
+  /** Where tapping leads. */
+  url: string;
+  /** Row in public.notifications (only those have a read state). */
+  dbId?: string;
 };
+
+/** Older notifications have no link: decide by type. */
+function linkFor(type: string, url: string | null): string {
+  if (url) return url;
+  if (type === 'result') return '/scores';
+  if (type === 'tippspiel') return '/tippspiel';
+  return '/chat';
+}
 
 const FILTERS: (Tag | null)[] = [null, 'BETINA', 'NEWS', 'XP'];
 
-function NotificationRow({ item, index, read }: { item: FeedItem; index: number; read: boolean }) {
+function NotificationRow({ item, index, read, onPress }: { item: FeedItem; index: number; read: boolean; onPress: () => void }) {
   const unread = item.unread && !read;
   const tagLime = item.tag !== 'NEWS';
   return (
-    <Animated.View entering={FadeInDown.delay(40 + index * 40).duration(350)} style={styles.row}>
+    <Animated.View entering={FadeInDown.delay(40 + Math.min(index, 10) * 40).duration(350)}>
+      <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
       <View style={[styles.marker, unread && styles.markerOn]} />
       <View style={styles.rowBody}>
         <View style={styles.rowHead}>
@@ -43,6 +58,8 @@ function NotificationRow({ item, index, read }: { item: FeedItem; index: number;
         <Text style={[styles.rowTitle, !unread && styles.rowTitleRead]} numberOfLines={2}>{item.title.toUpperCase()}</Text>
         <Text style={styles.rowText} numberOfLines={3}>{item.body}</Text>
       </View>
+      <Text style={[styles.arrow, unread && { color: Colors.primary }]}>→</Text>
+      </Pressable>
     </Animated.View>
   );
 }
@@ -67,7 +84,9 @@ export default function Notifications() {
   const { t, lang } = useI18n();
   const { profile } = useProfile();
   const [items, setItems] = useState<FeedItem[]>([]);
+  const router = useRouter();
   const [readAll, setReadAll] = useState(false);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
   const [filter, setFilter] = useState<Tag | null>(null);
 
@@ -94,7 +113,8 @@ export default function Notifications() {
           ? t.notifStatusBody.replace('{n}', String(nextTier.minXp - xp)).replace('{tier}', nextTier.name)
           : t.tiersTop1,
         ts: now,
-        unread: true,
+        unread: false,
+        url: '/tiers',
       });
 
       // 2. Streak (if the player has one going)
@@ -105,7 +125,8 @@ export default function Notifications() {
           title: t.notifStreakTitle,
           body: t.notifStreakBody.replace('{n}', String(profile.streak_days)),
           ts: now - 60_000,
-          unread: true,
+          unread: false,
+          url: '/journey',
         });
       }
 
@@ -123,26 +144,24 @@ export default function Notifications() {
               tomorrow: t.homeTomorrow,
             })}`,
             ts: now - 120_000,
-            unread: true,
+            unread: false,
+            url: '/scores',
           });
         }
       }
 
-      // 4. Latest sports headlines
-      const news = await fetchNews('sport', 3, lang);
-      news.slice(0, 2).forEach((n, i) => {
-        const ts = new Date(n.pubDate).getTime();
+      // 4. Latest headlines from BETina's newsroom
+      const news = await fetchNewsFeed({ lang, limit: 2 }).catch(() => []);
+      news.forEach((n) => {
+        const ts = new Date(n.published_at).getTime();
         feed.push({
-          id: `news-${i}`,
+          id: `news-${n.id}`,
           tag: 'NEWS',
-          title: n.title,
-          body: timeAgo(n.pubDate, {
-            justNow: t.liveJustNow,
-            hours: t.liveAgoHours,
-            days: t.liveAgoDays,
-          }),
+          title: n.headline,
+          body: `${n.teaser} · ${timeAgo(n.published_at, { justNow: t.liveJustNow, hours: t.liveAgoHours, days: t.liveAgoDays })}`,
           ts: Number.isNaN(ts) ? now - 3_600_000 : ts,
           unread: false,
+          url: `/article?id=${n.id}`,
         });
       });
 
@@ -152,10 +171,10 @@ export default function Notifications() {
         if (user) {
           const { data } = await supabase
             .from('notifications')
-            .select('id, type, title, body, read, created_at')
+            .select('id, type, title, body, read, created_at, url')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false })
-            .limit(20);
+            .limit(50);
           (data ?? []).forEach((n) => {
             feed.push({
               id: `db-${n.id}`,
@@ -164,6 +183,8 @@ export default function Notifications() {
               body: n.body,
               ts: new Date(n.created_at).getTime(),
               unread: !n.read,
+              url: linkFor(n.type, n.url ?? null),
+              dbId: n.id,
             });
           });
         }
@@ -184,7 +205,25 @@ export default function Notifications() {
   const shown = useMemo(() => (filter ? items.filter((i) => i.tag === filter) : items), [items, filter]);
   const today = useMemo(() => shown.filter((i) => isToday(i.ts)), [shown]);
   const earlier = useMemo(() => shown.filter((i) => !isToday(i.ts)), [shown]);
-  const unreadCount = items.filter((i) => i.unread && !readAll).length;
+  const isRead = (i: FeedItem) => readAll || (!!i.dbId && readIds.has(i.dbId));
+  const unreadCount = items.filter((i) => i.unread && !isRead(i)).length;
+
+  // Saved in the database, so the bell and the menu count it too.
+  const markAllRead = async () => {
+    Haptics.selectionAsync();
+    setReadAll(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+  };
+  const open = (item: FeedItem) => {
+    Haptics.selectionAsync();
+    const id = item.dbId;
+    if (id && item.unread && !isRead(item)) {
+      setReadIds((prev) => new Set(prev).add(id));
+      supabase.from('notifications').update({ read: true }).eq('id', id).then(() => {});
+    }
+    router.push(item.url as never);
+  };
 
   return (
     <ScreenBg>
@@ -195,7 +234,7 @@ export default function Notifications() {
         <View style={styles.topBar}>
           <BackButton />
           {unreadCount > 0 && (
-            <Pressable onPress={() => { Haptics.selectionAsync(); setReadAll(true); }} hitSlop={8}>
+            <Pressable onPress={markAllRead} hitSlop={8}>
               <Meta color={Colors.primary} style={styles.markRead}>{t.notifMarkRead}</Meta>
             </Pressable>
           )}
@@ -232,7 +271,7 @@ export default function Notifications() {
           <View>
             <Meta style={styles.day}>{`— ${t.notifToday}`}</Meta>
             {today.map((item, i) => (
-              <NotificationRow key={item.id} item={item} index={i} read={readAll} />
+              <NotificationRow key={item.id} item={item} index={i} read={isRead(item)} onPress={() => open(item)} />
             ))}
           </View>
         )}
@@ -241,7 +280,7 @@ export default function Notifications() {
           <View>
             <Meta style={styles.day}>{`— ${t.notifEarlier}`}</Meta>
             {earlier.map((item, i) => (
-              <NotificationRow key={item.id} item={item} index={i} read={readAll} />
+              <NotificationRow key={item.id} item={item} index={i} read={isRead(item)} onPress={() => open(item)} />
             ))}
           </View>
         )}
@@ -267,8 +306,10 @@ const styles = StyleSheet.create({
   },
   emptyText: { flex: 1, color: Colors.textSecondary, fontSize: 14, fontFamily: Fonts.medium, lineHeight: 20 },
   day: { paddingVertical: 8 },
-  row: { flexDirection: 'row', gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.line },
-  marker: { width: 8, height: 8, marginTop: 6, backgroundColor: 'transparent' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.line },
+  rowPressed: { backgroundColor: Colors.card },
+  arrow: { color: Colors.textMuted, fontSize: 20, fontFamily: Fonts.label },
+  marker: { width: 8, height: 8, alignSelf: 'flex-start', marginTop: 6, backgroundColor: Colors.black },
   markerOn: { backgroundColor: Colors.primary },
   rowBody: { flex: 1, gap: 6 },
   rowHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

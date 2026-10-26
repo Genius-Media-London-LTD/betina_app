@@ -104,6 +104,7 @@ Deno.serve(async () => {
         type: 'result',
         title: msg.title,
         body: msg.body,
+        url: '/scores',
       });
       // Respect the "Event reminders" toggle — no push when it's off.
       if (p.push_token && p.notify_events !== false) await sendPush(p.push_token, `BETina · ${msg.title}`, msg.body);

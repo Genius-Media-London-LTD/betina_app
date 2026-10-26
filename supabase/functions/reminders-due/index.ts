@@ -61,6 +61,7 @@ Deno.serve(async () => {
         type: 'betina',
         title: 'BETina reminder',
         body: rem.text,
+        url: '/chat',
       });
 
       const { data: profile } = await supabase

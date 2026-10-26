@@ -408,7 +408,7 @@ Deno.serve(async () => {
         if (!body) continue;
         const ch1 = await deliver(pf, null, body);
         if (ch1 !== 'none') {
-          await supabase.from('notifications').insert({ user_id: pf.id, type: 'BT-001', title: 'BETina', body });
+          await supabase.from('notifications').insert({ user_id: pf.id, type: 'BT-001', title: 'BETina', body, url: '/chat' });
           sent++;
         }
         continue;
@@ -453,7 +453,7 @@ Deno.serve(async () => {
         if (!body) continue;
 
         const ch2 = await deliver(pf, phone, body);
-        await supabase.from('notifications').insert({ user_id: pf.id, type: trig.id, title: 'BETina', body });
+        await supabase.from('notifications').insert({ user_id: pf.id, type: trig.id, title: 'BETina', body, url: '/chat' });
         if (ch2 !== 'none') {
           await logTrigger(phone, trig.id, ch2); // real channel: 'push' or 'sms'
           sent++;

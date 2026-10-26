@@ -249,7 +249,7 @@ async function deliver(
 ) {
   // Log first so an overlapping run can't double-send.
   await db.from('trigger_log').insert({ user_id: target.user_id, trigger_key: triggerKey, category: 'engagement' });
-  await db.from('notifications').insert({ user_id: target.user_id, type: 'betina', title, body });
+  await db.from('notifications').insert({ user_id: target.user_id, type: 'tippspiel', title, body, url: '/tippspiel' });
   if (target.notify_push && target.push_token) {
     await fetch(EXPO_PUSH, {
       method: 'POST',

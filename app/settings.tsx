@@ -50,7 +50,7 @@ export default function Settings() {
 
   const [eventReminders, setEventReminders] = useState(true);
   const [betinaMessages, setBetinaMessages] = useState(true);
-  const [tierUpdates, setTierUpdates] = useState(false);
+  const [tippsPush, setTippsPush] = useState(true);
 
   // Load saved notification preferences (degrades gracefully if the columns
   // aren't there yet — migration 004).
@@ -61,13 +61,13 @@ export default function Settings() {
         if (!user) return;
         const { data, error } = await supabase
           .from('profiles')
-          .select('notify_events, notify_betina, notify_tier')
+          .select('notify_events, notify_betina, notify_tippspiel')
           .eq('id', user.id)
           .maybeSingle();
         if (!error && data) {
           if (typeof data.notify_events === 'boolean') setEventReminders(data.notify_events);
           if (typeof data.notify_betina === 'boolean') setBetinaMessages(data.notify_betina);
-          if (typeof data.notify_tier === 'boolean') setTierUpdates(data.notify_tier);
+          if (typeof data.notify_tippspiel === 'boolean') setTippsPush(data.notify_tippspiel);
         }
       } catch {
         // keep defaults
@@ -75,7 +75,7 @@ export default function Settings() {
     })();
   }, []);
 
-  const savePref = (column: 'notify_events' | 'notify_betina' | 'notify_tier', value: boolean) => {
+  const savePref = (column: 'notify_events' | 'notify_betina' | 'notify_tippspiel', value: boolean) => {
     supabase.auth
       .getUser()
       .then(({ data }) => {
@@ -197,8 +197,8 @@ export default function Settings() {
             <SectionLabel>{t.settingsPush}</SectionLabel>
             <GlowCard>
               <Row emoji="⚽" label={t.settingsEventReminders} right={<Toggle value={eventReminders} onValueChange={(v) => { setEventReminders(v); savePref('notify_events', v); }} />} />
-              <Row emoji="💬" label={t.settingsBetinaMsgs} right={<Toggle value={betinaMessages} onValueChange={(v) => { setBetinaMessages(v); savePref('notify_betina', v); }} />} />
-              <Row emoji="🏆" label={t.settingsTierUpdates} right={<Toggle value={tierUpdates} onValueChange={(v) => { setTierUpdates(v); savePref('notify_tier', v); }} />} last />
+              <Row emoji="🎯" label={t.settingsTippsPush} right={<Toggle value={tippsPush} onValueChange={(v) => { setTippsPush(v); savePref('notify_tippspiel', v); }} />} />
+              <Row emoji="💬" label={t.settingsBetinaMsgs} right={<Toggle value={betinaMessages} onValueChange={(v) => { setBetinaMessages(v); savePref('notify_betina', v); }} />} last />
             </GlowCard>
           </Animated.View>
         )}
