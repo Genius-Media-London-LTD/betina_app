@@ -89,11 +89,12 @@ export default function Chat() {
             .from('chat_messages')
             .select('id, role, content, cards, created_at')
             .eq('user_id', user.id)
-            .order('created_at', { ascending: true })
-            .limit(50);
+            // The newest 60, shown oldest first.
+            .order('created_at', { ascending: false })
+            .limit(60);
           if (data && data.length > 0) {
             setMessages(
-              data.map((r) => ({
+              [...data].reverse().map((r) => ({
                 id: r.id,
                 role: r.role as 'user' | 'assistant',
                 content: r.content,
