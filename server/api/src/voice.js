@@ -21,9 +21,9 @@ const VOICE = 'marin';
 // Voices the app may ask for (e.g. to compare them); anything else falls back to VOICE.
 const VOICES = new Set(['coral', 'shimmer', 'sage', 'marin', 'ballad', 'alloy', 'verse', 'cedar', 'ash', 'echo']);
 export const DAILY_SECONDS = 5 * 60;
-// TEST PHASE (Dejan, 2026-10-26): no daily limit while he tests.
-// Switch back to true before the store release.
-const LIMIT_ON = false;
+const LIMIT_ON = true;
+// Testers without the daily limit (Dejan, 2026-10-26).
+const UNLIMITED = new Set(['aa5ea30d-9ef6-4597-9453-44b9b09997d2']);
 
 // ── Usage book (small JSON file; systemd StateDirectory) ─────────────────────
 const STATE_DIR = process.env.STATE_DIRECTORY || join(process.cwd(), '.state');
@@ -56,8 +56,8 @@ function book(userId, seconds) {
   return remaining(userId);
 }
 
-/** Seconds left today, or null while the limit is off. */
-const remaining = (userId) => (LIMIT_ON ? Math.max(0, DAILY_SECONDS - used(userId)) : null);
+/** Seconds left today, or null without a limit (switched off, or a tester). */
+const remaining = (userId) => (LIMIT_ON && !UNLIMITED.has(userId) ? Math.max(0, DAILY_SECONDS - used(userId)) : null);
 
 // ── Supabase: who is calling + their profile ─────────────────────────────────
 async function supabaseUser(token) {
