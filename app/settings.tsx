@@ -16,7 +16,7 @@ import { LANGUAGES, LangCode, useI18n } from '../src/lib/i18n';
 import { signOut } from '../src/lib/session';
 import { supabase } from '../src/lib/supabase';
 import { Meta } from '../src/components/Urban';
-import { Colors, Fonts } from '../src/theme';
+import { Colors, Fonts, displayType } from '../src/theme';
 
 
 function Row({
@@ -299,12 +299,12 @@ export default function Settings() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 16, gap: 14 },
   topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  title: { color: Colors.white, fontSize: 64, lineHeight: 66, fontFamily: Fonts.display },
+  title: { ...displayType(64, 66), color: Colors.white },
   profileCard: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 12 },
   profileInitial: { width: 48, height: 48, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
   profileInitialLabel: { color: Colors.black, fontSize: 28, fontFamily: Fonts.display },
   profileInfo: { flex: 1, gap: 3 },
-  profileName: { color: Colors.white, fontSize: 24, lineHeight: 26, fontFamily: Fonts.display },
+  profileName: { ...displayType(24, 26), color: Colors.white },
   profileMeta: { color: Colors.textSecondary, fontSize: 13, fontFamily: Fonts.medium, lineHeight: 18 },
   section: { gap: 6, marginTop: 6 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 14, paddingHorizontal: 14 },
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
     width: '100%', maxWidth: 380, backgroundColor: Colors.black, borderWidth: 1.5, borderColor: Colors.danger,
     paddingHorizontal: 18, paddingTop: 20, paddingBottom: 10,
   },
-  deleteDialogTitle: { color: Colors.white, fontSize: 30, lineHeight: 32, fontFamily: Fonts.display, marginBottom: 10 },
+  deleteDialogTitle: { ...displayType(30, 32), color: Colors.white, marginBottom: 10 + (displayType(30, 32).marginBottom as number | undefined ?? 0) },
   deleteDialogBody: { color: Colors.textSecondary, fontSize: 14, fontFamily: Fonts.medium, lineHeight: 20, marginBottom: 18 },
   deleteDialogError: { color: Colors.danger, fontSize: 14, fontFamily: Fonts.medium, marginBottom: 14 },
   deleteConfirmBtn: { width: '100%', backgroundColor: Colors.danger, paddingVertical: 15, alignItems: 'center', marginBottom: 4 },

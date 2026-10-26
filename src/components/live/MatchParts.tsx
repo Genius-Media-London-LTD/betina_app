@@ -11,7 +11,7 @@ import {
   H2H, Lineup, MatchDetail, MatchEvent, Person, Row, TableRow, isFinished, isLive,
 } from '../../lib/live';
 import { TipRef, tipPoints } from '../../lib/liveTips';
-import { Colors, Fonts, withAlpha } from '../../theme';
+import { Colors, Fonts, withAlpha, displayType } from '../../theme';
 
 type T = ReturnType<typeof useI18n>['t'];
 
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
   boardName: { color: Colors.white, fontSize: 17, lineHeight: 19, fontFamily: Fonts.label, textAlign: 'center' },
   boardMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   boardCenter: { position: 'absolute', left: '30%', right: '30%', top: 4, alignItems: 'center', gap: 4 },
-  boardScore: { color: Colors.white, fontSize: 64, lineHeight: 68, fontFamily: Fonts.display },
+  boardScore: { ...displayType(64, 68), color: Colors.white },
   scorers: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   scorerCol: { flex: 1, gap: 2 },
   scorer: { color: Colors.textSecondary, fontSize: 12, fontFamily: Fonts.medium },
@@ -523,9 +523,9 @@ const styles = StyleSheet.create({
 
   tipCard: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, backgroundColor: Colors.primary, paddingHorizontal: 12, paddingVertical: 8, gap: 10 },
   tipSide: { flex: 1, gap: 2 },
-  tipScore: { color: Colors.black, fontSize: 28, lineHeight: 30, fontFamily: Fonts.display },
+  tipScore: { ...displayType(28, 30), color: Colors.black },
   tipMid: { alignItems: 'center', backgroundColor: Colors.black, paddingHorizontal: 10, paddingVertical: 4 },
-  tipPts: { color: Colors.primary, fontSize: 24, lineHeight: 26, fontFamily: Fonts.display },
+  tipPts: { ...displayType(24, 26), color: Colors.primary },
 
   emptyTab: { padding: 28, alignItems: 'center' },
   emptyText: { color: Colors.textSecondary, fontSize: 15, lineHeight: 22, fontFamily: Fonts.medium, textAlign: 'center' },
@@ -555,14 +555,14 @@ const styles = StyleSheet.create({
   statsHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   stat: { gap: 6 },
   statLabels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  statVal: { color: Colors.white, fontSize: 20, lineHeight: 22, fontFamily: Fonts.display, minWidth: 48 },
+  statVal: { ...displayType(20, 22), color: Colors.white, minWidth: 48 },
   statName: { flex: 1, color: Colors.textSecondary, fontSize: 11, fontFamily: Fonts.monoBold, textAlign: 'center', letterSpacing: 0.6 },
   statBars: { flexDirection: 'row', gap: 4 },
   barTrack: { flex: 1, height: 6, backgroundColor: Colors.line },
   barFill: { height: 6 },
 
   formations: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
-  formation: { color: Colors.white, fontSize: 26, lineHeight: 28, fontFamily: Fonts.display },
+  formation: { ...displayType(26, 28), color: Colors.white },
   pitch: { alignSelf: 'center', backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: pitchLine, overflow: 'visible' },
   pitchHalfLine: { position: 'absolute', left: 0, right: 0, top: '50%', height: 1.5, backgroundColor: pitchLine },
   pitchCircle: { position: 'absolute', borderWidth: 1.5, borderColor: pitchLine },
@@ -604,7 +604,7 @@ const styles = StyleSheet.create({
   formName: { flex: 1, color: Colors.white, fontSize: 15, fontFamily: Fonts.label },
   tally: { flexDirection: 'row', gap: 8 },
   tallyBox: { flex: 1, backgroundColor: Colors.card, borderWidth: 1.5, borderColor: Colors.border, padding: 10, alignItems: 'center', gap: 2 },
-  tallyNum: { color: Colors.primary, fontSize: 34, lineHeight: 38, fontFamily: Fonts.display },
+  tallyNum: { ...displayType(34, 38), color: Colors.primary },
   meet: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: Colors.line },
   meetTeam: { flex: 1, color: Colors.white, fontSize: 13, fontFamily: Fonts.label },
   meetScore: { color: Colors.white, fontSize: 18, fontFamily: Fonts.display, width: 46, textAlign: 'center' },

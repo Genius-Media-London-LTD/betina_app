@@ -6,7 +6,7 @@ import BackButton from '../src/components/BackButton';
 import GlowCard from '../src/components/GlowCard';
 import ScreenBg from '../src/components/ScreenBg';
 import { LEGAL_DOCS, LegalDocKey } from '../src/lib/legal';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha, displayType } from '../src/theme';
 
 const DOCS: { key: LegalDocKey; emoji: string }[] = [
   { key: 'privacy', emoji: '🔒' },
@@ -64,7 +64,7 @@ export default function Legal() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.lg, gap: 14 },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingTop: Spacing.sm },
-  title: { color: Colors.white, fontSize: 44, lineHeight: 46, fontFamily: Fonts.display, textTransform: 'uppercase', flexShrink: 1 },
+  title: { ...displayType(44, 46), color: Colors.white, textTransform: 'uppercase', flexShrink: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: 14, paddingHorizontal: 16 },
   rowEmoji: { fontSize: 17 },
   rowLabel: { flex: 1, color: Colors.white, fontSize: Typography.sm + 1, fontFamily: Fonts.semibold },

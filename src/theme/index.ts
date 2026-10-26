@@ -1,5 +1,6 @@
 // BETina Design System
 // SINGLE SOURCE OF TRUTH — import everything from here, never hardcode values
+import { Platform, TextStyle } from 'react-native';
 
 /** '#RRGGBB' + alpha → 'rgba(r,g,b,a)' — for tints of the palette colours. */
 export function withAlpha(hex: string, alpha: number): string {
@@ -100,6 +101,21 @@ export const Fonts = {
   mono: 'SpaceMono_400Regular',
   monoBold: 'SpaceMono_700Bold',
 } as const;
+
+/**
+ * Anton headline (fontSize + lineHeight). Anton is tall: its natural line is
+ * 1.505× the font size (ascender 2409 + descender 674 of 2048 units), and our
+ * tight headline lines are far below that. The web centres the glyphs in the
+ * line, but iOS and Android cut the top off (caps, umlauts, accents). On the
+ * phone the line gets Anton's natural height and equal negative margins take
+ * the extra back — same position as on the web, nothing clipped.
+ */
+export function displayType(fontSize: number, lineHeight: number): TextStyle {
+  const natural = Math.ceil(fontSize * 1.505);
+  if (Platform.OS === 'web' || lineHeight >= natural) return { fontFamily: Fonts.display, fontSize, lineHeight };
+  const m = (lineHeight - natural) / 2;
+  return { fontFamily: Fonts.display, fontSize, lineHeight: natural, marginTop: m, marginBottom: m };
+}
 
 export const Typography = {
   // Font Sizes

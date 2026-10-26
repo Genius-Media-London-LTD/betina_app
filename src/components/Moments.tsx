@@ -15,7 +15,7 @@ import Animated, {
 import { Meta } from './Urban';
 import { tiers } from '../lib/demo';
 import { useI18n } from '../lib/i18n';
-import { Colors, Fonts } from '../theme';
+import { Colors, Fonts, displayType } from '../theme';
 
 const { width: W, height: H } = Dimensions.get('window');
 
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   stripText: { color: Colors.primary, fontSize: 18, fontFamily: Fonts.monoBold, letterSpacing: 2 },
   tierCenter: { flex: 1, justifyContent: 'center', gap: 6 },
   oldTier: { color: Colors.black, opacity: 0.45, fontSize: 40, fontFamily: Fonts.display, textDecorationLine: 'line-through' },
-  newTier: { color: Colors.black, fontSize: 96, lineHeight: 100, fontFamily: Fonts.display },
+  newTier: { ...displayType(96, 100), color: Colors.black },
   tierLine: { color: Colors.black, fontSize: 17, lineHeight: 24, fontFamily: Fonts.semibold, marginTop: 8 },
   perk: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14,
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   tag: { backgroundColor: Colors.black, paddingHorizontal: 8, paddingVertical: 4 },
   close: { width: 38, height: 38, backgroundColor: Colors.black, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
   closeText: { color: Colors.white, fontSize: 22, fontFamily: Fonts.label },
-  bdayTitle: { color: Colors.white, fontSize: 72, lineHeight: 70, fontFamily: Fonts.display },
+  bdayTitle: { ...displayType(72, 70), color: Colors.white },
   bdayLine: { color: Colors.white, fontSize: 17, lineHeight: 24, fontFamily: Fonts.medium },
   limeBtn: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',

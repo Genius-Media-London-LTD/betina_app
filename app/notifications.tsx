@@ -12,7 +12,7 @@ import { useI18n } from '../src/lib/i18n';
 import { useProfile } from '../src/hooks/useProfile';
 import { fetchNews, fetchTeamNext, formatKickoff, timeAgo } from '../src/lib/sports';
 import { supabase } from '../src/lib/supabase';
-import { Colors, Fonts } from '../src/theme';
+import { Colors, Fonts, displayType } from '../src/theme';
 
 type Tag = 'BETINA' | 'NEWS' | 'XP';
 
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   markRead: { textDecorationLine: 'underline' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 },
-  title: { color: Colors.white, fontSize: 72, lineHeight: 74, fontFamily: Fonts.display },
+  title: { ...displayType(72, 74), color: Colors.white },
   filters: { gap: 6 },
   filter: { borderWidth: 1.5, borderColor: Colors.borderStrong, paddingHorizontal: 12, paddingVertical: 7 },
   filterOn: { backgroundColor: Colors.primary, borderColor: Colors.primary },

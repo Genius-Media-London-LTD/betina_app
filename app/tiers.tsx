@@ -10,7 +10,7 @@ import { Meta, OutlineNumber } from '../src/components/Urban';
 import { tiers } from '../src/lib/demo';
 import { useProfile } from '../src/hooks/useProfile';
 import { useI18n } from '../src/lib/i18n';
-import { Colors, Fonts } from '../src/theme';
+import { Colors, Fonts, displayType } from '../src/theme';
 
 export default function Tiers() {
   const { t, lang } = useI18n();
@@ -102,7 +102,7 @@ export default function Tiers() {
 const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingHorizontal: 16, gap: 10 },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
-  headline: { color: Colors.white, fontSize: 62, lineHeight: 60, fontFamily: Fonts.display },
+  headline: { ...displayType(62, 60), color: Colors.white },
   subtitle: { color: Colors.textSecondary, fontSize: 15, lineHeight: 21, fontFamily: Fonts.medium, marginTop: 8, marginBottom: 6 },
   tier: {
     flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14,
@@ -112,12 +112,12 @@ const styles = StyleSheet.create({
   tierGold: { borderColor: Colors.primary },
   info: { flex: 1, gap: 4 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { fontSize: 28, lineHeight: 30, fontFamily: Fonts.display },
+  name: { ...displayType(28, 30) },
   you: { backgroundColor: Colors.black, paddingHorizontal: 6, paddingVertical: 1 },
   youText: { color: Colors.primary, fontSize: 11, fontFamily: Fonts.monoBold },
   progress: { gap: 6, marginTop: 4 },
   cashback: { alignItems: 'flex-end', minWidth: 58 },
-  cashbackValue: { fontSize: 32, lineHeight: 34, fontFamily: Fonts.display },
+  cashbackValue: { ...displayType(32, 34) },
   spacer: { flex: 1, minHeight: 12 },
   note: {
     flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14,

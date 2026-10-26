@@ -12,7 +12,7 @@ import VoiceStage from '../src/components/VoiceStage';
 import { Blink, Meta } from '../src/components/Urban';
 import { useI18n } from '../src/lib/i18n';
 import { startVoice, VoiceCall, VoiceError, VoiceState } from '../src/lib/voice';
-import { Colors, Fonts } from '../src/theme';
+import { Colors, Fonts, displayType } from '../src/theme';
 
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, s) % 60).padStart(2, '0')}`;
 
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   live: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   statusWrap: { minHeight: 96, justifyContent: 'flex-end', marginTop: 18 },
-  status: { color: Colors.white, fontSize: 46, lineHeight: 46, fontFamily: Fonts.display },
+  status: { ...displayType(46, 46), color: Colors.white },
   statusError: { fontSize: 22, lineHeight: 28, fontFamily: Fonts.semibold, color: Colors.white },
   stage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   hint: { color: Colors.textMuted, fontSize: 13, lineHeight: 18, fontFamily: Fonts.medium, textAlign: 'center', marginVertical: 14 },

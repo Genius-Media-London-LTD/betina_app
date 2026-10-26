@@ -17,7 +17,7 @@ import { isFollowing, useFollows } from '../lib/follows';
 import { useI18n } from '../lib/i18n';
 import { DayData, League, Row, fetchDay, isLive, localDay, sameTeam, useLiveNow } from '../lib/live';
 import { tipFor, tipPoints, useTips } from '../lib/liveTips';
-import { Colors, Fonts } from '../theme';
+import { Colors, Fonts, displayType } from '../theme';
 
 type Filter = 'all' | 'live' | 'mine';
 type Item =
@@ -274,16 +274,16 @@ function Spotlight({ r, league, tip, onPress }: { r: Row; league: League; tip?: 
 
 const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 16, paddingBottom: 12 },
-  title: { color: Colors.white, fontSize: 96, lineHeight: 96, fontFamily: Fonts.display },
+  title: { ...displayType(96, 96), color: Colors.white },
   counter: { alignItems: 'flex-end', paddingBottom: 12 },
   counterRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  counterNum: { color: Colors.white, fontSize: 48, lineHeight: 52, fontFamily: Fonts.display },
+  counterNum: { ...displayType(48, 52), color: Colors.white },
 
   days: { gap: 6, paddingHorizontal: 16, paddingTop: 14 },
   day: { minWidth: 76, paddingVertical: 8, paddingHorizontal: 8, borderWidth: 1.5, borderColor: Colors.borderStrong, alignItems: 'center', gap: 2 },
   dayOn: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   dayLabel: { color: Colors.textSecondary, fontSize: 10, fontFamily: Fonts.monoBold, letterSpacing: 0.2 },
-  dayNum: { color: Colors.white, fontSize: 24, lineHeight: 28, fontFamily: Fonts.display },
+  dayNum: { ...displayType(24, 28), color: Colors.white },
 
   filters: { flexDirection: 'row', gap: 6, paddingHorizontal: 16, paddingTop: 10 },
   filter: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1.5, borderColor: Colors.borderStrong },
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
 
   section: { paddingTop: 18, gap: 10 },
   sectionHead: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16 },
-  sectionTitle: { color: Colors.white, fontSize: 28, lineHeight: 30, fontFamily: Fonts.display, paddingHorizontal: 16 },
+  sectionTitle: { ...displayType(28, 30), color: Colors.white, paddingHorizontal: 16 },
   carousel: { gap: 8, paddingHorizontal: 16 },
 
   spot: { marginHorizontal: 16, padding: 14, gap: 12, backgroundColor: Colors.card, borderWidth: 1.5, borderColor: Colors.border },
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   spotNameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   spotName: { color: Colors.white, fontSize: 16, lineHeight: 18, fontFamily: Fonts.label, flexShrink: 1 },
   spotScoreBox: { position: 'absolute', left: 0, right: 0, top: 4, alignItems: 'center' },
-  spotScore: { color: Colors.white, fontSize: 50, lineHeight: 54, fontFamily: Fonts.display },
+  spotScore: { ...displayType(50, 54), color: Colors.white },
   spotScorers: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, fontFamily: Fonts.medium },
   spotTip: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: Colors.primary, paddingHorizontal: 10, paddingVertical: 6 },
 

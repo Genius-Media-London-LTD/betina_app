@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
 import Animated, { Easing, cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
-import { Colors, Fonts, Shadows } from '../theme';
+import { Colors, Fonts, Shadows, displayType } from '../theme';
 
 /** Rotated lime label with a hard black shadow ("EXKLUSIV", "+100 XP", tier names). */
 export function Sticker({ text, rotate = -3, style, dark, size = 14 }: { text: string; rotate?: number; style?: ViewStyle; dark?: boolean; size?: number }) {
@@ -28,7 +28,7 @@ export function Headline({
   const lineHeight = Math.round(size * 0.92);
   if (accent === 'none' || words.length === 1) {
     return (
-      <Text style={[styles.headline, { fontSize: size, lineHeight, color }, style]} numberOfLines={numberOfLines}>
+      <Text style={[styles.headline, { ...displayType(size, lineHeight), color }, style]} numberOfLines={numberOfLines}>
         {accent === 'none' ? text.toUpperCase() : <Text style={{ color: Colors.primary }}>{text.toUpperCase()}</Text>}
       </Text>
     );
@@ -36,7 +36,7 @@ export function Headline({
   const lime = accent === 'first' ? words[0] : words[words.length - 1];
   const rest = accent === 'first' ? words.slice(1).join(' ') : words.slice(0, -1).join(' ');
   return (
-    <Text style={[styles.headline, { fontSize: size, lineHeight, color }, style]} numberOfLines={numberOfLines}>
+    <Text style={[styles.headline, { ...displayType(size, lineHeight), color }, style]} numberOfLines={numberOfLines}>
       {accent === 'first' ? (
         <>
           <Text style={{ color: Colors.primary }}>{lime}</Text> {rest}
@@ -77,7 +77,7 @@ export function OutlineNumber({ value, size = 44, color = Colors.primary, fill =
 }) {
   const s = Math.max(1, size / 36);
   const offsets = [[-s, 0], [s, 0], [0, -s], [0, s], [-s, -s], [s, s], [-s, s], [s, -s]];
-  const base = { fontFamily: Fonts.display, fontSize: size, lineHeight: Math.round(size * 0.95) };
+  const base = displayType(size, Math.round(size * 0.95));
   return (
     <View>
       {offsets.map(([x, y], i) => (

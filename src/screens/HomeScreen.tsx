@@ -21,7 +21,7 @@ import { tiers } from '../lib/demo';
 import { MatchEvent, fetchTeamNext, formatKickoff } from '../lib/sports';
 import { supabase } from '../lib/supabase';
 import { useChrome } from '../components/chrome';
-import { Colors, Fonts } from '../theme';
+import { Colors, Fonts, displayType } from '../theme';
 
 function getTierInfo(xp: number) {
   const current = [...tiers].reverse().find((t) => xp >= t.minXp) ?? tiers[0];
@@ -193,9 +193,9 @@ export default function Home() {
           />
           <View style={styles.greeting}>
             <Meta color={Colors.primary} size={11}>{stamp}</Meta>
-            <Text style={[styles.yo, { fontSize: 76, lineHeight: 70 }]}>{t.homeYo.toUpperCase()},</Text>
+            <Text style={[styles.yo, displayType(76, 70)]}>{t.homeYo.toUpperCase()},</Text>
             <View style={styles.nameRow}>
-              <Text style={[styles.yo, styles.yoName, { fontSize: nameSize, lineHeight: Math.round(nameSize * 0.92) }]} numberOfLines={1}>
+              <Text style={[styles.yo, styles.yoName, displayType(nameSize, Math.round(nameSize * 0.92))]} numberOfLines={1}>
                 {firstName.toUpperCase()}.
               </Text>
               <Sticker text={tier} rotate={-4} style={styles.tierSticker} />
@@ -325,11 +325,11 @@ const styles = StyleSheet.create({
   emptyText: { color: Colors.textSecondary, fontSize: 15, lineHeight: 21, fontFamily: Fonts.medium },
   game: { backgroundColor: Colors.primary, padding: 16, gap: 12 },
   teams: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  team: { flex: 1, color: Colors.black, fontSize: 40, lineHeight: 40, fontFamily: Fonts.display },
+  team: { ...displayType(40, 40), flex: 1, color: Colors.black },
   vs: { color: Colors.black, opacity: 0.45, fontSize: 18, fontFamily: Fonts.display },
   countdown: { flexDirection: 'row', gap: 8 },
   cdBox: { flex: 1, backgroundColor: Colors.black, paddingVertical: 8, alignItems: 'center' },
-  cdValue: { color: Colors.primary, fontSize: 30, lineHeight: 32, fontFamily: Fonts.display },
+  cdValue: { ...displayType(30, 32), color: Colors.primary },
   cdUnit: { color: Colors.white, fontSize: 9, fontFamily: Fonts.mono, letterSpacing: 1 },
 
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   tileWide: { width: '100%', borderColor: Colors.live },
   tilePressed: { borderColor: Colors.primary },
-  tileLabel: { color: Colors.white, fontSize: 34, lineHeight: 36, fontFamily: Fonts.display },
+  tileLabel: { ...displayType(34, 36), color: Colors.white },
 
   streak: { borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, padding: 14 },
   streakTitle: { color: Colors.white, fontSize: 26, fontFamily: Fonts.display },

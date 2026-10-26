@@ -27,7 +27,7 @@ import JourneyScreen from '../screens/JourneyScreen';
 import LiveScreen from '../screens/LiveScreen';
 import NewsScreen from '../screens/NewsScreen';
 import TippspielScreen from '../screens/TippspielScreen';
-import { Colors, Fonts } from '../theme';
+import { Colors, Fonts, displayType } from '../theme';
 
 type Labels = ReturnType<typeof useI18n>['t'];
 type PageDef = { key: string; route: string; path: string; label: (t: Labels) => string; Component: React.ComponentType };
@@ -303,12 +303,15 @@ function FullMenu({
     ? `${num.format(xp)} / ${num.format(next.minXp)} XP · ${t.menuXpToNext.replace('{n}', num.format(next.minXp - xp)).replace('{tier}', next.name)}`
     : `${num.format(xp)} XP · ${t.menuMaxTier}`;
 
+  // Pages by key, so adding a page never shifts the menu.
+  const pageOf = (key: string) => PAGES.findIndex((p) => p.key === key);
   const items: { label: string; badge?: string; page?: number; href?: string }[] = [
-    { label: t.tabHome, page: 0 },
-    { label: t.tabNews, page: 1 },
-    { label: t.tabTipps, page: 2 },
-    { label: `BETina ${t.tabChat}`, page: 3, badge: 'ONLINE' },
-    { label: t.tabJourney, page: 4, badge: tierName },
+    { label: t.tabHome, page: pageOf('home') },
+    { label: t.tabLive, page: pageOf('scores'), badge: 'LIVE' },
+    { label: t.tabNews, page: pageOf('news') },
+    { label: t.tabTipps, page: pageOf('tipps') },
+    { label: `BETina ${t.tabChat}`, page: pageOf('chat'), badge: 'ONLINE' },
+    { label: t.tabJourney, page: pageOf('journey'), badge: tierName },
     { label: t.notifTitle, href: '/notifications', badge: unread > 0 ? String(unread) : undefined },
     { label: t.tiersTitle, href: '/tiers' },
     { label: t.settingsTitle, href: '/settings' },
@@ -317,8 +320,8 @@ function FullMenu({
   const quick = [
     { k: t.settingsLanguage, v: LANGUAGES.find((l) => l.code === lang)?.nativeName ?? lang, href: '/language' },
     { k: t.menuTeam, v: profile?.favourite_team ?? '—', href: '/settings' },
-    { k: t.menuStreak, v: `${profile?.streak_days ?? 0} ${t.menuDaysActive}`, page: 4 },
-    { k: 'XP', v: num.format(xp), page: 4 },
+    { k: t.menuStreak, v: `${profile?.streak_days ?? 0} ${t.menuDaysActive}`, page: pageOf('journey') },
+    { k: 'XP', v: num.format(xp), page: pageOf('journey') },
   ];
 
   return (
@@ -361,7 +364,7 @@ function FullMenu({
                     {({ pressed }) => (
                       <>
                         <Text style={[styles.itemNum, (on || pressed) && styles.itemTextOn]}>{String(i + 1).padStart(2, '0')}</Text>
-                        <Text style={[styles.itemLabel, (on || pressed) && styles.itemTextOn]} numberOfLines={1} adjustsFontSizeToFit>
+                        <Text style={[styles.itemLabel, (on || pressed) && styles.itemTextOn]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
                           {it.label.toUpperCase()}
                         </Text>
                         {it.badge && (
@@ -444,7 +447,7 @@ const styles = StyleSheet.create({
   initial: { width: 52, height: 52, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
   initialText: { color: Colors.black, fontSize: 28, fontFamily: Fonts.display },
   profileTop: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
-  profileName: { flex: 1, color: Colors.white, fontSize: 24, fontFamily: Fonts.display, lineHeight: 26 },
+  profileName: { ...displayType(24, 26), flex: 1, color: Colors.white },
   tierSticker: {
     backgroundColor: Colors.primary, color: Colors.black, fontSize: 12, fontFamily: Fonts.label,
     paddingHorizontal: 6, paddingVertical: 2, letterSpacing: 0.7, transform: [{ rotate: '3deg' }],
@@ -457,7 +460,7 @@ const styles = StyleSheet.create({
   },
   itemOn: { backgroundColor: Colors.black },
   itemNum: { width: 20, color: Colors.black, fontSize: 10, fontFamily: Fonts.monoBold },
-  itemLabel: { flex: 1, color: Colors.black, fontSize: 38, lineHeight: 42, fontFamily: Fonts.display },
+  itemLabel: { ...displayType(38, 42), flex: 1, color: Colors.black },
   itemTextOn: { color: Colors.primary },
   itemBadge: {
     color: Colors.black, fontSize: 10, fontFamily: Fonts.monoBold, letterSpacing: 0.6,

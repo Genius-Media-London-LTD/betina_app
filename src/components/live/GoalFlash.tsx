@@ -16,7 +16,7 @@ import { useProfile } from '../../hooks/useProfile';
 import { isFollowing, useFollows } from '../../lib/follows';
 import { useI18n } from '../../lib/i18n';
 import { Incident, onIncidents, sameTeam, useLiveNow } from '../../lib/live';
-import { Colors, Fonts } from '../../theme';
+import { Colors, Fonts, displayType } from '../../theme';
 
 const { width: W, height: H } = Dimensions.get('window');
 const SHOW_MS = 7000;
@@ -121,13 +121,13 @@ const styles = StyleSheet.create({
   piece: { position: 'absolute' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 18 },
   pop: { backgroundColor: Colors.primary, paddingHorizontal: 22, paddingTop: 6, alignSelf: 'stretch', alignItems: 'center' },
-  popText: { color: Colors.black, fontSize: 120, lineHeight: 128, fontFamily: Fonts.display },
+  popText: { ...displayType(120, 128), color: Colors.black },
   score: {
     flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch', gap: 10,
     borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, paddingHorizontal: 14, paddingVertical: 10,
   },
   team: { flex: 1, color: Colors.white, fontSize: 22, fontFamily: Fonts.display },
-  result: { color: Colors.white, fontSize: 52, lineHeight: 56, fontFamily: Fonts.display },
+  result: { ...displayType(52, 56), color: Colors.white },
   scorer: { color: Colors.white, fontSize: 20, fontFamily: Fonts.label, letterSpacing: 0.4 },
   btn: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: Colors.primary, paddingHorizontal: 16, paddingVertical: 16 },
   btnText: { color: Colors.black, fontSize: 22, fontFamily: Fonts.display },

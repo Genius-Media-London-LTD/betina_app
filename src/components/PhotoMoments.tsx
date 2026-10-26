@@ -17,7 +17,7 @@ import { Confetti, withName } from './Moments';
 import { Meta } from './Urban';
 import { useI18n } from '../lib/i18n';
 import type { HitMoment, PhotoMoment } from '../lib/moments';
-import { Colors, Fonts } from '../theme';
+import { Colors, Fonts, displayType } from '../theme';
 
 const { width: W, height: H } = Dimensions.get('window');
 
@@ -118,7 +118,7 @@ function Pop({ text, lime }: { text: string; lime?: boolean }) {
   }));
   return (
     <Animated.View style={[lime ? styles.popLime : styles.popPlain, style]}>
-      <Text style={[styles.popText, { fontSize: size, lineHeight: Math.round(size * 1.08) }, lime && { color: Colors.black }]} numberOfLines={1} adjustsFontSizeToFit>
+      <Text style={[styles.popText, displayType(size, Math.round(size * 1.08)), lime && { color: Colors.black }]} numberOfLines={1} adjustsFontSizeToFit>
         {text.toUpperCase()}
       </Text>
     </Animated.View>
@@ -314,21 +314,21 @@ const styles = StyleSheet.create({
 
   popLime: { backgroundColor: Colors.primary, paddingHorizontal: 14, paddingTop: 4, alignSelf: 'flex-start', maxWidth: '100%' },
   popPlain: { alignSelf: 'flex-start', maxWidth: '100%' },
-  popText: { color: Colors.white, fontSize: 92, lineHeight: 100, fontFamily: Fonts.display },
-  title: { color: Colors.white, fontSize: 64, lineHeight: 64, fontFamily: Fonts.display },
+  popText: { ...displayType(92, 100), color: Colors.white },
+  title: { ...displayType(64, 64), color: Colors.white },
 
   duel: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, paddingHorizontal: 14, paddingVertical: 8,
   },
   duelSide: { flex: 1, gap: 2 },
-  duelScore: { color: Colors.white, fontSize: 52, lineHeight: 58, fontFamily: Fonts.display },
+  duelScore: { ...displayType(52, 58), color: Colors.white },
   duelColon: { color: Colors.textMuted, fontSize: 40, fontFamily: Fonts.display },
 
   countRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 12 },
-  count: { color: Colors.primary, fontSize: 96, lineHeight: 100, fontFamily: Fonts.display },
+  count: { ...displayType(96, 100), color: Colors.primary },
   countBig: { fontSize: 132, lineHeight: 136 },
-  unit: { flex: 1, color: Colors.white, fontSize: 26, lineHeight: 28, fontFamily: Fonts.display, paddingBottom: 14 },
+  unit: { ...displayType(26, 28), flex: 1, color: Colors.white, paddingBottom: 14 },
 
   match: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
@@ -351,8 +351,8 @@ const styles = StyleSheet.create({
   toast: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.primary, padding: 8, paddingRight: 12 },
   toastPhoto: { width: 56, height: 56 },
   toastBody: { flex: 1, gap: 1 },
-  toastLine: { color: Colors.black, fontSize: 20, lineHeight: 22, fontFamily: Fonts.display },
+  toastLine: { ...displayType(20, 22), color: Colors.black },
   toastSub: { color: Colors.black, fontSize: 12, fontFamily: Fonts.semibold, opacity: 0.75 },
   toastPts: { backgroundColor: Colors.black, paddingHorizontal: 10, paddingVertical: 4 },
-  toastPtsText: { color: Colors.primary, fontSize: 30, lineHeight: 34, fontFamily: Fonts.display },
+  toastPtsText: { ...displayType(30, 34), color: Colors.primary },
 });

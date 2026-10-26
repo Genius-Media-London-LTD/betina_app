@@ -12,7 +12,7 @@ import { SPORT_KEYS, useI18n } from '../lib/i18n';
 import { fetchNewsFeed, NewsCard, PAGE_SIZE, timeAgo } from '../lib/news';
 import { fetchTeamLast, fetchTeamNext, MatchEvent } from '../lib/sports';
 import { useChrome } from '../components/chrome';
-import { Colors, Fonts, Typography, withAlpha } from '../theme';
+import { Colors, Fonts, Typography, withAlpha, displayType } from '../theme';
 
 // Sport filters, in the order shown; the player's interests come first.
 const ALL_SPORT_TABS = ['sport', 'football', 'tennis', 'basketball', 'nfl', 'mma', 'cricket', 'rugby', 'golf', 'athletics'];
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
 
   sectionHead: { paddingHorizontal: 16, paddingTop: 26, paddingBottom: 8 },
   matchCard: { marginHorizontal: 16, marginTop: 6, backgroundColor: Colors.primary, padding: 16, gap: 6 },
-  matchTeams: { color: Colors.black, fontSize: 36, lineHeight: 36, fontFamily: Fonts.display },
+  matchTeams: { ...displayType(36, 36), color: Colors.black },
   matchVs: { color: Colors.black, fontSize: 18, fontFamily: Fonts.label },
   resultRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16,

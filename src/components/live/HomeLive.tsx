@@ -10,7 +10,7 @@ import { LiveCard } from './LiveParts';
 import { isFollowing, useFollows } from '../../lib/follows';
 import { useI18n } from '../../lib/i18n';
 import { sameTeam, useLiveNow } from '../../lib/live';
-import { Colors, Fonts } from '../../theme';
+import { Colors, Fonts, displayType } from '../../theme';
 
 export default function HomeLive({ favourite, active }: { favourite: string | null | undefined; active: boolean }) {
   const { t } = useI18n();
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   wrap: { gap: 8 },
   cards: { gap: 8 },
   bar: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: Colors.live, paddingHorizontal: 12, paddingVertical: 10 },
-  barCount: { color: Colors.white, fontSize: 24, lineHeight: 26, fontFamily: Fonts.display },
+  barCount: { ...displayType(24, 26), color: Colors.white },
   barText: { color: Colors.live, fontSize: 13, fontFamily: Fonts.monoBold, letterSpacing: 1 },
   barCta: { flex: 1, textAlign: 'right', color: Colors.white, fontSize: 14, fontFamily: Fonts.label, letterSpacing: 0.5 },
 });

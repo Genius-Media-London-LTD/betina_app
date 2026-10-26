@@ -11,7 +11,7 @@ import Animated, {
 import { Meta, Sticker } from './Urban';
 import { useI18n } from '../lib/i18n';
 import type { ExactHit } from '../lib/tippspiel';
-import { Colors, Fonts } from '../theme';
+import { Colors, Fonts, displayType } from '../theme';
 
 const { width: W, height: H } = Dimensions.get('window');
 const XP_PER_EXACT = 15; // 3 points × 5 XP (010_tippspiel.sql)
@@ -130,14 +130,14 @@ const styles = StyleSheet.create({
   burst: { position: 'absolute', left: W / 2 - 16, top: H * 0.3, width: 0, height: 0 },
   particle: { position: 'absolute' },
   boom: { backgroundColor: Colors.primary, paddingHorizontal: 18, paddingTop: 4, alignSelf: 'stretch', alignItems: 'center' },
-  boomText: { color: Colors.black, fontSize: 132, lineHeight: 140, fontFamily: Fonts.display },
-  title: { color: Colors.white, fontSize: 40, lineHeight: 40, fontFamily: Fonts.display, textAlign: 'center' },
+  boomText: { ...displayType(132, 140), color: Colors.black },
+  title: { ...displayType(40, 40), color: Colors.white, textAlign: 'center' },
   score: {
     flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch', gap: 10,
     borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, paddingHorizontal: 14, paddingVertical: 10,
   },
   team: { flex: 1, color: Colors.white, fontSize: 24, fontFamily: Fonts.display },
-  result: { color: Colors.primary, fontSize: 56, lineHeight: 60, fontFamily: Fonts.display },
+  result: { ...displayType(56, 60), color: Colors.primary },
   xp: { paddingHorizontal: 14, paddingVertical: 6 },
   quote: { color: Colors.textSecondary, fontSize: 16, lineHeight: 23, fontFamily: Fonts.medium, textAlign: 'center', paddingHorizontal: 12 },
   actions: { gap: 8 },

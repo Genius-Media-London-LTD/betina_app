@@ -17,7 +17,7 @@ import { useSession } from '../hooks/useSession';
 import SignInWall from '../components/SignInWall';
 import { supabase } from '../lib/supabase';
 import { useChrome } from '../components/chrome';
-import { Colors, Fonts } from '../theme';
+import { Colors, Fonts, displayType } from '../theme';
 
 export default function Journey() {
   const { t, lang } = useI18n();
@@ -176,11 +176,11 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 16, gap: 16 },
-  headline: { color: Colors.white, fontSize: 84, lineHeight: 80, fontFamily: Fonts.display },
+  headline: { ...displayType(84, 80), color: Colors.white },
 
   tierCard: { backgroundColor: Colors.primary, padding: 16, gap: 10 },
   tierTop: { flexDirection: 'row', justifyContent: 'space-between' },
-  tierName: { color: Colors.black, fontSize: 64, lineHeight: 66, fontFamily: Fonts.display },
+  tierName: { ...displayType(64, 66), color: Colors.black },
   tierLeft: { color: Colors.black, fontSize: 15, fontFamily: Fonts.label, letterSpacing: 0.3, textTransform: 'uppercase' },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     width: '48.5%', gap: 6, padding: 12,
     borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface,
   },
-  statValue: { color: Colors.white, fontSize: 26, lineHeight: 30, fontFamily: Fonts.display, flexShrink: 1 },
+  statValue: { ...displayType(26, 30), color: Colors.white, flexShrink: 1 },
   teamRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 
   section: { color: Colors.white, fontSize: 34, fontFamily: Fonts.display, marginTop: 8 },
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   line: { width: 2, flex: 1, minHeight: 18, backgroundColor: Colors.borderStrong },
   lineOn: { backgroundColor: Colors.primary },
   tlBody: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingBottom: 18, marginTop: -4 },
-  tlName: { color: Colors.white, fontSize: 28, lineHeight: 30, fontFamily: Fonts.display },
+  tlName: { ...displayType(28, 30), color: Colors.white },
   tlNameLocked: { color: Colors.textMuted },
 
   allTiers: {

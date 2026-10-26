@@ -8,7 +8,7 @@ import GlowButton from '../../src/components/GlowButton';
 import ScreenBg from '../../src/components/ScreenBg';
 import { Meta, Sticker } from '../../src/components/Urban';
 import { useI18n } from '../../src/lib/i18n';
-import { Colors, Fonts } from '../../src/theme';
+import { Colors, Fonts, displayType } from '../../src/theme';
 
 export default function Welcome() {
   const { t } = useI18n();
@@ -43,7 +43,7 @@ export default function Welcome() {
 
         <Animated.View entering={FadeInDown.delay(300).duration(800)}>
           <Text style={styles.hi}>{t.welcomeHi.toUpperCase()}</Text>
-          <Text style={[styles.hi, styles.name, { fontSize: nameSize, lineHeight: Math.round(nameSize * 0.95) }]} numberOfLines={1} adjustsFontSizeToFit>
+          <Text style={[styles.hi, styles.name, displayType(nameSize, Math.round(nameSize * 0.95))]} numberOfLines={1} adjustsFontSizeToFit>
             {displayName.toUpperCase()}.
           </Text>
         </Animated.View>
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   content: { flex: 1, paddingHorizontal: 16, gap: 10 },
   tag: { alignSelf: 'flex-start', backgroundColor: Colors.black, paddingHorizontal: 8, paddingVertical: 4 },
   bonus: { alignSelf: 'flex-start', marginBottom: 10 },
-  hi: { color: Colors.white, fontSize: 76, lineHeight: 72, fontFamily: Fonts.display },
+  hi: { ...displayType(76, 72), color: Colors.white },
   name: { color: Colors.primary },
   quote: { color: Colors.white, fontSize: 17, lineHeight: 24, fontFamily: Fonts.medium },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },

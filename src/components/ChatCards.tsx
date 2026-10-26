@@ -7,7 +7,7 @@ import { Blink, Meta } from './Urban';
 import { ChatCard } from '../lib/chatCards';
 import { useI18n } from '../lib/i18n';
 import { formatKickoff } from '../lib/sports';
-import { Colors, Fonts } from '../theme';
+import { Colors, Fonts, displayType } from '../theme';
 
 type MatchCard = Extract<ChatCard, { type: 'match' }>;
 
@@ -156,13 +156,13 @@ const styles = StyleSheet.create({
   crest: { width: 28, height: 28 },
   crestEmpty: { backgroundColor: Colors.cardElevated },
   team: { flex: 1, color: Colors.white, fontSize: 17, fontFamily: Fonts.label, letterSpacing: 0.4 },
-  score: { color: Colors.white, fontSize: 26, lineHeight: 30, fontFamily: Fonts.display, minWidth: 22, textAlign: 'right' },
+  score: { ...displayType(26, 30), color: Colors.white, minWidth: 22, textAlign: 'right' },
   action: { marginTop: 2, backgroundColor: Colors.primary, paddingVertical: 10, alignItems: 'center' },
   actionText: { color: Colors.black, fontSize: 15, fontFamily: Fonts.label, letterSpacing: 0.6 },
 
   newsImage: { width: '100%', height: 150 },
   newsBody: { padding: 12, gap: 6 },
-  newsHeadline: { color: Colors.white, fontSize: 21, lineHeight: 24, fontFamily: Fonts.display },
+  newsHeadline: { ...displayType(21, 24), color: Colors.white },
   more: { color: Colors.primary, fontSize: 13, fontFamily: Fonts.label, letterSpacing: 0.5 },
 
   linkRow: { flexDirection: 'row', gap: 12 },
@@ -172,8 +172,8 @@ const styles = StyleSheet.create({
 
   tip: { backgroundColor: Colors.primary, padding: 12, gap: 6 },
   tipRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  tipNumber: { color: Colors.black, fontSize: 52, lineHeight: 56, fontFamily: Fonts.display },
-  tipTitle: { flex: 1, color: Colors.black, fontSize: 22, lineHeight: 24, fontFamily: Fonts.display },
+  tipNumber: { ...displayType(52, 56), color: Colors.black },
+  tipTitle: { ...displayType(22, 24), flex: 1, color: Colors.black },
   tipButton: {
     marginTop: 4, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     backgroundColor: Colors.black, paddingHorizontal: 12, paddingVertical: 10,

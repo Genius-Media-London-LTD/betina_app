@@ -11,7 +11,7 @@ import { Headline } from '../../src/components/Urban';
 import { CompetitionChips, fillText as fill } from '../../src/components/TipParts';
 import { useI18n } from '../../src/lib/i18n';
 import { Competition, Stats, fetchCompetitions, fetchMyCompetitions, fetchStats } from '../../src/lib/tippspiel';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts, Spacing, Typography, displayType } from '../../src/theme';
 
 // Short tags for the chart when all competitions are shown.
 const SHORT: Record<string, string> = { BL1: 'BL', PL: 'PL', PD: 'LL', SA: 'SA', CL: 'CL' };
@@ -180,13 +180,13 @@ const styles = StyleSheet.create({
   duelCard: { padding: 16, gap: 8, alignItems: 'center' },
   duelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18 },
   duelSide: { alignItems: 'center', gap: 4, minWidth: 90 },
-  duelPts: { fontSize: 56, lineHeight: 58, fontFamily: Fonts.display },
+  duelPts: { ...displayType(56, 58) },
   duelColon: { color: Colors.textMuted, fontSize: Typography['2xl'], fontFamily: Fonts.display },
   duelWho: { color: Colors.white, fontSize: 13, fontFamily: Fonts.label, textTransform: 'uppercase', letterSpacing: 0.4 },
   duelName: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   tiles: { flexDirection: 'row', gap: 8 },
   tile: { flex: 1, alignItems: 'center', paddingVertical: 12, gap: 2 },
-  tileValue: { color: Colors.white, fontSize: 34, lineHeight: 38, fontFamily: Fonts.display },
+  tileValue: { ...displayType(34, 38), color: Colors.white },
   tileLabel: { color: Colors.textMuted, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.8, textTransform: 'uppercase', textAlign: 'center' },
   streakSub: { color: Colors.textSecondary, fontSize: Typography.xs + 1, fontFamily: Fonts.medium, textAlign: 'center', marginTop: -6 },
   stack: { flexDirection: 'row', height: 14, borderRadius: 0, overflow: 'hidden', backgroundColor: Colors.glass },

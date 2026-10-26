@@ -7,7 +7,7 @@ import ScreenBg from '../src/components/ScreenBg';
 import { Meta } from '../src/components/Urban';
 import { LANGUAGES, LangCode, useI18n } from '../src/lib/i18n';
 import { supabase } from '../src/lib/supabase';
-import { Colors, Fonts } from '../src/theme';
+import { Colors, Fonts, displayType } from '../src/theme';
 
 /** App language — switches instantly and is saved on the profile (chat + pushes use it). */
 export default function Language() {
@@ -58,7 +58,7 @@ export default function Language() {
 const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingHorizontal: 16, gap: 14 },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { color: Colors.white, fontSize: 64, lineHeight: 66, fontFamily: Fonts.display, marginTop: 6 },
+  title: { ...displayType(64, 66), color: Colors.white, marginTop: 6 + (displayType(64, 66).marginTop as number | undefined ?? 0) },
   row: {
     flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 14,
     borderBottomWidth: 1, borderBottomColor: Colors.line,

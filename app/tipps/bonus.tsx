@@ -14,7 +14,7 @@ import {
   BonusAnswer, BonusQuestion, Competition, Team,
   defaultCompetition, fetchBonus, fetchCompetitions, fetchMatches, placeBonusTip, teamsOf,
 } from '../../src/lib/tippspiel';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts, Spacing, Typography, displayType } from '../../src/theme';
 
 export default function BonusScreen() {
   const { t, lang } = useI18n();
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   error: { color: Colors.danger, fontSize: Typography.sm, fontFamily: Fonts.semibold, textAlign: 'center' },
   qCard: { padding: 16, gap: 10 },
   qHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  qText: { flex: 1, color: Colors.white, fontSize: 24, lineHeight: 26, fontFamily: Fonts.display, textTransform: 'uppercase' },
+  qText: { ...displayType(24, 26), flex: 1, color: Colors.white, textTransform: 'uppercase' },
   qPoints: { color: Colors.primary, fontSize: 18, fontFamily: Fonts.display },
   qMeta: { color: Colors.textMuted, fontSize: 11, fontFamily: Fonts.mono, letterSpacing: 0.8, textTransform: 'uppercase' },
   choice: {

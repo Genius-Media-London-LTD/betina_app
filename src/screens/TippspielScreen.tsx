@@ -24,7 +24,7 @@ import {
 } from '../lib/tippspiel';
 import { HitMoment, PhotoMoment, bigMomentShown, checkMoments, claimBigMoment, takeHits, tipMoment } from '../lib/moments';
 import { useChrome } from '../components/chrome';
-import { Colors, Fonts } from '../theme';
+import { Colors, Fonts, displayType } from '../theme';
 
 type Open = Record<string, { open: number; total: number; next: string | null }>;
 
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
   duelMid: { width: 46, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.black },
   duelVs: { color: Colors.textMuted, fontSize: 20, fontFamily: Fonts.display },
   duelWho: { color: Colors.white, fontSize: 14, fontFamily: Fonts.label, letterSpacing: 1 },
-  duelPts: { fontSize: 52, lineHeight: 54, fontFamily: Fonts.display },
+  duelPts: { ...displayType(52, 54) },
   duelBetinaName: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   duelSub: { textAlign: 'center', marginTop: 8 },
 
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     flex: 1, alignItems: 'flex-start', paddingVertical: 12, paddingHorizontal: 12, gap: 4,
     borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface,
   },
-  tileValue: { color: Colors.white, fontSize: 34, lineHeight: 36, fontFamily: Fonts.display },
+  tileValue: { ...displayType(34, 36), color: Colors.white },
 
   sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 },
   sectionAction: {
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
   shortcutArrow: { color: Colors.primary, fontSize: 16, fontFamily: Fonts.label },
 
   onbHead: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  onbTitle: { color: Colors.primary, fontSize: 26, lineHeight: 28, fontFamily: Fonts.display },
+  onbTitle: { ...displayType(26, 28), color: Colors.primary },
   onbBody: { color: Colors.textSecondary, fontSize: 15, lineHeight: 21, fontFamily: Fonts.medium },
   onbGrid: { gap: 8 },
   onbTile: {

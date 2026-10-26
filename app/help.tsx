@@ -7,7 +7,7 @@ import BETinaAvatar from '../src/components/BETinaAvatar';
 import GlowCard from '../src/components/GlowCard';
 import ScreenBg from '../src/components/ScreenBg';
 import SectionLabel from '../src/components/SectionLabel';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha, displayType } from '../src/theme';
 
 const FAQS = [
   {
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     paddingTop: Spacing.sm,
   },
-  title: { color: Colors.white, fontSize: 44, lineHeight: 46, fontFamily: Fonts.display, textTransform: 'uppercase', flexShrink: 1 },
+  title: { ...displayType(44, 46), color: Colors.white, textTransform: 'uppercase', flexShrink: 1 },
   askCard: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, backgroundColor: Colors.primary, borderColor: Colors.primary },
   askText: {
     flex: 1,

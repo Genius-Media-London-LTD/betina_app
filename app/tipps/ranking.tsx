@@ -13,7 +13,7 @@ import { useI18n } from '../../src/lib/i18n';
 import {
   Competition, GroupDuel, RankRow, fetchCompetitions, fetchGroupDuel, fetchLeaderboard, fetchMyCompetitions,
 } from '../../src/lib/tippspiel';
-import { Colors, Fonts } from '../../src/theme';
+import { Colors, Fonts, displayType } from '../../src/theme';
 
 const PODIUM = [
   { place: 2, color: Colors.silver, height: 64 },
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   teamTitle: { color: Colors.primary, fontSize: 20, fontFamily: Fonts.display, letterSpacing: 0.5 },
   teamScore: { flexDirection: 'row', alignItems: 'center', gap: 18 },
   teamSide: { alignItems: 'center', gap: 2, minWidth: 80 },
-  teamNum: { fontSize: 56, lineHeight: 58, fontFamily: Fonts.display },
+  teamNum: { ...displayType(56, 58) },
   teamColon: { color: Colors.textMuted, fontSize: 40, fontFamily: Fonts.display },
   teamWho: { color: Colors.white, fontSize: 13, fontFamily: Fonts.label, letterSpacing: 1 },
   teamBetina: { flexDirection: 'row', alignItems: 'center', gap: 5 },

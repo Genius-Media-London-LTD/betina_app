@@ -18,7 +18,7 @@ import {
   currentRoundIndex, defaultCompetition, fetchBetinaTipped, fetchBetinaTips, fetchCompetitions, fetchMatches, fetchMyCompetitions, fetchMyTips,
   isFinished, isLive, isOpen, isVoid, placeTip, toRounds,
 } from '../../src/lib/tippspiel';
-import { Colors, Fonts } from '../../src/theme';
+import { Colors, Fonts, displayType } from '../../src/theme';
 
 type Draft = { home: number; away: number };
 type SaveState = 'saving' | 'saved' | 'error' | 'closed';
@@ -386,9 +386,9 @@ const styles = StyleSheet.create({
   stepBtnPressed: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   stepBtnOff: { opacity: 0.3 },
   stepBtnText: { color: Colors.white, fontSize: 20, fontFamily: Fonts.label },
-  stepValue: { width: 34, textAlign: 'center', color: Colors.primary, fontSize: 32, lineHeight: 36, fontFamily: Fonts.display },
+  stepValue: { ...displayType(32, 36), width: 34, textAlign: 'center', color: Colors.primary },
   stepValueEmpty: { color: Colors.textMuted },
-  resultValue: { minWidth: 40, textAlign: 'right', color: Colors.white, fontSize: 32, lineHeight: 36, fontFamily: Fonts.display },
+  resultValue: { ...displayType(32, 36), minWidth: 40, textAlign: 'right', color: Colors.white },
   tipsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderTopWidth: 1, borderTopColor: Colors.line, paddingTop: 10 },
   betinaTip: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 'auto' },
   betinaTipText: { color: Colors.white, fontSize: 16, fontFamily: Fonts.display },

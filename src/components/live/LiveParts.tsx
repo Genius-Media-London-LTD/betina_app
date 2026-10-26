@@ -10,7 +10,7 @@ import { FollowKind, isFollowing, toggleFollow, useFollows } from '../../lib/fol
 import { useI18n } from '../../lib/i18n';
 import { Row, isFinished, isLive, isOff, kickoffTime, leagueLogo, minuteOf, teamLogo } from '../../lib/live';
 import { TipRef, tipPoints } from '../../lib/liveTips';
-import { Colors, Fonts } from '../../theme';
+import { Colors, Fonts, displayType } from '../../theme';
 
 const FLASH_MS = 90_000;
 
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   rowName: { color: Colors.white, fontSize: 15, fontFamily: Fonts.label, letterSpacing: 0.3, flexShrink: 1 },
   rowNameLost: { color: Colors.textMuted },
   rowScore: { width: 26, alignItems: 'flex-end', gap: 1 },
-  score: { color: Colors.white, fontSize: 21, lineHeight: 26, fontFamily: Fonts.display },
+  score: { ...displayType(21, 26), color: Colors.white },
   scoreEmpty: { color: Colors.textFaint },
   scoreLive: { color: Colors.white },
   scoreFresh: { color: Colors.primary },
@@ -234,6 +234,6 @@ const styles = StyleSheet.create({
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   cardTeam: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   cardName: { flex: 1, color: Colors.white, fontSize: 16, fontFamily: Fonts.label, letterSpacing: 0.3 },
-  cardScore: { color: Colors.white, fontSize: 30, lineHeight: 34, fontFamily: Fonts.display, minWidth: 20, textAlign: 'right' },
+  cardScore: { ...displayType(30, 34), color: Colors.white, minWidth: 20, textAlign: 'right' },
 });
 

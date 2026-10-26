@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BackButton from '../../src/components/BackButton';
 import ScreenBg from '../../src/components/ScreenBg';
 import { LEGAL_DOCS, LegalDocKey } from '../../src/lib/legal';
-import { Colors, Fonts, Spacing, Typography } from '../../src/theme';
+import { Colors, Fonts, Spacing, Typography, displayType } from '../../src/theme';
 
 export default function LegalDocScreen() {
   const insets = useSafeAreaInsets();
@@ -42,7 +42,7 @@ export default function LegalDocScreen() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.lg, gap: Spacing.base },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingTop: Spacing.sm },
-  title: { color: Colors.white, fontSize: 34, lineHeight: 36, fontFamily: Fonts.display, textTransform: 'uppercase', flex: 1 },
+  title: { ...displayType(34, 36), color: Colors.white, textTransform: 'uppercase', flex: 1 },
   updated: { color: Colors.textMuted, fontSize: 10, fontFamily: Fonts.mono, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: -6 },
   section: { gap: 6 },
   heading: { color: Colors.primary, fontSize: 17, fontFamily: Fonts.label, textTransform: 'uppercase', letterSpacing: 0.4 },

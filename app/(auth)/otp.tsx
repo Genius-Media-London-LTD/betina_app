@@ -21,7 +21,7 @@ import ScreenBg from '../../src/components/ScreenBg';
 import { Headline, Meta } from '../../src/components/Urban';
 import { useI18n } from '../../src/lib/i18n';
 import { supabase } from '../../src/lib/supabase';
-import { Colors, Fonts } from '../../src/theme';
+import { Colors, Fonts, displayType } from '../../src/theme';
 
 const CODE_LENGTH = 6;
 
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border,
   },
   otpBoxActive: { borderColor: Colors.primary },
-  otpDigit: { color: Colors.white, fontSize: 40, lineHeight: 46, fontFamily: Fonts.display },
+  otpDigit: { ...displayType(40, 46), color: Colors.white },
   cursor: { width: 3, height: 30, backgroundColor: Colors.primary },
   hiddenInput: { position: 'absolute', opacity: 0, height: 1, width: 1 },
   error: { color: Colors.danger, fontSize: 14, fontFamily: Fonts.medium, textAlign: 'center', paddingTop: 14 },

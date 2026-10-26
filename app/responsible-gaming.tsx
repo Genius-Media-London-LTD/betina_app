@@ -12,7 +12,7 @@ import GlowButton from '../src/components/GlowButton';
 import GlowCard from '../src/components/GlowCard';
 import ScreenBg from '../src/components/ScreenBg';
 import SectionLabel from '../src/components/SectionLabel';
-import { Colors, Fonts, Spacing, Typography, withAlpha } from '../src/theme';
+import { Colors, Fonts, Spacing, Typography, withAlpha, displayType } from '../src/theme';
 
 const GENIUSBET_RG_URL = 'https://www.geniusbet.com/responsible-gaming';
 
@@ -154,7 +154,7 @@ export default function ResponsibleGaming() {
 const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingHorizontal: Spacing.lg, gap: 16 },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingTop: Spacing.sm },
-  title: { color: Colors.white, fontSize: 44, lineHeight: 46, fontFamily: Fonts.display, textTransform: 'uppercase', flexShrink: 1 },
+  title: { ...displayType(44, 46), color: Colors.white, textTransform: 'uppercase', flexShrink: 1 },
   introCard: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
   introText: { flex: 1, gap: 3 },
   introTitle: { color: Colors.primary, fontSize: 24, fontFamily: Fonts.display, textTransform: 'uppercase' },
