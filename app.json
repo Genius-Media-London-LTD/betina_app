@@ -2,7 +2,7 @@
   "expo": {
     "name": "BETina",
     "slug": "betina",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "betina",
@@ -59,7 +59,8 @@
           "microphonePermission": "BETina uses your microphone for voice chats with her.",
           "cameraPermission": "BETina does not use your camera; the voice-call component requires this entry."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
