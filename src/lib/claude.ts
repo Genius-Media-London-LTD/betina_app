@@ -109,7 +109,8 @@ export async function askBetina(history: Turn[], ctx: BetinaContext): Promise<st
   try {
     // supabase-js attaches the caller's JWT automatically.
     const { data, error } = await supabase.functions.invoke('chat', {
-      body: { history, ctx },
+      // This app version has the Tippspiel (older store builds don't send this).
+      body: { history, ctx: { ...ctx, features: ['tippspiel'] } },
     });
     if (error) throw error;
     const reply = (data?.reply ?? '').trim();

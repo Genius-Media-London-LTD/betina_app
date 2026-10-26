@@ -13,8 +13,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getPlayerByPhone } from '../_shared/crm-client.ts';
 import { normalizePhone } from '../_shared/phone.ts';
 import {
-  CRMData, Ctx, MatchEvent, NewsItem, TIPPSPIEL_LIVE, systemPrompt,
+  CRMData, Ctx, MatchEvent, NewsItem, hasTippspiel, systemPrompt,
 } from '../_shared/betina-persona.ts';
+import { appData } from '../_shared/app-data.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 const MODEL = 'claude-haiku-5-5';
@@ -33,7 +34,9 @@ const CORS = {
 type Turn = { role: 'user' | 'assistant'; content: string };
 // ── Tools ─────────────────────────────────────────────────────────────────────
 
-const TOOLS = [
+const TIPPSPIEL_TOOL = { name: 'get_tippspiel', description: "The player's Tippspiel (free prediction game): season points + rank, the duel against you (BETina tips every match too), matches in the next days they still have to tip, their upcoming tips and latest scored tips.", input_schema: { type: 'object', properties: {}, required: [] } };
+
+const BASE_TOOLS = [
   // Anthropic server-side web search — lets BETina look up ANY live fact
   // (standings, brackets, transfers, other sports, breaking news) beyond the
   // app's own fixtures/results/news feed. Executed on Anthropic's side.
@@ -42,9 +45,6 @@ const TOOLS = [
   { name: 'get_fixtures', description: "A team's upcoming matches. Needs a team id from search_team.", input_schema: { type: 'object', properties: { team_id: { type: 'string' } }, required: ['team_id'] } },
   { name: 'get_results', description: "A team's recent finished matches with scores. Needs a team id from search_team.", input_schema: { type: 'object', properties: { team_id: { type: 'string' } }, required: ['team_id'] } },
   { name: 'get_news', description: 'Latest sports headlines. Optional sport filter.', input_schema: { type: 'object', properties: { sport: { type: 'string' } }, required: [] } },
-  ...(TIPPSPIEL_LIVE
-    ? [{ name: 'get_tippspiel', description: "The player's Tippspiel (free prediction game): season points + rank, the duel against you (BETina tips every match too), matches in the next days they still have to tip, their upcoming tips and latest scored tips.", input_schema: { type: 'object', properties: {}, required: [] } }]
-    : []),
   { name: 'remember_fact', description: 'Save a lasting fact/preference the player shares so you recall it next time. Only worthwhile things, not small talk.', input_schema: { type: 'object', properties: { fact: { type: 'string' } }, required: ['fact'] } },
   { name: 'set_reminder', description: 'Set a reminder. Work out a concrete future ISO datetime from what they said and today\'s date.', input_schema: { type: 'object', properties: { text: { type: 'string' }, datetime: { type: 'string' } }, required: ['text', 'datetime'] } },
 ];
@@ -151,13 +151,14 @@ const DECLINED: Record<string, string> = {
 };
 
 // deno-lint-ignore no-explicit-any
-async function callClaude(system: string, messages: any[]) {
+// deno-lint-ignore no-explicit-any
+async function callClaude(system: string, messages: any[], tools: any[]) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
     // Haiku 5.5 thinks adaptively by default (thinking counts towards max_tokens);
     // low effort keeps chat replies quick.
-    body: JSON.stringify({ model: MODEL, max_tokens: 4096, output_config: { effort: 'low' }, system, tools: TOOLS, messages }),
+    body: JSON.stringify({ model: MODEL, max_tokens: 4096, output_config: { effort: 'low' }, system, tools, messages }),
   });
   if (!res.ok) throw new Error(`Anthropic ${res.status}`);
   return await res.json();
@@ -242,10 +243,26 @@ Deno.serve(async (req) => {
 
     // deno-lint-ignore no-explicit-any
     const messages: any[] = trimmed.map((m) => ({ role: m.role, content: m.content }));
-    const system = systemPrompt(ctx, recentNotes, crmData);
+    // Level + Tippspiel data from the app (same block the voice chat gets).
+    let data = '';
+    try {
+      const { data: prof } = await supabase.from('profiles').select('xp_points, streak_days, created_at').eq('id', user.id).single();
+      data = await appData({
+        supabaseUrl: Deno.env.get('SUPABASE_URL')!,
+        anonKey: Deno.env.get('SUPABASE_ANON_KEY')!,
+        token: (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, ''),
+        userId: user.id,
+        profile: prof ?? null,
+        tippspiel: hasTippspiel(ctx),
+      });
+    } catch (_) {
+      // non-fatal — BETina just won't know the app data this turn
+    }
+    const tools = hasTippspiel(ctx) ? [...BASE_TOOLS, TIPPSPIEL_TOOL] : BASE_TOOLS;
+    const system = systemPrompt(ctx, recentNotes, crmData, data);
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-      const response = await callClaude(system, messages);
+      const response = await callClaude(system, messages, tools);
       // Server-side tools (web_search) can pause mid-turn — hand the partial
       // turn back so Claude continues where it left off.
       if (response.stop_reason === 'pause_turn') {

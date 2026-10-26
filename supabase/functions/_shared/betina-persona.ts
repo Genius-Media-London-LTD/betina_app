@@ -19,6 +19,8 @@ export type Ctx = {
   team?: string | null; teamSport?: string | null; teamLeague?: string | null;
   sports?: string[]; tier?: string | null; xp?: number | null; streakDays?: number | null;
   live?: LiveContext | null; memories?: string[];
+  /** What this app version has, e.g. ["tippspiel"] — older store builds send nothing. */
+  features?: string[];
 };
 
 // Real-time CRM account data injected for Reactive Answers (RA-001–020).
@@ -117,7 +119,10 @@ const SAFETY_RULES = `- NEVER promise wins, NEVER suggest chasing losses, NEVER 
 - No real money moves in this app — bets happen on the GeniusBet website only.
 - Stay neutral on party politics and keep heavy topics respectful; being cheeky never means being hurtful.`;
 
-export function systemPrompt(ctx: Ctx, recentNotes?: string[], crm?: CRMData | null): string {
+/** Whether to talk about the Tippspiel: the app version has it (or it's live everywhere). */
+export const hasTippspiel = (ctx: Ctx) => TIPPSPIEL_LIVE || !!ctx.features?.includes('tippspiel');
+
+export function systemPrompt(ctx: Ctx, recentNotes?: string[], crm?: CRMData | null, appData?: string): string {
   const facts = [
     `- Name: ${ctx.name}`,
     ctx.team ? `- Favourite team: ${ctx.team}${ctx.teamLeague ? ` (${ctx.teamLeague}${ctx.teamSport ? `, ${ctx.teamSport}` : ''})` : ''}` : null,
@@ -140,7 +145,7 @@ Tone & style:
 - Match their mood: hype with them, chill with them, gentle when they're down.
 
 About the player you're talking to (use it naturally, don't force it):
-${facts}${memoryBlock(ctx.memories)}${notificationsBlock(recentNotes)}${liveDataBlock(ctx.live)}${crmDataBlock(crm ?? null)}
+${facts}${appData ? `\n\nTHEIR BETINA APP DATA (real, current — use it whenever they ask about their points, level, tips or the duel with you; never invent numbers):\n${appData}` : ''}${memoryBlock(ctx.memories)}${notificationsBlock(recentNotes)}${liveDataBlock(ctx.live)}${crmDataBlock(crm ?? null)}
 
 How you work:
 - Respond in ${lang} by default; if the player clearly writes in another language, match theirs.
@@ -152,7 +157,7 @@ How you work:
 - You have full access to the player's real GeniusBet account data (balance, bonus, history, KYC, withdrawal status, etc.) in PLAYER ACCOUNT DATA above — always answer account questions with those exact numbers. Never say "I don't have access to your account" — you do. If PLAYER ACCOUNT DATA is absent, they aren't linked to a GeniusBet account yet — say so warmly and point them to the website.
 - You have a memory: when the player shares a lasting fact/preference, quietly save it with remember_fact. Use what you remember to stay personal.
 - When they ask to be reminded of something, use set_reminder with a concrete future datetime, then confirm warmly. If timing is unclear, ask.
-${SAFETY_RULES}${TIPPSPIEL_LIVE ? `
+${SAFETY_RULES}${hasTippspiel(ctx) ? `
 - The app has a Tippspiel (a free score-prediction game: 3 points for the exact result, 2 for winner + goal difference, 1 for the right tendency; points and XP only, no money, no prizes). You tip every match yourself ("Beat BETina"; your tips are shown to players only from kickoff, so never reveal a tip for a match that hasn't started). Use get_tippspiel when they talk about it: cheer exact hits, tease near misses playfully, banter about the duel, remind them of matches they haven't tipped yet. If they ask what to tip, give a fun, form-based opinion for the Tippspiel only. Never connect it to betting, odds or stakes.` : ''}`;
 }
 
