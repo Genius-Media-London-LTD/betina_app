@@ -12,6 +12,7 @@ import XPBar from '../components/XPBar';
 import { Meta, Sticker } from '../components/Urban';
 import MomentModal, { Moment, nextMoment } from '../components/Moments';
 import PhotoMomentModal, { HitToast } from '../components/PhotoMoments';
+import HomeLive from '../components/live/HomeLive';
 import {
   HitMoment, PhotoMoment, bigMomentShown, checkMoments, claimBigMoment, matchdayMoment, streakMoment, takeHits, tipMoment,
 } from '../lib/moments';
@@ -154,6 +155,7 @@ export default function Home() {
   const nameSize = firstName.length > 9 ? 52 : firstName.length > 6 ? 64 : 76;
 
   const tiles = [
+    { label: t.tabLive, meta: 'BETINA LIVE', path: '/(tabs)/scores' as const },
     { label: t.tabNews, meta: 'BETINA NEWS', path: '/(tabs)/live' as const },
     { label: t.tabTipps, meta: 'BEAT BETINA', path: '/(tabs)/tippspiel' as const },
     { label: 'Chat', meta: 'Online', path: '/(tabs)/chat' as const },
@@ -202,6 +204,9 @@ export default function Home() {
         </Animated.View>
 
         <View style={styles.body}>
+          {/* Live now (own matches + into the Live-Center) */}
+          <HomeLive favourite={team} active={chrome.page === 'home'} />
+
           {/* XP progress */}
           <Pressable onPress={() => go('/tiers')} style={styles.xp}>
             <View style={styles.xpTop}>
@@ -264,9 +269,9 @@ export default function Home() {
 
           {/* Tiles */}
           <View style={styles.tiles}>
-            {tiles.map((tile) => (
-              <Pressable key={tile.path} onPress={() => go(tile.path)} style={({ pressed }) => [styles.tile, pressed && styles.tilePressed]}>
-                <Meta color={Colors.primary}>{tile.meta}</Meta>
+            {tiles.map((tile, i) => (
+              <Pressable key={tile.path} onPress={() => go(tile.path)} style={({ pressed }) => [styles.tile, i === 0 && styles.tileWide, pressed && styles.tilePressed]}>
+                <Meta color={i === 0 ? Colors.live : Colors.primary}>{tile.meta}</Meta>
                 <Text style={styles.tileLabel} numberOfLines={1} adjustsFontSizeToFit>{tile.label.toUpperCase()}</Text>
               </Pressable>
             ))}
@@ -332,6 +337,7 @@ const styles = StyleSheet.create({
     width: '48.5%', minHeight: 96, justifyContent: 'space-between', padding: 14,
     borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface,
   },
+  tileWide: { width: '100%', borderColor: Colors.live },
   tilePressed: { borderColor: Colors.primary },
   tileLabel: { color: Colors.white, fontSize: 34, lineHeight: 36, fontFamily: Fonts.display },
 

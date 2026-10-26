@@ -2,7 +2,7 @@
 // content by `top` so it starts below the floating header.
 import { createContext, useContext } from 'react';
 
-export type Chrome = { top: number; bottom: number };
+export type Chrome = { top: number; bottom: number; /** Key of the page on screen (e.g. "scores"). */ page?: string };
 
 export const ChromeContext = createContext<Chrome>({ top: 0, bottom: 0 });
 

@@ -45,6 +45,7 @@ const BASE_TOOLS = [
   { name: 'search_team', description: 'Find a sports team by name across ANY sport to get its id, sport and league. Call this first for a team you do not already have an id for.', input_schema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
   { name: 'get_fixtures', description: "A team's upcoming matches. Needs a team id from search_team.", input_schema: { type: 'object', properties: { team_id: { type: 'string' } }, required: ['team_id'] } },
   { name: 'get_results', description: "A team's recent finished matches with scores. Needs a team id from search_team.", input_schema: { type: 'object', properties: { team_id: { type: 'string' } }, required: ['team_id'] } },
+  { name: 'get_live_scores', description: "Football live scores right now, plus today's and yesterday's results and kick-off times with goal scorers (BETina Live, real time). Use it first for any football score question. Optional query: team, league or country; empty for the biggest live games.", input_schema: { type: 'object', properties: { query: { type: 'string' } }, required: [] } },
   { name: 'get_news', description: 'Latest sports headlines. Optional sport filter.', input_schema: { type: 'object', properties: { sport: { type: 'string' } }, required: [] } },
   { name: 'remember_fact', description: 'Save a lasting fact/preference the player shares so you recall it next time. Only worthwhile things, not small talk.', input_schema: { type: 'object', properties: { fact: { type: 'string' } }, required: ['fact'] } },
   { name: 'set_reminder', description: 'Set a reminder. Work out a concrete future ISO datetime from what they said and today\'s date.', input_schema: { type: 'object', properties: { text: { type: 'string' }, datetime: { type: 'string' } }, required: ['text', 'datetime'] } },
@@ -72,6 +73,10 @@ async function runTool(name: string, input: any, supabase: any, userId: string |
       const r = await fetch(`${SPORTS_API}/v1/sports/team/${input.team_id}/last`);
       const d = await r.json();
       return JSON.stringify((d.events ?? []).slice(0, 5).map(compactMatch));
+    }
+    if (name === 'get_live_scores') {
+      const r = await fetch(`${SPORTS_API}/v1/live/find?q=${encodeURIComponent(String(input.query ?? ''))}`);
+      return (await r.json()).answer ?? 'No live data right now.';
     }
     if (name === 'get_news') {
       // BETina's own newsroom (news-desk), already written in the player's language.

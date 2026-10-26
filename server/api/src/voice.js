@@ -160,6 +160,15 @@ export async function voiceSession(c) {
         max_output_tokens: 1024,
         tools: [{
           type: 'function',
+          name: 'live_scores',
+          description: "Football live scores, today's and yesterday's results and kick-off times with goal scorers (BETina Live). Use it first for any football score question.",
+          parameters: {
+            type: 'object',
+            properties: { query: { type: 'string', description: 'Team, league or country, e.g. "Rapid Wien", "Premier League". Empty for the biggest live games.' } },
+            required: [],
+          },
+        }, {
+          type: 'function',
           name: 'web_search',
           description: 'Search the web for anything current or specific: weather anywhere, live scores and today\'s results, standings, transfers, news, events, opening hours, facts.',
           parameters: {

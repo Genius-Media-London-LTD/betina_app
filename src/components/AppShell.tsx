@@ -15,6 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ChromeContext } from './chrome';
 import XPBar from './XPBar';
+import GoalFlash from './live/GoalFlash';
 import { useProfile } from '../hooks/useProfile';
 import { LANGUAGES, useI18n } from '../lib/i18n';
 import { tiers } from '../lib/demo';
@@ -23,6 +24,7 @@ import { supabase } from '../lib/supabase';
 import ChatScreen from '../screens/ChatScreen';
 import HomeScreen from '../screens/HomeScreen';
 import JourneyScreen from '../screens/JourneyScreen';
+import LiveScreen from '../screens/LiveScreen';
 import NewsScreen from '../screens/NewsScreen';
 import TippspielScreen from '../screens/TippspielScreen';
 import { Colors, Fonts } from '../theme';
@@ -32,6 +34,7 @@ type PageDef = { key: string; route: string; path: string; label: (t: Labels) =>
 
 const PAGES: PageDef[] = [
   { key: 'home', route: '/(tabs)', path: '/', label: (t) => t.tabHome, Component: HomeScreen },
+  { key: 'scores', route: '/(tabs)/scores', path: '/scores', label: (t) => t.tabLive, Component: LiveScreen },
   { key: 'news', route: '/(tabs)/live', path: '/live', label: (t) => t.tabNews, Component: NewsScreen },
   { key: 'tipps', route: '/(tabs)/tippspiel', path: '/tippspiel', label: (t) => t.tabTipps, Component: TippspielScreen },
   { key: 'chat', route: '/(tabs)/chat', path: '/chat', label: () => 'BETina', Component: ChatScreen },
@@ -127,7 +130,7 @@ export default function AppShell() {
   });
 
   return (
-    <ChromeContext.Provider value={{ top: headerHeight, bottom: insets.bottom }}>
+    <ChromeContext.Provider value={{ top: headerHeight, bottom: insets.bottom, page: PAGES[active]?.key }}>
       <View style={styles.root}>
         <Animated.ScrollView
           ref={scrollRef}
@@ -176,6 +179,7 @@ export default function AppShell() {
           insetsTop={insets.top}
           insetsBottom={insets.bottom}
         />
+        <GoalFlash />
       </View>
     </ChromeContext.Provider>
   );

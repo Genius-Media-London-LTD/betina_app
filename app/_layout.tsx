@@ -83,6 +83,7 @@ export default function RootLayout() {
         <Stack.Screen name="celebration" options={{ presentation: 'transparentModal', animation: 'fade' }} />
         <Stack.Screen name="voice" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
         <Stack.Screen name="article" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="match/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
       </Stack>
     </I18nProvider>
   );

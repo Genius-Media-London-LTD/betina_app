@@ -2,6 +2,7 @@
 // player's login, keeps the 5-minutes-a-day budget and hands out a short-lived
 // secret; the audio then flows directly between the app and OpenAI.
 import { levelMeter, mediaDevices, playRemote, RTCPeerConnection, RTCSessionDescription } from './rtc';
+import { LIVE_API } from './live';
 import { NEWS_API } from './sports';
 import { supabase } from './supabase';
 
@@ -137,6 +138,7 @@ export async function startVoice(opts: {
     switch (ev.type) {
       case 'response.function_call_arguments.done':
         if (ev.name === 'web_search' && ev.call_id) runSearch(ev.call_id, ev.arguments ?? '{}');
+        else if (ev.name === 'live_scores' && ev.call_id) runLive(ev.call_id, ev.arguments ?? '{}');
         break;
       case 'input_audio_buffer.speech_started': onState('userSpeaking'); break;
       case 'input_audio_buffer.speech_stopped': onState('listening'); break;
@@ -153,6 +155,22 @@ export async function startVoice(opts: {
     try {
       const { query } = JSON.parse(args) as { query?: string };
       const r = await api('search', token, { query, lang: opts.lang });
+      if (r.ok) answer = (await r.json()).answer ?? answer;
+    } catch {
+      // keep the fallback answer
+    }
+    if (ended) return;
+    dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: callId, output: answer } }));
+    dc.send(JSON.stringify({ type: 'response.create' }));
+  };
+
+  // BETina asked for live scores: BETina Live on betina-server (API-Football).
+  const runLive = async (callId: string, args: string) => {
+    onState('searching');
+    let answer = 'The live scores are not reachable just now.';
+    try {
+      const { query } = JSON.parse(args) as { query?: string };
+      const r = await fetch(`${LIVE_API}/v1/live/find?q=${encodeURIComponent(query ?? '')}`);
       if (r.ok) answer = (await r.json()).answer ?? answer;
     } catch {
       // keep the fallback answer
