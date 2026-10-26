@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import BackButton from '../src/components/BackButton';
 import GlowButton from '../src/components/GlowButton';
 import GlowCard from '../src/components/GlowCard';
 import ScreenBg from '../src/components/ScreenBg';
@@ -145,6 +146,9 @@ export default function Settings() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View entering={FadeInDown.duration(500)}>
+          <View style={styles.topBar}>
+            <BackButton />
+          </View>
           <Text style={styles.title}>{t.settingsTitle.toUpperCase()}<Text style={{ color: Colors.primary }}>.</Text></Text>
         </Animated.View>
 
@@ -294,6 +298,7 @@ export default function Settings() {
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 16, gap: 14 },
+  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   title: { color: Colors.white, fontSize: 64, lineHeight: 66, fontFamily: Fonts.display },
   profileCard: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 12 },
   profileInitial: { width: 48, height: 48, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },

@@ -13,6 +13,8 @@ export default function BackButton({ onPress }: { onPress?: () => void }) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         if (onPress) onPress();
         else if (router.canGoBack()) router.back();
+        // Opened directly (deep link, page reload on web): there is no history — go home.
+        else router.replace('/(tabs)');
       }}
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
       hitSlop={8}
