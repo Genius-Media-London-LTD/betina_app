@@ -5,6 +5,7 @@
 // (lib/live.ts) refreshes scores every 15 s while this page is on screen.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import HScroll from '../components/HScroll';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -141,7 +142,7 @@ export default function LiveScreen() {
       {tickerItems.length > 0 && <Ticker label={t.liveEvGoal} items={tickerItems} speed={40} />}
 
       {/* Days */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.days}>
+      <HScroll contentContainerStyle={styles.days}>
         {DAYS.map((o) => {
           const on = o === offset;
           return (
@@ -151,7 +152,7 @@ export default function LiveScreen() {
             </Pressable>
           );
         })}
-      </ScrollView>
+      </HScroll>
 
       {/* Filter */}
       <View style={styles.filters}>
@@ -184,11 +185,11 @@ export default function LiveScreen() {
             <Blink size={7} />
             <Text style={styles.sectionTitle}>{t.liveTop.toUpperCase()}</Text>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carousel}>
+          <HScroll contentContainerStyle={styles.carousel}>
             {topLive.map(({ r, league }) => (
               <LiveCard key={r.id} r={r} league={league.name} serverNow={serverNow} onPress={() => openMatch(r.id)} />
             ))}
-          </ScrollView>
+          </HScroll>
         </View>
       )}
       <View style={{ height: 14 }} />

@@ -2,7 +2,7 @@
 // take, the Tippspiel tip, and the tabs — ticker (home left, away right),
 // stats (animated bars), lineups on a pitch, live table and head-to-head.
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeIn, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { Meta } from '../Urban';
 import { Crest, LiveMinute, RedCards, Star, useStatusLabel } from './LiveParts';
@@ -10,6 +10,7 @@ import { useI18n } from '../../lib/i18n';
 import {
   H2H, Lineup, MatchDetail, MatchEvent, Person, Row, TableRow, isFinished, isLive,
 } from '../../lib/live';
+import { useContentWidth } from '../../lib/layout';
 import { TipRef, tipPoints } from '../../lib/liveTips';
 import { Colors, Fonts, withAlpha, displayType } from '../../theme';
 
@@ -302,7 +303,7 @@ function PitchPlayer({ p, x, y, color, numColor, rating }: { p: Person; x: numbe
 
 export function LineupsTab({ m }: { m: MatchDetail }) {
   const { t } = useI18n();
-  const { width } = useWindowDimensions();
+  const width = useContentWidth();
   const W = Math.min(width - 32, 520);
   const H = W * 1.8;
   if (!m.lineups.length) return <View style={styles.emptyTab}><Text style={styles.emptyText}>{t.liveNoLineups}</Text></View>;

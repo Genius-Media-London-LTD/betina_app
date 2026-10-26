@@ -14,12 +14,14 @@ import Animated, {
   interpolate, interpolateColor, runOnJS, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue,
 } from 'react-native-reanimated';
 import { ChromeContext } from './chrome';
+import DesktopShell from './DesktopShell';
 import XPBar from './XPBar';
 import GoalFlash from './live/GoalFlash';
 import { useProfile } from '../hooks/useProfile';
 import { LANGUAGES, useI18n } from '../lib/i18n';
 import { tiers } from '../lib/demo';
 import { signOut } from '../lib/session';
+import { useDesktop } from '../lib/layout';
 import { supabase } from '../lib/supabase';
 import ChatScreen from '../screens/ChatScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -44,7 +46,12 @@ const PAGES: PageDef[] = [
 const BAR = 50;   // logo row
 const TABS = 42;  // numbered tab row
 
+/** Phone pager, or the sidebar frame on a desktop browser. */
 export default function AppShell() {
+  return useDesktop() ? <DesktopShell pages={PAGES} /> : <PhoneShell />;
+}
+
+function PhoneShell() {
   const { t } = useI18n();
   const router = useRouter();
   const pathname = usePathname();

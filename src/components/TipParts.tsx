@@ -1,6 +1,7 @@
 // Small building blocks shared by the Tippspiel screens.
 import React from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import HScroll from './HScroll';
 import * as Haptics from 'expo-haptics';
 import type { LangCode } from '../lib/i18n';
 import type { Competition, Round } from '../lib/tippspiel';
@@ -75,7 +76,7 @@ export function CompetitionChips({
     ...competitions.map((c) => ({ code: c.code, name: c.name, emblem: c.emblem })),
   ];
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+    <HScroll contentContainerStyle={styles.chips}>
       {chips.map((c) => {
         const active = c.code === value;
         return (
@@ -92,7 +93,7 @@ export function CompetitionChips({
           </Pressable>
         );
       })}
-    </ScrollView>
+    </HScroll>
   );
 }
 

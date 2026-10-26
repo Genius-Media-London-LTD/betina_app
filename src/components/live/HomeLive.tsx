@@ -2,6 +2,7 @@
 // and a bar into the Live-Center with the number of matches live right now.
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import HScroll from '../HScroll';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -26,12 +27,12 @@ export default function HomeLive({ favourite, active }: { favourite: string | nu
   return (
     <Animated.View entering={FadeInDown.duration(400)} style={styles.wrap}>
       {mine.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cards}>
+        <HScroll contentContainerStyle={styles.cards}>
           {mine.slice(0, 6).map((r) => (
             <LiveCard key={r.id} r={r} league={now.leagues[r.lg]?.name ?? ''} serverNow={now.serverNow}
               onPress={() => open({ pathname: '/match/[id]', params: { id: String(r.id) } })} />
           ))}
-        </ScrollView>
+        </HScroll>
       )}
       <Pressable onPress={() => open('/(tabs)/scores')} style={({ pressed }) => [styles.bar, pressed && { opacity: 0.85 }]}>
         <Blink size={8} />

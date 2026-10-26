@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import HScroll from '../components/HScroll';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -131,7 +132,7 @@ export default function NewsScreen() {
       {cards.length > 0 && <Ticker label={t.newsBreaking} items={cards.slice(0, 8).map((n) => n.headline)} />}
 
       {/* Sport filter */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+      <HScroll contentContainerStyle={styles.chips}>
         {tabs.map((id) => {
           const on = sport === id;
           return (
@@ -144,7 +145,7 @@ export default function NewsScreen() {
             </Pressable>
           );
         })}
-      </ScrollView>
+      </HScroll>
 
       {loading && cards.length === 0 ? (
         <ActivityIndicator color={Colors.primary} style={{ marginTop: 60 }} />
@@ -203,7 +204,7 @@ export default function NewsScreen() {
                 </View>
               ))}
               {teamNews.length > 0 && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.teamNews}>
+                <HScroll contentContainerStyle={styles.teamNews}>
                   {teamNews.map((c) => (
                     <Pressable key={c.id} onPress={() => open(c)} style={({ pressed }) => [styles.teamCard, pressed && styles.pressed]}>
                       {c.image ? <Image source={{ uri: c.image }} style={styles.teamImage} resizeMode="cover" /> : <View style={[styles.teamImage, { backgroundColor: Colors.card }]} />}
@@ -213,7 +214,7 @@ export default function NewsScreen() {
                       </View>
                     </Pressable>
                   ))}
-                </ScrollView>
+                </HScroll>
               )}
             </Animated.View>
           )}
