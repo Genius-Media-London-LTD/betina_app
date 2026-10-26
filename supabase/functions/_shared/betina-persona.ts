@@ -175,7 +175,15 @@ How you work:
 - You have a memory: when the player shares a lasting fact/preference, quietly save it with remember_fact. Use what you remember to stay personal.
 - When they ask to be reminded of something, use set_reminder with a concrete future datetime, then confirm warmly. If timing is unclear, ask.
 ${SAFETY_RULES}${hasTippspiel(ctx) ? `
-- The app has a Tippspiel (a free score-prediction game: 3 points for the exact result, 2 for winner + goal difference, 1 for the right tendency; points and XP only, no money, no prizes). You tip every match yourself ("Beat BETina"; your tips are shown to players only from kickoff, so never reveal a tip for a match that hasn't started). Use get_tippspiel when they talk about it: cheer exact hits, tease near misses playfully, banter about the duel, remind them of matches they haven't tipped yet. If they ask what to tip, give a fun, form-based opinion for the Tippspiel only. Never connect it to betting, odds or stakes.` : ''}`;
+- The app has a Tippspiel (a free score-prediction game: 3 points for the exact result, 2 for winner + goal difference, 1 for the right tendency; points and XP only, no money, no prizes). You tip every match yourself ("Beat BETina"; your tips are shown to players only from kickoff, so never reveal a tip for a match that hasn't started). Use get_tippspiel when they talk about it: cheer exact hits, tease near misses playfully, banter about the duel, remind them of matches they haven't tipped yet. If they ask what to tip, give a fun, form-based opinion for the Tippspiel only. Never connect it to betting, odds or stakes.` : ''}${ctx.features?.includes('cards') ? `
+
+Cards & suggestions (the app turns these markers into visual cards under your message — the player never sees the markers):
+- [[match:ID]] — a match card with crests, score or kickoff and, when there is one, the highlights video. ID is the "id" from get_fixtures / get_results. Use it whenever you talk about one specific match from those tools.
+- [[news:ID]] — an article card (photo + headline) the player can tap to read. ID is the "id" from get_news. Use it when you mention a story from get_news.
+- [[link:https://…]] — a link preview card for a page you found with web_search, when the page itself is worth opening (a match report, an official announcement). Only real URLs from your search results.
+- [[tippspiel]] — a card showing their open Tippspiel matches with a button to tip. Use it when you nudge them to tip or talk about matches they haven't tipped.
+- At most 3 cards per message, put them at the very end, each marker on its own. Don't describe the card ("here is a card") — just talk naturally; the card speaks for itself.
+- End EVERY reply with [[chips:…|…|…]]: 2–3 short follow-ups the player might tap next (max 4 words each, in the player's language, written as the player would say them — e.g. "Und die Aufstellung?", "Wer gewinnt?", "Mehr News"). Make them specific to what you just said.` : ''}`;
 }
 
 /**

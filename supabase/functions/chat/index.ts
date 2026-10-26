@@ -16,6 +16,7 @@ import {
   CRMData, Ctx, MatchEvent, NewsItem, hasTippspiel, systemPrompt,
 } from '../_shared/betina-persona.ts';
 import { appData } from '../_shared/app-data.ts';
+import { buildCards, parseMarkers } from './cards.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 const MODEL = 'claude-haiku-5-5';
@@ -50,7 +51,7 @@ const BASE_TOOLS = [
 ];
 
 function compactMatch(e: MatchEvent) {
-  return { home: e.home, away: e.away, score: e.homeScore != null && e.awayScore != null ? `${e.homeScore}-${e.awayScore}` : null, date: e.date, time: e.time ? e.time.slice(0, 5) : null, league: e.league };
+  return { id: e.id, home: e.home, away: e.away, score: e.homeScore != null && e.awayScore != null ? `${e.homeScore}-${e.awayScore}` : null, date: e.date, time: e.time ? e.time.slice(0, 5) : null, league: e.league };
 }
 
 // deno-lint-ignore no-explicit-any
@@ -73,6 +74,11 @@ async function runTool(name: string, input: any, supabase: any, userId: string |
       return JSON.stringify((d.events ?? []).slice(0, 5).map(compactMatch));
     }
     if (name === 'get_news') {
+      // BETina's own newsroom (news-desk), already written in the player's language.
+      const sport = typeof input.sport === 'string' && input.sport && input.sport !== 'sport' ? input.sport : null;
+      const { data } = await supabase.rpc('news_feed', { p_lang: lang, p_sport: sport, p_team: null, p_before: null, p_before_id: null, p_limit: 10 });
+      // deno-lint-ignore no-explicit-any
+      if (data?.length) return JSON.stringify((data as any[]).map((n) => ({ id: n.id, headline: n.headline, teaser: n.teaser, published_at: n.published_at })));
       const r = await fetch(`${NEWS_API}/v1/news?sport=${input.sport ?? 'sport'}&count=8&lang=${encodeURIComponent(lang)}`);
       const d = await r.json();
       return JSON.stringify((d.items ?? []).slice(0, 8).map((n: NewsItem) => n.title));
@@ -283,8 +289,15 @@ Deno.serve(async (req) => {
       // deno-lint-ignore no-explicit-any
       const text = (response.content ?? []).filter((b: any) => b.type === 'text').map((b: any) => b.text).join('').trim();
       // A declined request comes back as stop_reason "refusal" without usable text.
-      const reply = response.stop_reason === 'refusal' || !text ? (DECLINED[ctx.lang] ?? DECLINED.en) : text;
-      return new Response(JSON.stringify({ reply }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
+      // Card + chip markers are always cut out (older apps just get the text);
+      // apps that render cards get them resolved alongside.
+      const parsed = parseMarkers(text);
+      const reply = response.stop_reason === 'refusal' || !parsed.text ? (DECLINED[ctx.lang] ?? DECLINED.en) : parsed.text;
+      const withCards = !!ctx.features?.includes('cards');
+      const cards = withCards && parsed.markers.length
+        ? await buildCards(parsed.markers, { supabase, userId: user.id, lang: ctx.lang ?? 'en', tippspiel: hasTippspiel(ctx) })
+        : [];
+      return new Response(JSON.stringify({ reply, cards, chips: withCards ? parsed.chips : [] }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
     return new Response(JSON.stringify({ reply: '' }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
   } catch (e) {

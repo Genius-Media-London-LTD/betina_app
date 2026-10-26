@@ -5,7 +5,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { G2PError } from './g2p.js';
 import { newsArticle, newsList, newsPool } from './news.js';
-import { lookupTeam, searchTeams, teamLast, teamNext } from './sportsdb.js';
+import { lookupEvent, lookupTeam, searchTeams, teamLast, teamNext } from './sportsdb.js';
 import { voiceBudget, voiceSearch, voiceSession, voiceUsage } from './voice.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
@@ -51,6 +51,7 @@ app.get('/v1/article', async (c) => {
 // --- Sports data (TheSportsDB) ---------------------------------------------------
 app.get('/v1/sports/team/:id/next', async (c) => send(c, await teamNext(c.req.param('id')), 600));
 app.get('/v1/sports/team/:id/last', async (c) => send(c, await teamLast(c.req.param('id')), 600));
+app.get('/v1/sports/event/:id', async (c) => send(c, await lookupEvent(c.req.param('id')), 300));
 app.get('/v1/sports/team/:id', async (c) => send(c, await lookupTeam(c.req.param('id')), 86400));
 app.get('/v1/sports/teams', async (c) => send(c, await searchTeams(c.req.query('t')), 3600));
 

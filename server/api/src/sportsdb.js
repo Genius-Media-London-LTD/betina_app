@@ -69,3 +69,29 @@ export async function lookupTeam(id) {
   if (!validId(id)) return { status: 400, body: { error: 'bad_id', teams: null } };
   return { status: 200, body: await call('lookupteam.php', { id }, longCache) };
 }
+
+/** One match with badges, status and the highlights video (chat cards). */
+export async function lookupEvent(id) {
+  if (!validId(id)) return { status: 400, body: { error: 'bad_id', event: null } };
+  const d = await call('lookupevent.php', { id }, cache);
+  const e = d.events?.[0];
+  if (!e) return { status: 404, body: { event: null } };
+  return {
+    status: 200,
+    body: {
+      event: {
+        id: e.idEvent,
+        home: e.strHomeTeam,
+        away: e.strAwayTeam,
+        homeBadge: e.strHomeTeamBadge || null,
+        awayBadge: e.strAwayTeamBadge || null,
+        homeScore: e.intHomeScore,
+        awayScore: e.intAwayScore,
+        status: e.strStatus || null,
+        kickoff: e.strTimestamp ? `${e.strTimestamp}Z` : null,
+        league: e.strLeague,
+        video: /^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(e.strVideo ?? '') ? e.strVideo : null,
+      },
+    },
+  };
+}

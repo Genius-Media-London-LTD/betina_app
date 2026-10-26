@@ -7,6 +7,7 @@
 
 import type { LangCode } from './i18n';
 import type { LiveContext } from './sports';
+import { ChatCard, cleanCards } from './chatCards';
 import { supabase } from './supabase';
 
 export type Turn = { role: 'user' | 'assistant'; content: string };
@@ -98,25 +99,30 @@ function demoReply(ctx: BetinaContext): string {
 
 // ── Main entry ────────────────────────────────────────────────────────────────
 
-export async function askBetina(history: Turn[], ctx: BetinaContext): Promise<string> {
+/** BETina's answer: the text, cards to show under it, and tap-to-send follow-ups. */
+export type BetinaReply = { reply: string; cards: ChatCard[]; chips: string[] };
+
+export async function askBetina(history: Turn[], ctx: BetinaContext): Promise<BetinaReply> {
   // No session (web preview / logged out) → canned demo replies.
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData.session) {
     await new Promise((r) => setTimeout(r, 1200));
-    return demoReply(ctx);
+    return { reply: demoReply(ctx), cards: [], chips: [] };
   }
 
   try {
     // supabase-js attaches the caller's JWT automatically.
     const { data, error } = await supabase.functions.invoke('chat', {
-      // This app version has the Tippspiel (older store builds don't send this).
-      body: { history, ctx: { ...ctx, features: ['tippspiel'] } },
+      // What this app version can show (older store builds send nothing).
+      body: { history, ctx: { ...ctx, features: ['tippspiel', 'cards'] } },
     });
     if (error) throw error;
     const reply = (data?.reply ?? '').trim();
-    return reply || (NETWORK_ERROR[ctx.lang] ?? NETWORK_ERROR.en)(ctx.name);
+    if (!reply) return { reply: (NETWORK_ERROR[ctx.lang] ?? NETWORK_ERROR.en)(ctx.name), cards: [], chips: [] };
+    const chips = Array.isArray(data?.chips) ? (data.chips as unknown[]).filter((c): c is string => typeof c === 'string').slice(0, 3) : [];
+    return { reply, cards: cleanCards(data?.cards), chips };
   } catch (e) {
     console.warn('chat function failed:', e);
-    return (NETWORK_ERROR[ctx.lang] ?? NETWORK_ERROR.en)(ctx.name);
+    return { reply: (NETWORK_ERROR[ctx.lang] ?? NETWORK_ERROR.en)(ctx.name), cards: [], chips: [] };
   }
 }

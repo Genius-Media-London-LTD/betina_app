@@ -24,9 +24,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import BETinaAvatar from '../components/BETinaAvatar';
 import ChatBubble from '../components/ChatBubble';
+import ChatCards from '../components/ChatCards';
 import ScreenBg from '../components/ScreenBg';
 import { Blink, Meta } from '../components/Urban';
 import { askBetina } from '../lib/claude';
+import { ChatCard, cleanCards } from '../lib/chatCards';
 import { fetchMemories } from '../lib/memory';
 import { XP_REWARDS, awardChatXp } from '../lib/xp';
 import { LiveContext, fetchLiveContext, formatKickoff, parseSports } from '../lib/sports';
@@ -44,6 +46,8 @@ type Message = {
   content: string;
   at: string; // ISO time
   xp?: boolean;
+  /** Visual cards under one of BETina's messages (match, news, link, Tippspiel). */
+  cards?: ChatCard[];
 };
 
 function TypingDot({ delay }: { delay: number }) {
@@ -69,7 +73,6 @@ export default function Chat() {
   const { profile, bumpXp } = useProfile();
   const session = useSession();
   const userName = profile?.name ?? 'friend';
-  const quickReplies = [t.chatQuick1, t.chatQuick2, t.chatQuick3];
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const chrome = useChrome();
@@ -84,7 +87,7 @@ export default function Chat() {
         if (user) {
           const { data } = await supabase
             .from('chat_messages')
-            .select('id, role, content, created_at')
+            .select('id, role, content, cards, created_at')
             .eq('user_id', user.id)
             .order('created_at', { ascending: true })
             .limit(50);
@@ -95,6 +98,7 @@ export default function Chat() {
                 role: r.role as 'user' | 'assistant',
                 content: r.content,
                 at: r.created_at,
+                cards: cleanCards(r.cards),
               })),
             );
           }
@@ -119,12 +123,12 @@ export default function Chat() {
   }, [historyLoaded, userName, t]);
 
   // Fire-and-forget persistence; chat keeps working if Supabase is unreachable
-  const persist = (role: 'user' | 'assistant', content: string) => {
+  const persist = (role: 'user' | 'assistant', content: string, cards?: ChatCard[]) => {
     supabase.auth
       .getUser()
       .then(({ data }) => {
         if (data.user) {
-          return supabase.from('chat_messages').insert({ user_id: data.user.id, role, content });
+          return supabase.from('chat_messages').insert({ user_id: data.user.id, role, content, ...(cards?.length ? { cards } : {}) });
         }
       })
       .then((res) => {
@@ -134,6 +138,9 @@ export default function Chat() {
   };
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
+  // BETina's follow-up suggestions for her latest answer (fallback: the standard three).
+  const [chips, setChips] = useState<string[]>([]);
+  const quickReplies = chips.length ? chips : [t.chatQuick1, t.chatQuick2, t.chatQuick3];
   const [live, setLive] = useState<LiveContext | null>(null);
   const [memories, setMemories] = useState<string[]>([]);
   const scrollRef = useRef<ScrollView>(null);
@@ -164,6 +171,7 @@ export default function Chat() {
     if (!trimmed || typing) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setInput('');
+    setChips([]);
     const userMsg: Message = { id: `u${Date.now()}`, role: 'user', content: trimmed, at: new Date().toISOString() };
     setMessages((prev) => [...prev, userMsg]);
     setTyping(true);
@@ -176,7 +184,7 @@ export default function Chat() {
     bumpXp(XP_REWARDS.chatMessage);
     awardChatXp();
 
-    const reply = await askBetina(history, {
+    const answer = await askBetina(history, {
       name: userName,
       lang,
       team: profile?.favourite_team,
@@ -189,12 +197,13 @@ export default function Chat() {
       live,
       memories,
     });
-    persist('assistant', reply);
+    persist('assistant', answer.reply, answer.cards);
 
     setTyping(false);
+    setChips(answer.chips);
     setMessages((prev) => [
       ...prev,
-      { id: `a${Date.now()}`, role: 'assistant', content: reply, at: new Date().toISOString(), xp: true },
+      { id: `a${Date.now()}`, role: 'assistant', content: answer.reply, at: new Date().toISOString(), xp: true, cards: answer.cards },
     ]);
   };
 
@@ -254,6 +263,7 @@ export default function Chat() {
               style={msg.role === 'user' ? styles.userWrap : styles.betinaWrap}
             >
               <ChatBubble role={msg.role}>{msg.content}</ChatBubble>
+              {!!msg.cards?.length && <ChatCards cards={msg.cards} />}
               <Meta style={styles.stamp} color={msg.xp ? Colors.primary : Colors.textMuted}>
                 {msg.role === 'user' ? time(msg.at) : `BETINA · ${time(msg.at)}${msg.xp ? ` · +${XP_REWARDS.chatMessage} XP` : ''}`}
               </Meta>
@@ -282,7 +292,7 @@ export default function Chat() {
               <Pressable
                 key={qr}
                 onPress={() => send(qr)}
-                style={({ pressed }) => [styles.quickReply, pressed && styles.quickReplyPressed]}
+                style={({ pressed }) => [styles.quickReply, chips.length > 0 && styles.quickReplyBetina, pressed && styles.quickReplyPressed]}
               >
                 <Text style={styles.quickReplyLabel}>{qr.toUpperCase()}</Text>
               </Pressable>
@@ -348,6 +358,7 @@ const styles = StyleSheet.create({
   inputBlock: { gap: 10, paddingHorizontal: 16, paddingTop: 10, borderTopWidth: 1, borderTopColor: Colors.line },
   quickReplies: { gap: 6 },
   quickReply: { borderWidth: 1.5, borderColor: Colors.borderStrong, paddingVertical: 8, paddingHorizontal: 12 },
+  quickReplyBetina: { borderColor: Colors.primary },
   quickReplyPressed: { borderColor: Colors.primary, backgroundColor: Colors.card },
   quickReplyLabel: { color: Colors.white, fontSize: 14, fontFamily: Fonts.label, letterSpacing: 0.5 },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
