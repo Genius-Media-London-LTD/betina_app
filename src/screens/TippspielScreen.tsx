@@ -7,6 +7,7 @@ import Animated, { FadeIn, FadeInDown, SlideInDown } from 'react-native-reanimat
 import AnimatedNumber from '../components/AnimatedNumber';
 import BETinaAvatar from '../components/BETinaAvatar';
 import BoomMoment from '../components/BoomMoment';
+import PhotoMomentModal, { HitToast } from '../components/PhotoMoments';
 import GlowButton from '../components/GlowButton';
 import ScreenBg from '../components/ScreenBg';
 import SignInWall from '../components/SignInWall';
@@ -21,6 +22,7 @@ import {
   defaultCompetition, fetchCompetitions, fetchGroupDuel, fetchLeaderboard, fetchMyCompetitions, fetchMyGroups,
   fetchNotifyTippspiel, fetchOpenTips, fetchStats, setMyCompetitions, setNotifyTippspiel, takeUnseenExactHit,
 } from '../lib/tippspiel';
+import { HitMoment, PhotoMoment, bigMomentShown, checkMoments, claimBigMoment, takeHits, tipMoment } from '../lib/moments';
 import { useChrome } from '../components/chrome';
 import { Colors, Fonts } from '../theme';
 
@@ -54,6 +56,8 @@ function Hub() {
   const [rules, setRules] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [boom, setBoom] = useState<ExactHit | null>(null);
+  const [photo, setPhoto] = useState<PhotoMoment | null>(null);
+  const [hits, setHits] = useState<HitMoment | null>(null);
 
   const load = useCallback(async () => {
     const [comps, myComps, myGroups, myStats, board, push] = await Promise.all([
@@ -72,9 +76,18 @@ function Hub() {
     setMe(board.find((r) => r.is_me) ?? null);
     setGroups(myGroups.map((g, i) => ({ ...g, rank: ranks[i], duel: duels[i] })));
     setNotify(push);
-    // A fresh exact hit gets its BOOM moment once.
-    const hit = await takeUnseenExactHit();
-    if (hit) setBoom(hit);
+    // One big moment per visit (lib/moments.ts): BOOM for a fresh exact hit,
+    // else K.O./Revanche, Platz 1, On Fire; otherwise the TREFFER toast.
+    await checkMoments(async () => {
+      if (!bigMomentShown()) {
+        const hit = await takeUnseenExactHit();
+        if (hit && claimBigMoment()) { setBoom(hit); return; }
+        const big = await tipMoment();
+        if (big && claimBigMoment()) { setPhoto(big); return; }
+      }
+      const fresh = await takeHits();
+      if (fresh) setHits(fresh);
+    }).catch(() => {});
   }, []);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -265,6 +278,9 @@ function Hub() {
         onMore={() => { const c = boom?.competition; setBoom(null); if (c) go('/tipps/play', { competition: c }); }}
         onCelebrate={() => { setBoom(null); router.push('/(tabs)/chat'); }}
       />
+
+      <PhotoMomentModal moment={photo} name={firstName} onClose={() => setPhoto(null)} />
+      <HitToast hit={hits} name={firstName} onClose={() => setHits(null)} />
 
       {/* Menu */}
       <Modal visible={menu} transparent animationType="none" onRequestClose={() => setMenu(false)}>

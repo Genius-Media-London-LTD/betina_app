@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '../lib/i18n';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -11,6 +11,10 @@ import SignInWall from '../components/SignInWall';
 import XPBar from '../components/XPBar';
 import { Meta, Sticker } from '../components/Urban';
 import MomentModal, { Moment, nextMoment } from '../components/Moments';
+import PhotoMomentModal, { HitToast } from '../components/PhotoMoments';
+import {
+  HitMoment, PhotoMoment, bigMomentShown, checkMoments, claimBigMoment, matchdayMoment, streakMoment, takeHits, tipMoment,
+} from '../lib/moments';
 import { useSession } from '../hooks/useSession';
 import { tiers } from '../lib/demo';
 import { MatchEvent, fetchTeamNext, formatKickoff } from '../lib/sports';
@@ -62,6 +66,11 @@ export default function Home() {
   const [fixtures, setFixtures] = useState<MatchEvent[]>([]);
   const [loadingFixtures, setLoadingFixtures] = useState(false);
   const [moment, setMoment] = useState<Moment | null>(null);
+  const [photo, setPhoto] = useState<PhotoMoment | null>(null);
+  const [hit, setHit] = useState<HitMoment | null>(null);
+  // Which team the loaded fixtures belong to (moments wait for them).
+  const [fixturesTeam, setFixturesTeam] = useState<string | null>(null);
+  const checking = useRef(false);
 
   // Reload on focus so XP/tier earned in chat or on daily open show up here.
   useFocusEffect(useCallback(() => { loadProfile(); }, []));
@@ -77,8 +86,6 @@ export default function Home() {
         .maybeSingle();
       if (data) {
         setProfile(data);
-        // Tier-up / birthday moments fire once (see Moments.tsx).
-        nextMoment(data).then((m) => { if (m) setMoment(m); });
       }
     } catch (e) {
       console.error('Profile load error:', e);
@@ -96,12 +103,33 @@ export default function Home() {
     setLoadingFixtures(true);
     fetchTeamNext(teamId)
       .then((events) => { if (active) setFixtures(events); })
-      .finally(() => { if (active) setLoadingFixtures(false); });
+      .finally(() => { if (active) { setLoadingFixtures(false); setFixturesTeam(teamId); } });
     return () => { active = false; };
   }, [teamId]);
 
   const nextMatch = fixtures.find((e) => kickoffDate(e).getTime() > Date.now()) ?? null;
   const countdown = useCountdown(nextMatch ? kickoffDate(nextMatch) : null);
+
+  // Moments, once profile + fixtures are in: one big moment per visit, in order
+  // tier-up, birthday, matchday, days streak, Tippspiel (lib/moments.ts);
+  // otherwise the small TREFFER toast for fresh 1–2 point tips.
+  useEffect(() => {
+    if (!profile || (teamId && fixturesTeam !== teamId) || checking.current) return;
+    checking.current = true;
+    checkMoments(async () => {
+      if (!bigMomentShown()) {
+        const special = await nextMoment(profile);
+        if (special && claimBigMoment()) { setMoment(special); return; }
+        const next = nextMatch ? { id: nextMatch.id, home: nextMatch.home, away: nextMatch.away, kickoff: kickoffDate(nextMatch) } : null;
+        const big = (await matchdayMoment(profile.favourite_team, next))
+          ?? (await streakMoment(profile.streak_days))
+          ?? (await tipMoment());
+        if (big && claimBigMoment()) { setPhoto(big); return; }
+      }
+      const fresh = await takeHits();
+      if (fresh) setHit(fresh);
+    }).catch(() => {}).finally(() => { checking.current = false; });
+  }, [profile, fixturesTeam]);
 
   const xp = profile?.xp_points ?? 0;
   const name = profile?.name ?? '';
@@ -259,6 +287,8 @@ export default function Home() {
         </View>
       </ScrollView>
       <MomentModal moment={moment} name={firstName} onClose={() => setMoment(null)} />
+      <PhotoMomentModal moment={photo} name={firstName} onClose={() => setPhoto(null)} />
+      <HitToast hit={hit} name={firstName} onClose={() => setHit(null)} onPress={() => go('/(tabs)/tippspiel')} />
     </ScreenBg>
   );
 }

@@ -54,7 +54,7 @@ export async function nextMoment(profile: { vip_tier?: string | null; birthday?:
 }
 
 /** Put the name into a line; without one, drop it with its comma. */
-function withName(s: string, name: string) {
+export function withName(s: string, name: string) {
   if (name) return s.replace('{name}', name);
   const out = s.replace(/,\s*\{name\}/, '').replace(/\{name\}[,!]?\s*/, '');
   return out.charAt(0).toUpperCase() + out.slice(1);
@@ -85,7 +85,7 @@ function Piece({ x, w, h, delay, duration, turn, color }: (typeof PIECES)[number
   return <Animated.View style={[styles.piece, { left: x * W, width: w, height: h, backgroundColor: color }, style]} />;
 }
 
-function Confetti({ colors }: { colors: string[] }) {
+export function Confetti({ colors }: { colors: string[] }) {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       {PIECES.map((p, i) => <Piece key={i} {...p} color={colors[i % colors.length]} />)}
