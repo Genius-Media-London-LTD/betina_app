@@ -13,6 +13,7 @@ import { Blink } from './Urban';
 import { useProfile } from '../hooks/useProfile';
 import { useSession } from '../hooks/useSession';
 import { LANGUAGES, useI18n } from '../lib/i18n';
+import { useIsAdmin } from '../lib/admin';
 import { tiers } from '../lib/demo';
 import { isFollowing, useFollows } from '../lib/follows';
 import { ContentWidthContext, PAGE_MAX, RAIL_MIN, RAIL_W, SIDEBAR_W } from '../lib/layout';
@@ -78,6 +79,7 @@ function Sidebar({ pages, active, unread, onPage }: { pages: ShellPage[]; active
   const session = useSession();
   const { profile } = useProfile();
   const [hover, setHover] = useState<string | null>(null);
+  const admin = useIsAdmin();
 
   const xp = profile?.xp_points ?? 0;
   const tierName = profile?.vip_tier ?? 'INITIATE';
@@ -92,6 +94,7 @@ function Sidebar({ pages, active, unread, onPage }: { pages: ShellPage[]; active
     { key: 'settings', label: t.settingsTitle, href: '/settings' },
     { key: 'language', label: LANGUAGES.find((l) => l.code === lang)?.nativeName ?? t.settingsLanguage, href: '/language' },
     { key: 'help', label: t.settingsHelp, href: '/help' },
+    ...(admin ? [{ key: 'admin', label: 'Team dashboard', href: '/admin' }] : []),
   ];
 
   return (

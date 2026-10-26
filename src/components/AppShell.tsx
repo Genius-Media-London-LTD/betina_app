@@ -19,6 +19,7 @@ import XPBar from './XPBar';
 import GoalFlash from './live/GoalFlash';
 import { useProfile } from '../hooks/useProfile';
 import { LANGUAGES, useI18n } from '../lib/i18n';
+import { useIsAdmin } from '../lib/admin';
 import { tiers } from '../lib/demo';
 import { signOut } from '../lib/session';
 import { useDesktop } from '../lib/layout';
@@ -297,6 +298,7 @@ function FullMenu({
 }) {
   const { t, lang } = useI18n();
   const { profile } = useProfile();
+  const admin = useIsAdmin();
   if (!open) return null;
 
   const name = (profile?.name ?? '').trim();
@@ -323,6 +325,7 @@ function FullMenu({
     { label: t.tiersTitle, href: '/tiers' },
     { label: t.settingsTitle, href: '/settings' },
     { label: t.settingsHelp, href: '/help' },
+    ...(admin ? [{ label: 'Team dashboard', href: '/admin' }] : []),
   ];
   const quick = [
     { k: t.settingsLanguage, v: LANGUAGES.find((l) => l.code === lang)?.nativeName ?? lang, href: '/language' },
