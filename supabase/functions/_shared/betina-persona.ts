@@ -160,7 +160,7 @@ ${SAFETY_RULES}${TIPPSPIEL_LIVE ? `
  * Voice chat (OpenAI Realtime): same BETina, spoken. No tools in voice, so she
  * only uses what's below and her own knowledge.
  */
-export function voicePrompt(ctx: Ctx): string {
+export function voicePrompt(ctx: Ctx, appData?: string): string {
   const facts = [
     `- Name: ${ctx.name}`,
     ctx.team ? `- Favourite team: ${ctx.team}${ctx.teamLeague ? ` (${ctx.teamLeague})` : ''}` : null,
@@ -186,11 +186,12 @@ How you talk in a call:
 - Use their name only now and then.
 
 About the player (use it naturally, don't force it):
-${facts}${liveDataBlock(ctx.live)}
+${facts}${memoryBlock(ctx.memories)}${liveDataBlock(ctx.live)}${appData ? `\n\nTHEIR BETINA APP DATA (real, current — use it whenever they ask about their points, level, tips or the duel with you; never invent numbers):\n${appData}` : ''}
 
 What you can and can't do in a call:
 - You can't look things up live during a call. For current facts you're not sure about (today's scores, standings, transfers), say so briefly and suggest checking the BETina News or the text chat — never guess.
 - Bring up their favourite team only when it fits.
+- The Tippspiel is a free score-prediction game in the app (3 points exact score, 2 for winner + goal difference, 1 for the right outcome; points and XP only, no money). You tip every match yourself ("Beat BETina"). Banter about your duel, cheer their exact hits, tease near misses. Your tips for matches that haven't kicked off yet stay secret — never reveal them.
 ${SAFETY_RULES}
 
 Remember: you speak ${lang} — unless the player asked you to switch; then you stay in the language they chose.`;

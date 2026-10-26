@@ -47,7 +47,8 @@ export async function startVoice(opts: {
   /** Optional voice name (server whitelist), e.g. to compare voices. */
   voice?: string;
   onState: (s: VoiceState) => void;
-  onRemaining: (seconds: number) => void;
+  /** Seconds left today; null while there is no daily limit. */
+  onRemaining: (seconds: number | null) => void;
   onError: (e: VoiceError) => void;
 }): Promise<VoiceCall | null> {
   const { onState, onRemaining, onError } = opts;
@@ -58,7 +59,7 @@ export async function startVoice(opts: {
 
   // 1. Short-lived secret from betina-server (also checks the daily budget).
   let secret: string;
-  let remaining: number;
+  let remaining: number | null;
   try {
     const r = await api('session', token, { lang: opts.lang, voice: opts.voice });
     if (r.status === 429) { onError('limit'); return null; }
@@ -108,7 +109,7 @@ export async function startVoice(opts: {
     if (seconds <= 0) return;
     api('usage', token, { seconds })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d && typeof d.remaining === 'number') { remaining = Math.min(remaining, d.remaining); onRemaining(remaining); } })
+      .then((d) => { if (d && typeof d.remaining === 'number' && remaining != null) { remaining = Math.min(remaining, d.remaining); onRemaining(remaining); } })
       .catch(() => {});
   };
 
@@ -170,10 +171,11 @@ export async function startVoice(opts: {
 
   // 5. Talk time: count down locally, book it on the server every few seconds.
   tick = setInterval(() => {
-    remaining -= 1;
     sinceReport += 1;
-    onRemaining(Math.max(0, remaining));
     if (sinceReport >= REPORT_EVERY_S) { report(sinceReport); sinceReport = 0; }
+    if (remaining == null) return; // no daily limit right now
+    remaining -= 1;
+    onRemaining(Math.max(0, remaining));
     if (remaining <= 0) { onError('limit'); stop(); }
   }, 1000);
 
