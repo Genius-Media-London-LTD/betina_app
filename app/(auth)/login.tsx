@@ -196,8 +196,14 @@ export default function Login() {
               <Animated.View entering={FadeInDown.delay(350).duration(600)} style={styles.ctaBlock}>
                 <GlowButton label={t.loginSendCode} onPress={sendCode} loading={loading} />
                 <Text style={styles.terms}>
-                  {t.termsAgree} <Text style={styles.termsLink}>{t.termsLink}</Text> &{' '}
-                  <Text style={styles.termsLink}>{t.privacyLink}</Text>
+                  {t.termsAgree}{' '}
+                  <Text style={styles.termsLink} onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'terms' } })} suppressHighlighting>
+                    {t.termsLink}
+                  </Text>
+                  {' & '}
+                  <Text style={styles.termsLink} onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'privacy' } })} suppressHighlighting>
+                    {t.privacyLink}
+                  </Text>
                 </Text>
               </Animated.View>
 
