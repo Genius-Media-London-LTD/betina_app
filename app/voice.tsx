@@ -73,7 +73,7 @@ export default function Voice() {
       let target = 0.12 + Math.sin(sec * 1.6) * 0.05; // idle breathing
       if (s === 'speaking') target = lv.betina ?? 0.55 + Math.sin(sec * 7) * 0.2 + Math.sin(sec * 13) * 0.15;
       else if (s === 'userSpeaking') target = lv.me ?? 0.45 + Math.sin(sec * 6) * 0.2;
-      else if (s === 'connecting') target = 0.25 + Math.sin(sec * 4) * 0.2;
+      else if (s === 'connecting' || s === 'searching') target = 0.3 + Math.sin(sec * 5) * 0.25;
       else if (s === 'ended') target = 0;
       energy.value += (Math.max(0, Math.min(1, target)) - energy.value) * 0.25;
       time.value = sec;
@@ -99,7 +99,7 @@ export default function Voice() {
   const live = !error && state !== 'ended';
   const status = error
     ? { limit: t.voiceErrLimit, mic: t.voiceErrMic, network: t.voiceErrNetwork, auth: t.voiceErrAuth }[error]
-    : { connecting: t.voiceConnecting, listening: t.voiceListening, userSpeaking: t.voiceYouSpeak, speaking: t.voiceSpeaking, ended: t.voiceEnded }[state];
+    : { connecting: t.voiceConnecting, listening: t.voiceListening, userSpeaking: t.voiceYouSpeak, speaking: t.voiceSpeaking, searching: t.voiceSearching, ended: t.voiceEnded }[state];
 
   return (
     <ScreenBg>

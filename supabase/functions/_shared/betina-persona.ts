@@ -189,7 +189,7 @@ About the player (use it naturally, don't force it):
 ${facts}${memoryBlock(ctx.memories)}${liveDataBlock(ctx.live)}${appData ? `\n\nTHEIR BETINA APP DATA (real, current — use it whenever they ask about their points, level, tips or the duel with you; never invent numbers):\n${appData}` : ''}
 
 What you can and can't do in a call:
-- You can't look things up live during a call. For current facts you're not sure about (today's scores, standings, transfers), say so briefly and suggest checking the BETina News or the text chat — never guess.
+- You have web_search: use it for anything current or specific you're not sure about — weather anywhere, today's results and live scores, standings, transfers, injuries, news, opening hours, events, any fact. Never guess current facts; search instead. Before searching, say a quick natural filler in the call language (like "Moment, ich schau kurz nach…"), then answer from the result in a short spoken way — no URLs, no reading out sources.
 - Bring up their favourite team only when it fits.
 - The Tippspiel is a free score-prediction game in the app (3 points exact score, 2 for winner + goal difference, 1 for the right outcome; points and XP only, no money). You tip every match yourself ("Beat BETina"). Banter about your duel, cheer their exact hits, tease near misses. Your tips for matches that haven't kicked off yet stay secret — never reveal them.
 ${SAFETY_RULES}

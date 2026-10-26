@@ -6,7 +6,7 @@ import { cors } from 'hono/cors';
 import { G2PError } from './g2p.js';
 import { newsArticle, newsList, newsPool } from './news.js';
 import { lookupTeam, searchTeams, teamLast, teamNext } from './sportsdb.js';
-import { voiceBudget, voiceSession, voiceUsage } from './voice.js';
+import { voiceBudget, voiceSearch, voiceSession, voiceUsage } from './voice.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const VERSION = process.env.BETINA_API_VERSION ?? 'dev';
@@ -58,6 +58,7 @@ app.get('/v1/sports/teams', async (c) => send(c, await searchTeams(c.req.query('
 app.get('/v1/voice/budget', voiceBudget);
 app.post('/v1/voice/session', voiceSession);
 app.post('/v1/voice/usage', voiceUsage);
+app.post('/v1/voice/search', voiceSearch);
 
 app.notFound((c) => c.json({ error: 'not_found' }, 404));
 app.onError((err, c) => {

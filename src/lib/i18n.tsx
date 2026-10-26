@@ -201,6 +201,7 @@ type Translations = {
   tabTipps: string;
   tabNews: string;
   tabMenu: string;
+  voiceSearching: string;
   voiceConnecting: string;
   voiceListening: string;
   voiceYouSpeak: string;
@@ -701,6 +702,7 @@ const T: Record<LangCode, Translations> = {
     momentBdayTag: "Your day",
     momentThanks: "Thanks, BETina",
     voiceConnecting: "Calling BETina…",
+    voiceSearching: "BETina is searching…",
     voiceListening: "BETina is listening",
     voiceYouSpeak: "You're talking",
     voiceSpeaking: "BETina is talking",
@@ -1032,6 +1034,7 @@ const T: Record<LangCode, Translations> = {
     momentBdayTag: "Dein Tag",
     momentThanks: "Danke, BETina",
     voiceConnecting: "Rufe BETina an…",
+    voiceSearching: "BETina sucht…",
     voiceListening: "BETina hört zu",
     voiceYouSpeak: "Du sprichst",
     voiceSpeaking: "BETina spricht",
@@ -1363,6 +1366,7 @@ const T: Record<LangCode, Translations> = {
     momentBdayTag: "Tu día",
     momentThanks: "Gracias, BETina",
     voiceConnecting: "Llamando a BETina…",
+    voiceSearching: "BETina está buscando…",
     voiceListening: "BETina te escucha",
     voiceYouSpeak: "Estás hablando",
     voiceSpeaking: "BETina habla",
@@ -1694,6 +1698,7 @@ const T: Record<LangCode, Translations> = {
     momentBdayTag: "O teu dia",
     momentThanks: "Obrigado, BETina",
     voiceConnecting: "A ligar à BETina…",
+    voiceSearching: "A BETina está a pesquisar…",
     voiceListening: "A BETina está a ouvir",
     voiceYouSpeak: "Estás a falar",
     voiceSpeaking: "A BETina está a falar",
@@ -2025,6 +2030,7 @@ const T: Record<LangCode, Translations> = {
     momentBdayTag: "Ton jour",
     momentThanks: "Merci, BETina",
     voiceConnecting: "Appel de BETina…",
+    voiceSearching: "BETina cherche…",
     voiceListening: "BETina t’écoute",
     voiceYouSpeak: "Tu parles",
     voiceSpeaking: "BETina parle",
@@ -2356,6 +2362,7 @@ const T: Record<LangCode, Translations> = {
     momentBdayTag: "Il tuo giorno",
     momentThanks: "Grazie, BETina",
     voiceConnecting: "Chiamo BETina…",
+    voiceSearching: "BETina sta cercando…",
     voiceListening: "BETina ti ascolta",
     voiceYouSpeak: "Stai parlando",
     voiceSpeaking: "BETina parla",
@@ -2687,6 +2694,7 @@ const T: Record<LangCode, Translations> = {
     momentBdayTag: "Ziua ta",
     momentThanks: "Mersi, BETina",
     voiceConnecting: "O sun pe BETina…",
+    voiceSearching: "BETina caută…",
     voiceListening: "BETina te ascultă",
     voiceYouSpeak: "Vorbești tu",
     voiceSpeaking: "BETina vorbește",
@@ -3017,6 +3025,7 @@ const T: Record<LangCode, Translations> = {
     momentBdayTag: "Senin günün",
     momentThanks: "Teşekkürler, BETina",
     voiceConnecting: "BETina'yı arıyorum…",
+    voiceSearching: "BETina arıyor…",
     voiceListening: "BETina dinliyor",
     voiceYouSpeak: "Sen konuşuyorsun",
     voiceSpeaking: "BETina konuşuyor",
@@ -3347,6 +3356,7 @@ const T: Record<LangCode, Translations> = {
     momentBdayTag: "Tvoj dan",
     momentThanks: "Hvala, BETina",
     voiceConnecting: "Zovem BETinu…",
+    voiceSearching: "BETina traži…",
     voiceListening: "BETina sluša",
     voiceYouSpeak: "Ti pričaš",
     voiceSpeaking: "BETina priča",

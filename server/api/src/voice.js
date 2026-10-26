@@ -15,6 +15,7 @@ const SUPABASE_URL = 'https://djnmrvhdklpclbrhxxqs.supabase.co';
 // Public anon key (ships in the app); requests run with the player's own JWT.
 const SUPABASE_ANON = 'sb_publishable_YOv1ukkxjnHUN5LWYoJ--g_DJDtbCIY';
 const MODEL = 'gpt-realtime-2.1-mini';
+const SEARCH_MODEL = 'gpt-5.4-mini'; // Responses API + web_search, ~4 s per search
 const VOICE = 'marin';
 // Voices the app may ask for (e.g. to compare them); anything else falls back to VOICE.
 const VOICES = new Set(['coral', 'shimmer', 'sage', 'marin', 'ballad', 'alloy', 'verse', 'cedar', 'ash', 'echo']);
@@ -108,7 +109,7 @@ async function memoriesOf(token) {
 }
 
 /** Compact text block: level, Tippspiel season, duel, tips side by side with BETina's. */
-export async function appData(userId, token, profile) {
+async function appData(userId, token, profile) {
   const lines = [];
   const xp = Number(profile?.xp_points ?? 0);
   const idx = TIERS.reduce((i, [, min], k) => (xp >= min ? k : i), 0);
@@ -213,6 +214,17 @@ export async function voiceSession(c) {
         model: MODEL,
         instructions,
         max_output_tokens: 1024,
+        tools: [{
+          type: 'function',
+          name: 'web_search',
+          description: 'Search the web for anything current or specific: weather anywhere, live scores and today\'s results, standings, transfers, news, events, opening hours, facts.',
+          parameters: {
+            type: 'object',
+            properties: { query: { type: 'string', description: 'What to look up, in natural language, with place and date if relevant.' } },
+            required: ['query'],
+          },
+        }],
+        tool_choice: 'auto',
         audio: {
           input: { turn_detection: { type: 'semantic_vad' }, noise_reduction: { type: 'near_field' } },
           // A touch faster: BETina is young and lively.
@@ -229,6 +241,52 @@ export async function voiceSession(c) {
   }
   const secret = await res.json();
   return c.json({ client_secret: secret.value, expires_at: secret.expires_at, remaining: left, model: MODEL });
+}
+
+// Searches per player per hour (keeps a runaway call from burning money).
+const SEARCHES_PER_HOUR = 40;
+const searchLog = new Map(); // userId -> timestamps (ms)
+
+/** POST /v1/voice/search { query, lang } → { answer }. Called by the app when BETina uses web_search. */
+export async function voiceSearch(c) {
+  if (!process.env.OPENAI_API_KEY) return c.json({ error: 'not_configured' }, 503);
+  const user = await supabaseUser(bearer(c));
+  if (!user) return c.json({ error: 'unauthorized' }, 401);
+  const now = Date.now();
+  const recent = (searchLog.get(user.id) ?? []).filter((t) => now - t < 3_600_000);
+  if (recent.length >= SEARCHES_PER_HOUR) return c.json({ answer: 'Search limit reached for now — answer from what you know or suggest trying later.' });
+  recent.push(now);
+  searchLog.set(user.id, recent);
+
+  const body = await c.req.json().catch(() => ({}));
+  const query = String(body.query ?? '').trim().slice(0, 300);
+  if (!query) return c.json({ answer: 'Empty query.' });
+  const lang = String(body.lang ?? 'en').slice(0, 2);
+  try {
+    const res = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: SEARCH_MODEL,
+        tools: [{ type: 'web_search' }],
+        instructions: `Today is ${new Date().toISOString().slice(0, 10)}. Look this up on the web and answer in 1–3 short factual sentences in the language with ISO code "${lang}", ready to be spoken: concrete numbers, names and times, no URLs, no markdown, no source list. If the web has no clear answer, say so.`,
+        input: query,
+      }),
+      signal: AbortSignal.timeout(25_000),
+    });
+    if (!res.ok) throw new Error(`responses ${res.status}`);
+    const d = await res.json();
+    const answer = (d.output ?? []).filter((o) => o.type === 'message').flatMap((o) => o.content ?? [])
+      .map((cc) => cc.text ?? '').join(' ')
+      // Drop inline source links ([site](url)) — BETina speaks, she doesn't read URLs.
+      .replace(/\(\[[^\]]*\]\([^)]*\)\)|\[[^\]]*\]\([^)]*\)/g, '')
+      .replace(/\s+([.,!?;:])/g, '$1')
+      .trim();
+    return c.json({ answer: answer || 'No clear answer found.' });
+  } catch (err) {
+    console.error('voice search:', err.message);
+    return c.json({ answer: 'The search failed just now — say so briefly and offer to try again.' });
+  }
 }
 
 /** POST /v1/voice/usage { seconds } → { remaining }. The app reports talk time every few seconds. */

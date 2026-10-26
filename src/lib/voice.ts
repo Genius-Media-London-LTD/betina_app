@@ -5,7 +5,7 @@ import { levelMeter, mediaDevices, playRemote, RTCPeerConnection, RTCSessionDesc
 import { NEWS_API } from './sports';
 import { supabase } from './supabase';
 
-export type VoiceState = 'connecting' | 'listening' | 'userSpeaking' | 'speaking' | 'ended';
+export type VoiceState = 'connecting' | 'listening' | 'userSpeaking' | 'speaking' | 'searching' | 'ended';
 export type VoiceError = 'limit' | 'mic' | 'network' | 'auth';
 
 const REPORT_EVERY_S = 10;
@@ -132,9 +132,12 @@ export async function startVoice(opts: {
     dc.send(JSON.stringify({ type: 'response.create' }));
   });
   dc.addEventListener('message', (e: { data: string }) => {
-    let ev: { type?: string };
+    let ev: { type?: string; call_id?: string; name?: string; arguments?: string };
     try { ev = JSON.parse(e.data); } catch { return; }
     switch (ev.type) {
+      case 'response.function_call_arguments.done':
+        if (ev.name === 'web_search' && ev.call_id) runSearch(ev.call_id, ev.arguments ?? '{}');
+        break;
       case 'input_audio_buffer.speech_started': onState('userSpeaking'); break;
       case 'input_audio_buffer.speech_stopped': onState('listening'); break;
       case 'output_audio_buffer.started': onState('speaking'); break;
@@ -143,6 +146,22 @@ export async function startVoice(opts: {
       case 'error': console.warn('realtime error', e.data); break;
     }
   });
+  // BETina asked for a web search: run it on betina-server, hand her the answer.
+  const runSearch = async (callId: string, args: string) => {
+    onState('searching');
+    let answer = 'The search failed just now.';
+    try {
+      const { query } = JSON.parse(args) as { query?: string };
+      const r = await api('search', token, { query, lang: opts.lang });
+      if (r.ok) answer = (await r.json()).answer ?? answer;
+    } catch {
+      // keep the fallback answer
+    }
+    if (ended) return;
+    dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: callId, output: answer } }));
+    dc.send(JSON.stringify({ type: 'response.create' }));
+  };
+
   pc.addEventListener('connectionstatechange', () => {
     if (!ended && (pc.connectionState === 'failed' || pc.connectionState === 'disconnected')) {
       onError('network');
