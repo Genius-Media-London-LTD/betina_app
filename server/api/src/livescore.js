@@ -302,7 +302,9 @@ function detail(f) {
 /** GET /v1/live/match/:id — everything for the match page. */
 export async function liveMatch(id) {
   if (!/^\d{1,10}$/.test(String(id))) return { status: 400, body: { error: 'bad_id' } };
-  const d = await cached(`match:${id}`, (v) => (!v ? 60_000 : LIVE.has(v.st) ? 12_000 : FINISHED.has(v.st) ? 6 * 3_600_000 : 5 * 60_000), async () => {
+  const d = await cached(`match:${id}`, (v) => (!v ? 60_000 : LIVE.has(v.st) ? 12_000
+    // Finished: stats and ratings often arrive a little after the whistle.
+    : FINISHED.has(v.st) ? (v.stats.length || Date.now() / 1000 - v.ts > 6 * 3600 ? 6 * 3_600_000 : 15 * 60_000) : 5 * 60_000), async () => {
     const [f] = await af('fixtures', { id });
     return f ? detail(f) : null;
   });

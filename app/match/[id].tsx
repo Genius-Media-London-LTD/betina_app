@@ -69,23 +69,29 @@ export default function MatchPage() {
     fetchTake(fixture, lang).then(setTake).catch(() => {}).finally(() => setTakeLoading(false));
   }, [takeKey, fixture, lang]);
 
+  const TABS: [Tab, string][] = [['ticker', t.liveTabTicker], ['stats', t.liveTabStats], ['lineups', t.liveTabLineups], ['table', t.liveTabTable], ['h2h', t.liveTabH2H]];
+  // Finished matches only show the tabs the data covers (small leagues often have no details).
+  const done = !!match && isFinished(match.st);
+  const tabs = TABS.filter(([k]) => !done || !match || (k === 'ticker' ? match.events.length > 0 : k === 'stats' ? match.stats.length > 0 : k === 'lineups' ? match.lineups.length > 0 : true));
+  const current: Tab = tabs.some(([k]) => k === tab) ? tab : tabs[0][0];
+  const noDetail = done && !!match && !match.events.length && !match.stats.length && !match.lineups.length;
+
   // Lazy tabs.
   useEffect(() => {
-    if (!m || tab !== 'table' || (table && !live)) return;
+    if (!m || current !== 'table' || (table && !live)) return;
     setTableLoading(!table);
     fetchTable(m.league.id, m.league.season).then(setTable).catch(() => setTable([])).finally(() => setTableLoading(false));
-  }, [tab, m?.league.id, live]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [current, m?.league.id, live]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (!m || tab !== 'h2h' || h2h) return;
+    if (!m || current !== 'h2h' || h2h) return;
     setH2hLoading(true);
     fetchH2H(m.h.id, m.a.id).then(setH2h).catch(() => {}).finally(() => setH2hLoading(false));
-  }, [tab, m?.h.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [current, m?.h.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [from, to] = useMemo(() => (m ? [m.ts * 1000 - 3_600_000, m.ts * 1000 + 3_600_000] : [0, 0]), [m?.ts]); // eslint-disable-line react-hooks/exhaustive-deps
   const tips = useTips(from, to);
   const tip = match ? tipFor(match, tips) : undefined;
 
-  const TABS: [Tab, string][] = [['ticker', t.liveTabTicker], ['stats', t.liveTabStats], ['lineups', t.liveTabLineups], ['table', t.liveTabTable], ['h2h', t.liveTabH2H]];
 
   return (
     <ScreenBg>
@@ -124,8 +130,8 @@ export default function MatchPage() {
 
           <View style={styles.tabsWrap}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
-              {TABS.map(([key, label]) => {
-                const on = key === tab;
+              {tabs.map(([key, label]) => {
+                const on = key === current;
                 return (
                   <Pressable key={key} onPress={() => { Haptics.selectionAsync(); setTab(key); }} style={[styles.tab, on && styles.tabOn]}>
                     <Text style={[styles.tabText, on && { color: Colors.white }]}>{label.toUpperCase()}</Text>
@@ -136,11 +142,12 @@ export default function MatchPage() {
           </View>
 
           <View style={styles.body}>
-            {tab === 'ticker' && <TickerTab m={match} />}
-            {tab === 'stats' && <StatsTab m={match} />}
-            {tab === 'lineups' && <LineupsTab m={match} />}
-            {tab === 'table' && <TableTab groups={table} m={match} loading={tableLoading} />}
-            {tab === 'h2h' && <H2HTab data={h2h} m={match} loading={h2hLoading} />}
+            {noDetail && <Text style={styles.note}>{t.liveNoCoverage}</Text>}
+            {current === 'ticker' && <TickerTab m={match} />}
+            {current === 'stats' && <StatsTab m={match} />}
+            {current === 'lineups' && <LineupsTab m={match} />}
+            {current === 'table' && <TableTab groups={table} m={match} loading={tableLoading} />}
+            {current === 'h2h' && <H2HTab data={h2h} m={match} loading={h2hLoading} />}
           </View>
 
           {(match.venue || match.referee) && (
@@ -170,4 +177,5 @@ const styles = StyleSheet.create({
   tabText: { color: Colors.textMuted, fontSize: 16, fontFamily: Fonts.label, letterSpacing: 0.5 },
   body: { paddingHorizontal: 16, minHeight: 300 },
   facts: { paddingHorizontal: 16, gap: 4 },
+  note: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, fontFamily: Fonts.medium, marginBottom: 14 },
 });

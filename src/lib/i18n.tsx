@@ -120,6 +120,7 @@ type Translations = {
   liveFollowing: string;
   liveGoal: string;
   liveOpenCenter: string;
+  liveNoCoverage: string;
   tabChat: string;
   tabJourney: string;
   tabSettings: string;
@@ -595,6 +596,7 @@ const T: Record<LangCode, Translations> = {
     liveFollowing: "Following",
     liveGoal: "GOAL!",
     liveOpenCenter: "Open Live-Center",
+    liveNoCoverage: "Our data partner has no ticker, stats or lineups for this competition — but I can still tell you how it went.",
     tabChat: 'Chat',
     tabJourney: 'Journey',
     tabSettings: 'Settings',
@@ -1033,6 +1035,7 @@ const T: Record<LangCode, Translations> = {
     liveFollowing: "Folge ich",
     liveGoal: "TOR!",
     liveOpenCenter: "Zum Live-Center",
+    liveNoCoverage: "Für diesen Wettbewerb liefert unser Datenpartner keinen Ticker, keine Statistik und keine Aufstellungen. Wie es lief, sag ich dir trotzdem.",
     tabChat: 'Chat',
     tabJourney: 'Reise',
     tabSettings: 'Einstellungen',
@@ -1471,6 +1474,7 @@ const T: Record<LangCode, Translations> = {
     liveFollowing: "Siguiendo",
     liveGoal: "¡GOL!",
     liveOpenCenter: "Abrir Live-Center",
+    liveNoCoverage: "Nuestro proveedor de datos no tiene directo, estadísticas ni alineaciones de esta competición, pero yo te cuento cómo fue.",
     tabChat: 'Chat',
     tabJourney: 'Viaje',
     tabSettings: 'Ajustes',
@@ -1909,6 +1913,7 @@ const T: Record<LangCode, Translations> = {
     liveFollowing: "A seguir",
     liveGoal: "GOLO!",
     liveOpenCenter: "Abrir Live-Center",
+    liveNoCoverage: "O nosso parceiro de dados não tem direto, estatísticas nem onzes desta competição, mas eu conto-te como correu.",
     tabChat: 'Chat',
     tabJourney: 'Jornada',
     tabSettings: 'Configurações',
@@ -2347,6 +2352,7 @@ const T: Record<LangCode, Translations> = {
     liveFollowing: "Suivi",
     liveGoal: "BUT !",
     liveOpenCenter: "Ouvrir le Live-Center",
+    liveNoCoverage: "Notre partenaire de données n’a ni live, ni stats, ni compos pour cette compétition, mais je te raconte quand même.",
     tabChat: 'Chat',
     tabJourney: 'Parcours',
     tabSettings: 'Paramètres',
@@ -2785,6 +2791,7 @@ const T: Record<LangCode, Translations> = {
     liveFollowing: "Seguita",
     liveGoal: "GOL!",
     liveOpenCenter: "Apri il Live-Center",
+    liveNoCoverage: "Il nostro partner dati non ha cronaca, statistiche né formazioni per questa competizione, ma ti racconto io com’è andata.",
     tabChat: 'Chat',
     tabJourney: 'Percorso',
     tabSettings: 'Impostazioni',
@@ -3223,6 +3230,7 @@ const T: Record<LangCode, Translations> = {
     liveFollowing: "Urmărești",
     liveGoal: "GOL!",
     liveOpenCenter: "Deschide Live-Center",
+    liveNoCoverage: "Partenerul nostru de date nu are live, statistici sau echipe pentru această competiție, dar îți spun eu cum a fost.",
     tabChat: 'Chat',
     tabJourney: 'Călătorie',
     tabSettings: 'Setări',
@@ -3661,6 +3669,7 @@ const T: Record<LangCode, Translations> = {
     liveFollowing: "Takipte",
     liveGoal: "GOL!",
     liveOpenCenter: "Live-Center’ı aç",
+    liveNoCoverage: "Veri ortağımızın bu turnuva için anlatım, istatistik veya kadro verisi yok, ama nasıl geçtiğini ben anlatırım.",
     tabChat: "Sohbet",
     tabJourney: "Yolculuk",
     tabSettings: "Ayarlar",
@@ -4098,6 +4107,7 @@ const T: Record<LangCode, Translations> = {
     liveFollowing: "Pratim",
     liveGoal: "GOL!",
     liveOpenCenter: "Otvori Live-Center",
+    liveNoCoverage: "Naš partner za podatke nema prijenos, statistiku ni postave za ovo natjecanje, ali reći ću ti kako je bilo.",
     tabChat: "Chat",
     tabJourney: "Put",
     tabSettings: "Postavke",
