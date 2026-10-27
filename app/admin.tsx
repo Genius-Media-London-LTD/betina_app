@@ -1,21 +1,22 @@
 // Team dashboard: how BETina is doing — players, sign-ups, activity, what
-// players write. Only for accounts in public.admins (migration 024); the
-// server checks every call. Internal tool, so the copy is English only.
+// players write — and BETina's posts on X (review, approve, kill switch).
+// Only for accounts in public.admins (migrations 024, 025); the server checks
+// every call. Internal tool, so the copy is English only.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AnimatedNumber from '../src/components/AnimatedNumber';
 import BackButton from '../src/components/BackButton';
 import { Meta } from '../src/components/Urban';
 import {
-  AdminMessage, AdminUser, Count, Overview,
-  fetchAdminMessages, fetchAdminUsers, fetchOverview, useIsAdmin,
+  AdminMessage, AdminUser, Count, Overview, SocialMode, SocialPost, SocialState, SocialStatus,
+  decideSocial, fetchAdminMessages, fetchAdminUsers, fetchOverview, fetchSocial, setSocialMode, useIsAdmin,
 } from '../src/lib/admin';
 import { isDesktopWidth } from '../src/lib/layout';
 import { Colors, Fonts, displayType } from '../src/theme';
 
-type Tab = 'overview' | 'players' | 'chats';
+type Tab = 'overview' | 'players' | 'chats' | 'social';
 type Picked = { id: string; name: string };
 
 const LOCALE = 'de-AT';
@@ -65,7 +66,7 @@ export default function AdminScreen() {
           </View>
 
           <View style={styles.tabs}>
-            {(['overview', 'players', 'chats'] as Tab[]).map((k) => (
+            {(['overview', 'players', 'chats', 'social'] as Tab[]).map((k) => (
               <Pressable key={k} onPress={() => setTab(k)} style={[styles.tab, tab === k && styles.tabOn]}>
                 <Text style={[styles.tabText, tab === k && styles.tabTextOn]}>{k.toUpperCase()}</Text>
               </Pressable>
@@ -75,6 +76,7 @@ export default function AdminScreen() {
           {tab === 'overview' && <OverviewTab desktop={desktop} onPick={setPicked} />}
           {tab === 'players' && <PlayersTab desktop={desktop} onPick={setPicked} />}
           {tab === 'chats' && <ChatsTab onPick={setPicked} />}
+          {tab === 'social' && <SocialTab desktop={desktop} />}
         </ScrollView>
 
         {desktop && picked && (
@@ -414,6 +416,158 @@ function Conversation({ user, onClose }: { user: Picked; onClose: () => void }) 
   );
 }
 
+// ── Social: BETina on X ──────────────────────────────────────────────────────
+const MODES: { k: SocialMode; label: string; hint: string }[] = [
+  { k: 'off', label: 'OFF', hint: 'Stopped. BETina writes and posts nothing.' },
+  { k: 'drafts', label: 'DRAFTS', hint: 'BETina writes, the team decides. Only approved posts go out.' },
+  { k: 'auto', label: 'AUTO', hint: 'Match days, polls, goals, results, news and time travel go out on their own. Replies and anything the filter held back still wait here.' },
+];
+const VIEWS: { k: SocialStatus; label: string; empty: string }[] = [
+  { k: 'draft', label: 'TO REVIEW', empty: 'Nothing to review. BETina writes her next post when there’s something to say.' },
+  { k: 'approved', label: 'QUEUED', empty: 'Nothing waiting to go out.' },
+  { k: 'posted', label: 'POSTED', empty: 'Nothing posted yet.' },
+  { k: 'rejected', label: 'NOT POSTED', empty: 'Nothing rejected or skipped.' },
+];
+const KINDS: Record<string, string> = {
+  matchday: 'MATCH DAY', poll: 'POLL', goal: 'GOAL', result: 'FULL TIME', news: 'NEWS', history: 'TIME TRAVEL', reply: 'REPLY',
+};
+/** Like X: most emoji count double. */
+const xLength = (s: string) => [...s].reduce((n, ch) => n + ((ch.codePointAt(0) ?? 0) > 0x10ff ? 2 : 1), 0);
+
+function SocialTab({ desktop }: { desktop: boolean }) {
+  const [view, setView] = useState<SocialStatus>('draft');
+  const [data, setData] = useState<SocialState | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(() => {
+    setError(null);
+    fetchSocial(view).then(setData).catch((e) => setError(String(e?.message ?? e)));
+  }, [view]);
+  useEffect(() => { setData(null); load(); }, [load]);
+
+  const changeMode = async (mode: SocialMode) => {
+    setBusy(true);
+    try {
+      await setSocialMode(mode);
+      load();
+    } catch (e) {
+      setError(String((e as Error)?.message ?? e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (error) return <ErrorBox text={error} onRetry={load} />;
+  if (!data) return <ActivityIndicator color={Colors.primary} style={{ marginTop: 40 }} />;
+  const s = data.settings;
+  const count = (k: SocialStatus) => (k === 'rejected'
+    ? (data.counts.rejected ?? 0) + (data.counts.skipped ?? 0) + (data.counts.failed ?? 0)
+    : data.counts[k] ?? 0);
+
+  return (
+    <View style={{ gap: 14 }}>
+      <View style={styles.card}>
+        <View style={styles.breakTop}>
+          <Text style={styles.cardTitle}>BETINA ON X</Text>
+          <Text style={[styles.badge, s.x_ready && styles.badgeLime]}>{s.x_ready ? 'X CONNECTED' : 'X NOT CONNECTED · PREVIEW ONLY'}</Text>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 6 }}>
+          {MODES.map((m) => (
+            <Pressable key={m.k} disabled={busy} onPress={() => changeMode(m.k)} style={[styles.chip, s.mode === m.k && (m.k === 'off' ? styles.chipDanger : styles.chipOn)]}>
+              <Text style={[styles.chipText, s.mode === m.k && styles.chipTextOn]}>{m.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+        <Text style={styles.cell}>{MODES.find((m) => m.k === s.mode)?.hint}</Text>
+        <Meta>{`${data.posted_24h} / ${s.daily_limit} POSTED IN 24 H · ${s.lang.toUpperCase()} · LAST RUN ${ago(s.last_run)}`}</Meta>
+      </View>
+
+      <View style={styles.periodRow}>
+        <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+          {VIEWS.map((v) => (
+            <Pressable key={v.k} onPress={() => setView(v.k)} style={[styles.chip, view === v.k && styles.chipOn]}>
+              <Text style={[styles.chipText, view === v.k && styles.chipTextOn]}>{`${v.label} · ${count(v.k)}`}</Text>
+            </Pressable>
+          ))}
+        </View>
+        <Pressable onPress={load} style={styles.chip}><Text style={styles.chipText}>↻</Text></Pressable>
+      </View>
+
+      {data.posts.length === 0 && <Text style={styles.empty}>{VIEWS.find((v) => v.k === view)?.empty}</Text>}
+      <View style={[styles.grid, { alignItems: 'flex-start' }]}>
+        {data.posts.map((p) => <SocialCard key={p.id} post={p} onDone={load} style={desktop ? styles.half : styles.full} />)}
+      </View>
+    </View>
+  );
+}
+
+function SocialCard({ post, onDone, style }: { post: SocialPost; onDone: () => void; style: object }) {
+  const editable = post.status === 'draft' || post.status === 'approved' || post.status === 'failed';
+  const [text, setText] = useState(post.text);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const len = xLength(text);
+  const blocked = busy || len > 280 || !text.trim();
+
+  const decide = async (action: 'approve' | 'reject') => {
+    setBusy(true);
+    setError(null);
+    try {
+      await decideSocial(post.id, action, action === 'approve' && text !== post.text ? text : undefined);
+      onDone();
+    } catch (e) {
+      setError(String((e as Error)?.message ?? e));
+      setBusy(false);
+    }
+  };
+
+  return (
+    <View style={[styles.card, style]}>
+      <View style={styles.breakTop}>
+        <Text style={[styles.badge, styles.badgeLime]}>{KINDS[post.kind] ?? post.kind.toUpperCase()}</Text>
+        <Text style={styles.userMeta}>{`${dateTime(post.posted_at ?? post.created_at)} · ${ago(post.posted_at ?? post.created_at)}`}</Text>
+      </View>
+      {post.reply_author && (
+        <View style={styles.quote}>
+          <Text style={styles.userMeta}>{`@${post.reply_author} WROTE`}</Text>
+          <Text style={styles.feedText}>{post.reply_text}</Text>
+        </View>
+      )}
+      {editable
+        ? <TextInput multiline value={text} onChangeText={setText} style={[styles.search, styles.postInput]} />
+        : <Text style={styles.postText}>{post.text}</Text>}
+      {post.poll && (
+        <View style={{ gap: 4 }}>
+          {post.poll.map((o) => <Text key={o} style={styles.pollOption}>{o}</Text>)}
+        </View>
+      )}
+      <View style={styles.breakTop}>
+        <Text style={[styles.userMeta, { flex: 1 }]} numberOfLines={3}>{post.context ?? ''}</Text>
+        {editable && <Text style={[styles.userMeta, len > 280 && { color: Colors.danger }]}>{`${len}/280`}</Text>}
+      </View>
+      {post.flags.length > 0 && <Text style={styles.flagText}>{`HELD BACK: ${post.flags.join(', ').replace(/_/g, ' ').toUpperCase()}`}</Text>}
+      {post.error && <Text style={styles.flagText}>{post.error}</Text>}
+      {error && <Text style={styles.flagText}>{error}</Text>}
+      {editable && (
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Pressable disabled={blocked} onPress={() => decide('approve')} style={[styles.approveBtn, blocked && { opacity: 0.5 }]}>
+            <Text style={styles.denyBtnText}>{post.status === 'approved' ? 'SAVE' : post.status === 'failed' ? 'RETRY' : 'APPROVE'}</Text>
+          </Pressable>
+          <Pressable disabled={busy} onPress={() => decide('reject')} style={styles.rejectBtn}>
+            <Text style={styles.chipText}>REJECT</Text>
+          </Pressable>
+        </View>
+      )}
+      {post.x_id && (
+        <Pressable onPress={() => Linking.openURL(`https://x.com/i/web/status/${post.x_id}`)}>
+          <Text style={styles.errorRetry}>OPEN ON X →</Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
 function ErrorBox({ text, onRetry }: { text: string; onRetry?: () => void }) {
   return (
     <View style={styles.error}>
@@ -443,6 +597,7 @@ const styles = StyleSheet.create({
   chipOn: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   chipText: { color: Colors.textSecondary, fontSize: 11, fontFamily: Fonts.monoBold, letterSpacing: 0.6 },
   chipTextOn: { color: Colors.black },
+  chipDanger: { backgroundColor: Colors.danger, borderColor: Colors.danger },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tile: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.line, padding: 14, gap: 4 },
@@ -517,6 +672,14 @@ const styles = StyleSheet.create({
   bubbleBot: { alignSelf: 'flex-start', backgroundColor: Colors.card },
   bubbleMeta: { color: Colors.textMuted, fontSize: 9, fontFamily: Fonts.monoBold, letterSpacing: 0.6 },
   bubbleText: { color: Colors.white, fontSize: 14, lineHeight: 20, fontFamily: Fonts.regular },
+
+  quote: { borderLeftWidth: 3, borderLeftColor: Colors.borderStrong, paddingLeft: 10, gap: 2 },
+  postInput: { minHeight: 96, lineHeight: 21, textAlignVertical: 'top' },
+  postText: { color: Colors.white, fontSize: 15, lineHeight: 21, fontFamily: Fonts.regular },
+  pollOption: { color: Colors.white, borderWidth: 1, borderColor: Colors.borderStrong, paddingVertical: 6, paddingHorizontal: 10, fontSize: 13, fontFamily: Fonts.label },
+  flagText: { color: Colors.danger, fontSize: 11, fontFamily: Fonts.monoBold, letterSpacing: 0.4 },
+  approveBtn: { backgroundColor: Colors.primary, paddingVertical: 10, paddingHorizontal: 16 },
+  rejectBtn: { borderWidth: 1.5, borderColor: Colors.borderStrong, paddingVertical: 10, paddingHorizontal: 16, justifyContent: 'center' },
 
   error: { borderWidth: 1, borderColor: Colors.danger, padding: 12, gap: 6 },
   errorText: { color: Colors.danger, fontSize: 13, fontFamily: Fonts.regular },

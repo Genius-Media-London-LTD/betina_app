@@ -59,3 +59,35 @@ export function useIsAdmin(): boolean | undefined {
   }, []);
   return admin;
 }
+
+// ── BETina on X (migration 025) ─────────────────────────────────────────────
+export type SocialMode = 'off' | 'drafts' | 'auto';
+export type SocialStatus = 'draft' | 'approved' | 'posting' | 'posted' | 'rejected' | 'skipped' | 'failed';
+export type SocialPost = {
+  id: number; kind: string; status: SocialStatus; text: string; poll: string[] | null; context: string | null;
+  flags: string[]; reply_author: string | null; reply_text: string | null; expires_at: string | null;
+  x_id: string | null; error: string | null; decided_at: string | null; posted_at: string | null; created_at: string;
+};
+export type SocialState = {
+  settings: { mode: SocialMode; auto_kinds: string[]; daily_limit: number; lang: string; x_ready: boolean; last_run: string };
+  posted_24h: number;
+  counts: Partial<Record<SocialStatus, number>>;
+  posts: SocialPost[];
+};
+
+/** Posts by status ('rejected' also shows skipped and failed ones). */
+export async function fetchSocial(status: SocialStatus | null): Promise<SocialState> {
+  const { data, error } = await supabase.rpc('admin_social', { p_status: status, p_limit: 100 });
+  if (error) throw error;
+  return data as SocialState;
+}
+
+export async function decideSocial(id: number, action: 'approve' | 'reject', text?: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_social_decide', { p_id: id, p_action: action, p_text: text ?? null });
+  if (error) throw error;
+}
+
+export async function setSocialMode(mode: SocialMode): Promise<void> {
+  const { error } = await supabase.rpc('admin_social_mode', { p_mode: mode });
+  if (error) throw error;
+}
