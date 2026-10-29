@@ -91,7 +91,7 @@ const POST_SCHEMA = {
   required: ['skip', 'reason', 'text'],
   additionalProperties: false,
 };
-const MAX_LEN = 260; // X allows 280; the rest is room for the team's edits
+const MAX_LEN = 220; // X allows 280; the rest is room for the score line and the team's edits
 
 async function claudeJson<T>(system: string, user: string, schema: object): Promise<T | null> {
   try {
@@ -129,7 +129,7 @@ async function write(db: Db, kind: SocialKind, lang: string, facts: string): Pro
   if (out && !out.skip && xLength(out.text.trim()) > MAX_LEN) {
     out = await claudeJson<Out>(
       socialInstructions(kind, lang),
-      `${input}\n\nYour draft has ${xLength(out.text.trim())} characters, too long:\n${out.text}\nRewrite it in under 200 characters.`,
+      `${input}\n\nYour draft has ${xLength(out.text.trim())} characters, too long:\n${out.text}\nRewrite it in under 160 characters, same shape.`,
       POST_SCHEMA,
     );
   }
@@ -151,7 +151,8 @@ function flagsFor(d: Draft): string[] {
   if (BETTING.test(d.text) || d.poll?.some((o) => BETTING.test(o))) flags.push('betting_words');
   if (/https?:\/\//i.test(d.text)) flags.push('link');
   if (/(^|\s)@\w/.test(d.text)) flags.push('mention');
-  if (/#\w/.test(d.text)) flags.push('hashtag');
+  const tags = d.text.match(/#\w+/g)?.length ?? 0;
+  if (tags > 1 || (tags && (d.kind === 'reply' || d.kind === 'poll'))) flags.push('hashtags');
   if (xLength(d.text) > 280) flags.push('too_long');
   if (d.poll?.some((o) => o.length > 25)) flags.push('poll_option_too_long');
   return flags;
@@ -250,7 +251,8 @@ async function live(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
         `Score now: ${score} (${where}).`,
       ].join('\n');
       const { text, why } = await write(db, 'goal', s.lang, facts);
-      if (text) await save(db, s, { kind: 'goal', text, dedupe_key: key, context: facts, expires_at: new Date(i.at + 20 * 60_000).toISOString() });
+      // The score line comes from the data, so it's always right.
+      if (text) await save(db, s, { kind: 'goal', text: `GOAL ⚽ ${i.h.n} ${i.g[0] ?? 0}–${i.g[1] ?? 0} ${i.a.n}\n\n${text}`, dedupe_key: key, context: facts, expires_at: new Date(i.at + 20 * 60_000).toISOString() });
       else await pass(db, 'goal', key, facts, why);
     }
 
@@ -259,7 +261,7 @@ async function live(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
       if (await exists(db, key)) continue;
       const facts = `FULL TIME: ${score} (${where}).`;
       const { text, why } = await write(db, 'result', s.lang, facts);
-      if (text) await save(db, s, { kind: 'result', text, dedupe_key: key, context: facts, expires_at: new Date(i.at + 60 * 60_000).toISOString() });
+      if (text) await save(db, s, { kind: 'result', text: `FT: ${i.h.n} ${i.g[0] ?? 0}–${i.g[1] ?? 0} ${i.a.n}\n\n${text}`, dedupe_key: key, context: facts, expires_at: new Date(i.at + 60 * 60_000).toISOString() });
       else await pass(db, 'result', key, facts, why);
     }
   }
