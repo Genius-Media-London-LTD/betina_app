@@ -88,30 +88,51 @@ function PhoneShell() {
     scrollRef.current?.scrollTo({ x: i * width, y: 0, animated });
   }, [scrollRef, width]);
 
-  /** Jump to a page from the tabs or the menu. */
+  // A jump from a tab, the menu or the logo. The pager mustn't take the scroll
+  // it causes for a swipe — an animated jump across several pages (paging on
+  // Android in particular) could come to rest a page too far. So: neighbours
+  // slide, farther pages switch at once, and swipe handling waits meanwhile.
+  const jumping = useRef(false);
+  const jumpTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const jump = useCallback((i: number, from: number) => {
+    const slide = Math.abs(i - from) === 1;
+    jumping.current = true;
+    clearTimeout(jumpTimer.current);
+    jumpTimer.current = setTimeout(() => {
+      jumping.current = false;
+      scrollTo(activeRef.current, false); // wherever it ended: the chosen page
+    }, slide ? 600 : 150);
+    if (!slide) progress.value = i;
+    scrollTo(i, slide);
+  }, [progress, scrollTo]);
+
+  /** Jump to a page from the tabs, the menu or the logo. */
   const goTo = useCallback((i: number) => {
     Haptics.selectionAsync();
     setMenu(false);
-    if (i !== activeRef.current) {
+    const from = activeRef.current;
+    if (i !== from) {
       show(i);
       router.navigate(PAGES[i].route as never);
     }
-    scrollTo(i, true);
-  }, [router, scrollTo, show]);
+    jump(i, from);
+  }, [router, jump, show]);
 
   // Route → page (deep links, pushes, router.push('/(tabs)/chat') elsewhere).
   useEffect(() => {
-    if (routeIndex !== activeRef.current) {
+    const from = activeRef.current;
+    if (routeIndex !== from) {
       show(routeIndex);
-      scrollTo(routeIndex, true);
+      jump(routeIndex, from);
     }
-  }, [routeIndex, scrollTo, show]);
+  }, [routeIndex, jump, show]);
 
   // Keep the visible page in place when the width changes (web resize, rotation).
   useEffect(() => { scrollTo(activeRef.current, false); }, [width, scrollTo]);
 
   /** A swipe came to rest on page x / width. */
   const settle = useCallback((x: number) => {
+    if (jumping.current) return;
     const i = Math.max(0, Math.min(PAGES.length - 1, Math.round(x / width)));
     if (i === activeRef.current) return;
     show(i);
@@ -162,7 +183,9 @@ function PhoneShell() {
         {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top }]}>
           <View style={styles.bar}>
-            <Wordmark />
+            <Pressable onPress={() => goTo(0)} hitSlop={8} accessibilityRole="button" accessibilityLabel="BETina home">
+              <Wordmark />
+            </Pressable>
             <View style={styles.barRight}>
               <Pressable onPress={() => router.push('/notifications')} hitSlop={6} style={({ pressed }) => [styles.bell, pressed && styles.pressed]}>
                 <Text style={styles.bellIcon}>🔔</Text>
@@ -299,6 +322,7 @@ function FullMenu({
   const { t, lang } = useI18n();
   const { profile } = useProfile();
   const admin = useIsAdmin();
+  const { width } = useWindowDimensions();
   if (!open) return null;
 
   const name = (profile?.name ?? '').trim();
@@ -327,6 +351,11 @@ function FullMenu({
     { label: t.settingsHelp, href: '/help' },
     ...(admin ? [{ label: 'Team dashboard', href: '/admin' }] : []),
   ];
+  // One size for every item, so the longest one fits (Anton runs about half an
+  // em wide). Shrinking only the long rows made some — like 06 with its tier
+  // badge — look broken next to the others.
+  const longest = Math.max(...items.map((it) => it.label.length + (it.badge ? it.badge.length * 0.6 + 2 : 0)));
+  const labelSize = Math.max(24, Math.min(38, Math.floor((width - 36 - 32) / (longest * 0.5))));
   const quick = [
     { k: t.settingsLanguage, v: LANGUAGES.find((l) => l.code === lang)?.nativeName ?? lang, href: '/language' },
     { k: t.menuTeam, v: profile?.favourite_team ?? '—', href: '/settings' },
@@ -374,7 +403,7 @@ function FullMenu({
                     {({ pressed }) => (
                       <>
                         <Text style={[styles.itemNum, (on || pressed) && styles.itemTextOn]}>{String(i + 1).padStart(2, '0')}</Text>
-                        <Text style={[styles.itemLabel, (on || pressed) && styles.itemTextOn]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+                        <Text style={[styles.itemLabel, displayType(labelSize, labelSize + 4), (on || pressed) && styles.itemTextOn]} numberOfLines={1}>
                           {it.label.toUpperCase()}
                         </Text>
                         {it.badge && (
