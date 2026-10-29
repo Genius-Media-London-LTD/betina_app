@@ -362,7 +362,13 @@ async function history(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
 }
 
 // ── X API (OAuth 1.0a, user context of BETina's account) ────────────────────
-const env = (k: string) => Deno.env.get(k) ?? '';
+// Pasted keys sometimes bring spaces or quotes along.
+const env = (k: string) => (Deno.env.get(k) ?? '').trim().replace(/^["']|["']$/g, '');
+const X_KEYS = ['X_API_KEY', 'X_API_SECRET', 'X_ACCESS_TOKEN', 'X_ACCESS_SECRET'];
+/** For a 401: the keys' lengths and shape, never their values (expected about 25/50/50/45, token "<digits>-…"). */
+const keyShape = () => X_KEYS.map((k) => env(k).length).join('/') +
+  (/^\d+-/.test(env('X_ACCESS_TOKEN')) ? '' : ', access token not "<digits>-…"') +
+  (X_KEYS.some((k) => /\s/.test(env(k))) ? ', whitespace inside a key' : '');
 const xReady = () => ['X_API_KEY', 'X_API_SECRET', 'X_ACCESS_TOKEN', 'X_ACCESS_SECRET'].every((k) => env(k));
 const enc = (s: string) => encodeURIComponent(s).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
 
@@ -395,7 +401,7 @@ async function xFetch(method: 'GET' | 'POST', url: string, body?: unknown) {
     signal: AbortSignal.timeout(20_000),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(`x ${res.status}: ${JSON.stringify(data).slice(0, 300)}`);
+  if (!res.ok) throw new Error(`x ${res.status}: ${JSON.stringify(data).slice(0, 300)}${res.status === 401 ? ` (keys ${keyShape()})` : ''}`);
   return data;
 }
 
