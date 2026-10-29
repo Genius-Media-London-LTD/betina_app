@@ -91,7 +91,7 @@ const POST_SCHEMA = {
   required: ['skip', 'reason', 'text'],
   additionalProperties: false,
 };
-const MAX_LEN = 220; // X allows 280; the rest is room for the score line and the team's edits
+const MAX_LEN = 270; // X allows 280 — keep a little room for the team's edits
 
 async function claudeJson<T>(system: string, user: string, schema: object): Promise<T | null> {
   try {
@@ -116,9 +116,11 @@ type Written = { text?: string; why?: string };
 
 /**
  * BETina writes one post from the facts. She sees her latest posts, so she
- * doesn't repeat herself; a draft that's too long gets one rewrite.
+ * doesn't repeat herself. A draft that doesn't fit X gets up to two shorter
+ * rewrites; if it still doesn't fit, it's dropped — nobody has to cut it.
+ * `reserve`: characters the caller adds in front (the score line).
  */
-async function write(db: Db, kind: SocialKind, lang: string, facts: string): Promise<Written> {
+async function write(db: Db, kind: SocialKind, lang: string, facts: string, reserve = 0): Promise<Written> {
   const { data: recent } = await db.from('social_posts').select('text')
     .in('status', ['draft', 'approved', 'posted']).order('created_at', { ascending: false }).limit(12);
   const before = (recent ?? []).map((r) => `- ${r.text}`).join('\n');
@@ -126,16 +128,38 @@ async function write(db: Db, kind: SocialKind, lang: string, facts: string): Pro
   type Out = { skip: boolean; reason: string; text: string };
 
   let out = await claudeJson<Out>(socialInstructions(kind, lang), input, POST_SCHEMA);
-  if (out && !out.skip && xLength(out.text.trim()) > MAX_LEN) {
+  for (const target of [160, 110]) {
+    if (!out || out.skip || xLength(out.text.trim()) + reserve <= MAX_LEN) break;
     out = await claudeJson<Out>(
       socialInstructions(kind, lang),
-      `${input}\n\nYour draft has ${xLength(out.text.trim())} characters, too long:\n${out.text}\nRewrite it in under 160 characters, same shape.`,
+      `${input}\n\nYour draft has ${xLength(out.text.trim())} characters, too long:\n${out.text}\nRewrite it in under ${target} characters, same shape.`,
       POST_SCHEMA,
     );
   }
   if (!out) return { why: 'model error' };
   const text = out.text?.trim();
-  return out.skip || !text ? { why: out.reason?.trim() || 'nothing to say' } : { text };
+  if (out.skip || !text) return { why: out.reason?.trim() || 'nothing to say' };
+  return xLength(text) + reserve <= MAX_LEN ? { text } : { why: 'too long even after rewriting' };
+}
+
+/** Drafts written before the rewrite rule: shorten them in place. */
+async function shortenDrafts(db: Db, s: Settings) {
+  const { data: long } = await db.from('social_posts').select('id, kind, text, poll')
+    .eq('status', 'draft').contains('flags', ['too_long']).limit(3);
+  for (const p of long ?? []) {
+    const out = await claudeJson<{ skip: boolean; reason: string; text: string }>(
+      socialInstructions(p.kind as SocialKind, s.lang),
+      `Shorten this post of yours to under 200 characters. Keep its facts, its shape and its first line if that is a score line:\n${p.text}`,
+      POST_SCHEMA,
+    );
+    const text = out?.text?.trim();
+    if (!text || out?.skip || xLength(text) > MAX_LEN) {
+      await db.from('social_posts').update({ status: 'skipped', error: 'too long' }).eq('id', p.id);
+      continue;
+    }
+    const d = { kind: p.kind as SocialKind, text, poll: p.poll ?? undefined, dedupe_key: '', context: '' };
+    await db.from('social_posts').update({ text, flags: flagsFor(d) }).eq('id', p.id);
+  }
 }
 
 // ── Filters ──────────────────────────────────────────────────────────────────
@@ -250,9 +274,10 @@ async function live(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
         `GOAL for ${team}${i.min ? ` in minute ${i.min}` : ''}${i.player ? `, scored by ${i.player}` : ''}${i.detail && i.detail !== 'Normal Goal' ? ` (${i.detail})` : ''}.`,
         `Score now: ${score} (${where}).`,
       ].join('\n');
-      const { text, why } = await write(db, 'goal', s.lang, facts);
       // The score line comes from the data, so it's always right.
-      if (text) await save(db, s, { kind: 'goal', text: `GOAL ⚽ ${i.h.n} ${i.g[0] ?? 0}–${i.g[1] ?? 0} ${i.a.n}\n\n${text}`, dedupe_key: key, context: facts, expires_at: new Date(i.at + 20 * 60_000).toISOString() });
+      const head = `GOAL ⚽ ${score}`;
+      const { text, why } = await write(db, 'goal', s.lang, facts, xLength(head) + 2);
+      if (text) await save(db, s, { kind: 'goal', text: `${head}\n\n${text}`, dedupe_key: key, context: facts, expires_at: new Date(i.at + 20 * 60_000).toISOString() });
       else await pass(db, 'goal', key, facts, why);
     }
 
@@ -260,8 +285,9 @@ async function live(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
       const key = `result:${i.id}`;
       if (await exists(db, key)) continue;
       const facts = `FULL TIME: ${score} (${where}).`;
-      const { text, why } = await write(db, 'result', s.lang, facts);
-      if (text) await save(db, s, { kind: 'result', text: `FT: ${i.h.n} ${i.g[0] ?? 0}–${i.g[1] ?? 0} ${i.a.n}\n\n${text}`, dedupe_key: key, context: facts, expires_at: new Date(i.at + 60 * 60_000).toISOString() });
+      const head = `FT: ${score}`;
+      const { text, why } = await write(db, 'result', s.lang, facts, xLength(head) + 2);
+      if (text) await save(db, s, { kind: 'result', text: `${head}\n\n${text}`, dedupe_key: key, context: facts, expires_at: new Date(i.at + 60 * 60_000).toISOString() });
       else await pass(db, 'result', key, facts, why);
     }
   }
@@ -497,6 +523,7 @@ Deno.serve(async () => {
   await step('live', () => live(db, { ...s, featured: fresh?.featured ?? s.featured }, v));
   await step('news', () => news(db, s, v));
   await step('history', () => history(db, s, v));
+  await step('shorten', () => shortenDrafts(db, s));
   let posted = 0;
   if (ready) {
     await step('mentions', () => mentions(db, s));
