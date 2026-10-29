@@ -83,10 +83,15 @@ function vienna(now = new Date()) {
 // ── Claude ───────────────────────────────────────────────────────────────────
 const POST_SCHEMA = {
   type: 'object',
-  properties: { skip: { type: 'boolean' }, text: { type: 'string' } },
-  required: ['skip', 'text'],
+  properties: {
+    skip: { type: 'boolean' },
+    reason: { type: 'string', description: 'If skip: why, in a few words. Else empty.' },
+    text: { type: 'string' },
+  },
+  required: ['skip', 'reason', 'text'],
   additionalProperties: false,
 };
+const MAX_LEN = 260; // X allows 280; the rest is room for the team's edits
 
 async function claudeJson<T>(system: string, user: string, schema: object): Promise<T | null> {
   try {
@@ -107,11 +112,30 @@ async function claudeJson<T>(system: string, user: string, schema: object): Prom
   }
 }
 
-/** BETina writes one post from the facts; null = she (or the model) passed. */
-async function write(kind: SocialKind, lang: string, facts: string): Promise<string | null> {
-  const out = await claudeJson<{ skip: boolean; text: string }>(socialInstructions(kind, lang), facts, POST_SCHEMA);
-  const text = out?.text?.trim();
-  return !out || out.skip || !text ? null : text;
+type Written = { text?: string; why?: string };
+
+/**
+ * BETina writes one post from the facts. She sees her latest posts, so she
+ * doesn't repeat herself; a draft that's too long gets one rewrite.
+ */
+async function write(db: Db, kind: SocialKind, lang: string, facts: string): Promise<Written> {
+  const { data: recent } = await db.from('social_posts').select('text')
+    .in('status', ['draft', 'approved', 'posted']).order('created_at', { ascending: false }).limit(12);
+  const before = (recent ?? []).map((r) => `- ${r.text}`).join('\n');
+  const input = `${facts}${before ? `\n\nYour latest posts — don’t reuse their openings, jokes or images:\n${before}` : ''}`;
+  type Out = { skip: boolean; reason: string; text: string };
+
+  let out = await claudeJson<Out>(socialInstructions(kind, lang), input, POST_SCHEMA);
+  if (out && !out.skip && xLength(out.text.trim()) > MAX_LEN) {
+    out = await claudeJson<Out>(
+      socialInstructions(kind, lang),
+      `${input}\n\nYour draft has ${xLength(out.text.trim())} characters, too long:\n${out.text}\nRewrite it in under 200 characters.`,
+      POST_SCHEMA,
+    );
+  }
+  if (!out) return { why: 'model error' };
+  const text = out.text?.trim();
+  return out.skip || !text ? { why: out.reason?.trim() || 'nothing to say' } : { text };
 }
 
 // ── Filters ──────────────────────────────────────────────────────────────────
@@ -142,8 +166,8 @@ async function save(db: Db, s: Settings, d: Draft) {
 }
 
 /** BETina passed (or the model failed): remember it, so the next run doesn't try again. */
-async function pass(db: Db, kind: SocialKind, key: string, context: string) {
-  await db.from('social_posts').insert({ kind, text: '(BETina passed)', dedupe_key: key, context, status: 'skipped' });
+async function pass(db: Db, kind: SocialKind, key: string, context: string, why?: string) {
+  await db.from('social_posts').insert({ kind, text: `(BETina passed${why ? `: ${why}` : ''})`, dedupe_key: key, context, status: 'skipped' });
 }
 
 async function exists(db: Db, key: string) {
@@ -188,11 +212,11 @@ async function matchday(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
     const { m, league } = byId.get(id)!;
     return `${m.h.n} vs ${m.a.n} — ${league}, kick-off ${time(m.ts)} CET`;
   }).join('\n');
-  const text = await write('matchday', s.lang, `Today’s biggest matches:\n${facts}`);
+  const { text } = await write(db, 'matchday', s.lang, `Today’s biggest matches:\n${facts}`);
   if (text) await save(db, s, { kind: 'matchday', text, dedupe_key: `matchday:${v.date}`, context: facts, expires_at: `${v.date}T23:00:00Z` });
 
   const top = byId.get(featured[0])!;
-  const question = await write('poll', s.lang, `Match: ${top.m.h.n} vs ${top.m.a.n} — ${top.league}, kick-off ${time(top.m.ts)} CET`);
+  const { text: question } = await write(db, 'poll', s.lang, `Match: ${top.m.h.n} vs ${top.m.a.n} — ${top.league}, kick-off ${time(top.m.ts)} CET`);
   if (question) {
     const short = (n: string) => (n.length > 25 ? n.slice(0, 24) + '…' : n);
     await save(db, s, {
@@ -212,7 +236,7 @@ async function live(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
   for (const i of incidents) {
     if (!ids.has(i.id) || now - i.at > LIVE_WINDOW_MS) continue;
     const score = `${i.h.n} ${i.g[0] ?? 0}–${i.g[1] ?? 0} ${i.a.n}`;
-    const where = `${i.league.name}${i.league.round ? `, ${i.league.round}` : ''}`;
+    const where = `${i.league.name}, ${i.league.country}`;
 
     if (i.type === 'goal') {
       if (now - i.at < GOAL_DELAY_MS) continue;
@@ -225,18 +249,18 @@ async function live(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
         `GOAL for ${team}${i.min ? ` in minute ${i.min}` : ''}${i.player ? `, scored by ${i.player}` : ''}${i.detail && i.detail !== 'Normal Goal' ? ` (${i.detail})` : ''}.`,
         `Score now: ${score} (${where}).`,
       ].join('\n');
-      const text = await write('goal', s.lang, facts);
+      const { text, why } = await write(db, 'goal', s.lang, facts);
       if (text) await save(db, s, { kind: 'goal', text, dedupe_key: key, context: facts, expires_at: new Date(i.at + 20 * 60_000).toISOString() });
-      else await pass(db, 'goal', key, facts);
+      else await pass(db, 'goal', key, facts, why);
     }
 
     if (i.type === 'ft') {
       const key = `result:${i.id}`;
       if (await exists(db, key)) continue;
       const facts = `FULL TIME: ${score} (${where}).`;
-      const text = await write('result', s.lang, facts);
+      const { text, why } = await write(db, 'result', s.lang, facts);
       if (text) await save(db, s, { kind: 'result', text, dedupe_key: key, context: facts, expires_at: new Date(i.at + 60 * 60_000).toISOString() });
-      else await pass(db, 'result', key, facts);
+      else await pass(db, 'result', key, facts, why);
     }
   }
 }
@@ -265,9 +289,9 @@ async function news(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
     if (SENSITIVE.test(source)) continue;
     const facts = `Headline: ${a.headline}\nSummary: ${a.teaser}\nArticle:\n${(a.body ?? []).slice(0, 4).join('\n')}`;
     tries++;
-    const text = await write('news', s.lang, facts);
+    const { text, why } = await write(db, 'news', s.lang, facts);
     if (!text) {
-      await pass(db, 'news', key, a.headline);
+      await pass(db, 'news', key, a.headline, why);
       continue;
     }
     await save(db, s, { kind: 'news', text, dedupe_key: key, context: a.headline, expires_at: new Date(Date.now() + 12 * 3_600_000).toISOString() });
@@ -314,7 +338,7 @@ async function history(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
   }
 
   if (facts) {
-    const text = await write('history', s.lang, facts);
+    const { text } = await write(db, 'history', s.lang, facts);
     if (text) return save(db, s, { kind: 'history', text, dedupe_key: key, context, expires_at: `${v.date}T23:00:00Z` });
     facts = null;
   }
@@ -332,9 +356,9 @@ async function history(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
     context = `Moment · ${m.title}`;
     await db.from('social_moments').update({ last_used: v.date }).eq('id', m.id);
   }
-  const text = facts ? await write('history', s.lang, facts) : null;
+  const { text, why } = facts ? await write(db, 'history', s.lang, facts) : { text: undefined, why: 'no moment found' };
   if (text) await save(db, s, { kind: 'history', text, dedupe_key: key, context, expires_at: `${v.date}T23:00:00Z` });
-  else await pass(db, 'history', key, context || 'no moment found');
+  else await pass(db, 'history', key, context, why);
 }
 
 // ── X API (OAuth 1.0a, user context of BETina's account) ────────────────────
@@ -430,7 +454,7 @@ async function mentions(db: Db, s: Settings) {
   for (const m of res.data ?? []) {
     if (m.author_id === me) continue;
     const author = res.includes?.users?.find((u) => u.id === m.author_id)?.username ?? 'someone';
-    const text = await write('reply', s.lang, `Mention by @${author}:\n"""${m.text}"""`);
+    const { text } = await write(db, 'reply', s.lang, `Mention by @${author}:\n"""${m.text}"""`);
     if (!text) continue;
     await save(db, s, {
       kind: 'reply', text, dedupe_key: `reply:${m.id}`, context: `@${author}`,
