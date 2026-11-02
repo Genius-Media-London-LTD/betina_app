@@ -1,4 +1,5 @@
 import { langForDialCode, useI18n } from '../../src/lib/i18n';
+import { toE164 } from '../../src/lib/phone';
 import React, { useState } from 'react';
 import {
   FlatList,
@@ -93,7 +94,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
 
   const sendCode = async () => {
-    const fullPhone = `${dialEntry.code}${phone.replace(/\s/g, '')}`;
+    const fullPhone = toE164(dialEntry.code, phone);
     if (phone.replace(/\D/g, '').length < 6) {
       setError(t.loginErrShort);
       return;
