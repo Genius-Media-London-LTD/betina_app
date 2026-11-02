@@ -5,7 +5,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { G2PError } from './g2p.js';
 import {
-  liveDay, liveFind, liveH2H, liveIncidents, liveMatch, liveNow, liveStatus, liveTable, liveTake,
+  liveDay, liveFind, liveH2H, liveIncidents, liveMatch, liveNext, liveNow, liveStatus, liveTable, liveTake,
 } from './livescore.js';
 import { newsArticle, newsList, newsPool } from './news.js';
 import { lookupEvent, lookupTeam, searchTeams, teamLast, teamNext } from './sportsdb.js';
@@ -68,6 +68,7 @@ app.get('/v1/live/table/:league', async (c) => send(c, await liveTable(c.req.par
 app.get('/v1/live/h2h/:home/:away', async (c) => send(c, await liveH2H(c.req.param('home'), c.req.param('away')), 3600));
 app.get('/v1/live/find', async (c) => send(c, await liveFind(c.req.query('q')), 15));
 app.get('/v1/live/take/:id', async (c) => send(c, await liveTake(c.req.param('id'), c.req.query('lang')), 30));
+app.get('/v1/live/next', async (c) => send(c, await liveNext({ teams: c.req.query('teams'), matches: c.req.query('matches') }), 30));
 app.get('/v1/live/status', (c) => send(c, liveStatus(), 0));
 
 app.get('/v1/voice/budget', voiceBudget);

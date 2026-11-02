@@ -13,12 +13,13 @@ import { Meta, Sticker } from '../components/Urban';
 import MomentModal, { Moment, nextMoment } from '../components/Moments';
 import PhotoMomentModal, { HitToast } from '../components/PhotoMoments';
 import HomeLive from '../components/live/HomeLive';
+import YourGames from '../components/YourGames';
 import {
   HitMoment, PhotoMoment, bigMomentShown, checkMoments, claimBigMoment, matchdayMoment, streakMoment, takeHits, tipMoment,
 } from '../lib/moments';
 import { useSession } from '../hooks/useSession';
 import { tiers } from '../lib/demo';
-import { MatchEvent, fetchTeamNext, formatKickoff } from '../lib/sports';
+import { MatchEvent, fetchTeamNext } from '../lib/sports';
 import { supabase } from '../lib/supabase';
 import { useChrome } from '../components/chrome';
 import { Colors, Fonts, displayType } from '../theme';
@@ -42,19 +43,6 @@ type Profile = {
 };
 
 const kickoffDate = (e: MatchEvent) => new Date(`${e.date}T${e.time || '00:00:00'}`);
-
-/** Days / hours / minutes / seconds until kickoff, ticking every second. */
-function useCountdown(target: Date | null) {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    if (!target) return;
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, [target]);
-  if (!target) return null;
-  const s = Math.max(0, Math.floor((target.getTime() - now) / 1000));
-  return { hoursTotal: Math.floor(s / 3600), parts: [Math.floor(s / 86400), Math.floor(s / 3600) % 24, Math.floor(s / 60) % 60, s % 60] };
-}
 
 export default function Home() {
   const { t, lang } = useI18n();
@@ -109,7 +97,6 @@ export default function Home() {
   }, [teamId]);
 
   const nextMatch = fixtures.find((e) => kickoffDate(e).getTime() > Date.now()) ?? null;
-  const countdown = useCountdown(nextMatch ? kickoffDate(nextMatch) : null);
 
   // Moments, once profile + fixtures are in: one big moment per visit, in order
   // tier-up, birthday, matchday, days streak, Tippspiel (lib/moments.ts);
@@ -151,7 +138,6 @@ export default function Home() {
 
   const now = new Date();
   const stamp = `${now.toLocaleDateString(lang, { weekday: 'short' }).replace('.', '')} · ${now.toLocaleDateString(lang, { day: '2-digit', month: '2-digit' })} · ${now.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' })}`;
-  const units = t.homeCountdownUnits.split('|');
   const nameSize = firstName.length > 9 ? 52 : firstName.length > 6 ? 64 : 76;
 
   const tiles = [
@@ -227,44 +213,9 @@ export default function Home() {
             </Pressable>
           </Animated.View>
 
-          {/* Your game */}
+          {/* Your game(s): starred in Live first, then the favourite team */}
           <Animated.View entering={FadeInDown.delay(180).duration(450)}>
-            <View style={styles.sectionRow}>
-              <Text style={styles.section}>{t.homeYourGame.toUpperCase()}</Text>
-              {countdown && <Meta color={Colors.primary}>{t.homeInHours.replace('{n}', String(countdown.hoursTotal))}</Meta>}
-            </View>
-            {!teamId ? (
-              <Pressable onPress={() => go('/settings')} style={styles.emptyCard}>
-                <Text style={styles.emptyText}>{t.homePickTeam}</Text>
-              </Pressable>
-            ) : loadingFixtures ? (
-              <View style={styles.emptyCard}><ActivityIndicator color={Colors.primary} /></View>
-            ) : !nextMatch ? (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>{t.homeNoFixtures.replace('{team}', team ?? '')}</Text>
-              </View>
-            ) : (
-              <View style={styles.game}>
-                <Meta color={Colors.black} style={{ fontFamily: Fonts.monoBold }}>
-                  {`${nextMatch.league} · ${formatKickoff(nextMatch.date, nextMatch.time, lang, { today: t.homeToday, tomorrow: t.homeTomorrow })}`}
-                </Meta>
-                <View style={styles.teams}>
-                  <Text style={styles.team} numberOfLines={2} adjustsFontSizeToFit>{nextMatch.home.toUpperCase()}</Text>
-                  <Text style={styles.vs}>VS</Text>
-                  <Text style={[styles.team, { textAlign: 'right' }]} numberOfLines={2} adjustsFontSizeToFit>{nextMatch.away.toUpperCase()}</Text>
-                </View>
-                {countdown && (
-                  <View style={styles.countdown}>
-                    {countdown.parts.map((v, i) => (
-                      <View key={i} style={styles.cdBox}>
-                        <Text style={styles.cdValue}>{String(v).padStart(2, '0')}</Text>
-                        <Text style={styles.cdUnit}>{(units[i] ?? '').toUpperCase()}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </View>
-            )}
+            <YourGames favourite={nextMatch} loading={!!teamId && loadingFixtures} team={team} onPickTeam={() => go('/settings')} />
           </Animated.View>
 
           {/* Tiles */}
@@ -320,17 +271,6 @@ const styles = StyleSheet.create({
   replyText: { color: Colors.black, fontSize: 15, fontFamily: Fonts.label, letterSpacing: 0.6 },
 
   sectionRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 },
-  section: { color: Colors.white, fontSize: 34, fontFamily: Fonts.display },
-  emptyCard: { borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface, padding: 18, minHeight: 80, justifyContent: 'center' },
-  emptyText: { color: Colors.textSecondary, fontSize: 15, lineHeight: 21, fontFamily: Fonts.medium },
-  game: { backgroundColor: Colors.primary, padding: 16, gap: 12 },
-  teams: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  team: { ...displayType(40, 40), flex: 1, color: Colors.black },
-  vs: { color: Colors.black, opacity: 0.45, fontSize: 18, fontFamily: Fonts.display },
-  countdown: { flexDirection: 'row', gap: 8 },
-  cdBox: { flex: 1, backgroundColor: Colors.black, paddingVertical: 8, alignItems: 'center' },
-  cdValue: { ...displayType(30, 32), color: Colors.primary },
-  cdUnit: { color: Colors.white, fontSize: 9, fontFamily: Fonts.mono, letterSpacing: 1 },
 
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tile: {

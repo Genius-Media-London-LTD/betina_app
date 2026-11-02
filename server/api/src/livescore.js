@@ -314,6 +314,38 @@ export async function liveMatch(id) {
   return { status: 200, body: { serverNow: Date.now(), match: fresh ? { ...d, st: fresh.st, min: fresh.min, ex: fresh.ex, g: fresh.g, red: fresh.red ?? d.red } : d } };
 }
 
+/**
+ * GET /v1/live/next?teams=1,2&matches=3,4 — the player's starred games for
+ * Home: each followed team's next (or running) match and the followed
+ * matches, live score merged in. Finished games are left out.
+ */
+export async function liveNext({ teams, matches }) {
+  const ids = (s) => [...new Set(String(s ?? '').split(',').map(Number).filter((n) => Number.isInteger(n) && n > 0))].slice(0, 12);
+  const pick = (f) => (f ? { r: row(f), lg: leagueOf(f) } : null);
+  const [byTeam, byMatch] = await Promise.all([
+    Promise.all(ids(teams).map((id) => {
+      // A match the team is playing right now counts as its next one.
+      const running = [...live.values()].find((v) => v.h.id === id || v.a.id === id);
+      if (running?.lgx) return { r: strip(running), lg: running.lgx };
+      return cached(`next:${id}`, 30 * 60_000, async () => pick((await af('fixtures', { team: id, next: 1 }))[0]))
+        .catch(() => null);
+    })),
+    Promise.all(ids(matches).map((id) => cached(`fixture:${id}`, 10 * 60_000, async () => {
+      const [f] = await af('fixtures', { id });
+      return pick(f);
+    }).catch(() => null))),
+  ]);
+  const games = [];
+  for (const g of [...byMatch, ...byTeam]) {
+    if (!g || games.some((x) => x.r.id === g.r.id)) continue;
+    const fresh = live.get(g.r.id);
+    const r = fresh ? { ...g.r, st: fresh.st, min: fresh.min, ex: fresh.ex, g: fresh.g } : g.r;
+    if (FINISHED.has(r.st)) continue;
+    games.push({ r, lg: g.lg });
+  }
+  return { status: 200, body: { serverNow: Date.now(), games } };
+}
+
 // ── Tables (with the live state) ─────────────────────────────────────────────
 const tableRaw = (league, season) => cached(`table:${league}:${season}`, 10 * 60_000, async () => {
   const [res] = await af('standings', { league, season });

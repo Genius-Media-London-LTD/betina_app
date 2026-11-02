@@ -92,6 +92,9 @@ async function get<T>(path: string): Promise<T> {
 }
 
 export const fetchDay = (date: string) => get<DayData>(`/v1/live/day?date=${date}&tz=${-new Date().getTimezoneOffset()}`);
+/** The starred teams' next matches and the starred matches (ids comma-separated), finished ones left out. */
+export const fetchNext = (teams: string, matches: string) =>
+  get<{ games: { r: Row; lg: League }[] }>(`/v1/live/next?teams=${teams}&matches=${matches}`).then((d) => d.games);
 export const fetchMatch = (id: number) => get<{ serverNow: number; match: MatchDetail }>(`/v1/live/match/${id}`).then((d) => d.match);
 export const fetchTable = (league: number, season: number) => get<{ groups: TableRow[][] }>(`/v1/live/table/${league}?season=${season}`).then((d) => d.groups);
 export const fetchH2H = (home: number, away: number) => get<H2H>(`/v1/live/h2h/${home}/${away}`);
