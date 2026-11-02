@@ -64,6 +64,10 @@ function PhoneShell() {
   const activeRef = useRef(routeIndex);
   // Pages mount when they are (next to) the visible one and then stay mounted.
   const [mounted, setMounted] = useState<number[]>(() => [routeIndex - 1, routeIndex, routeIndex + 1]);
+  // Where the pager starts. Only the first value counts: a contentOffset that
+  // follows the route got re-applied on every re-render (Android), which
+  // flashed the previous page during a jump before the route caught up.
+  const [startOffset] = useState(() => ({ x: routeIndex * width, y: 0 }));
   const [menu, setMenu] = useState(false);
   const [unread, setUnread] = useState(0);
   const progress = useSharedValue(routeIndex);
@@ -170,7 +174,7 @@ function PhoneShell() {
           onScroll={onScroll}
           scrollEventThrottle={16}
           keyboardShouldPersistTaps="handled"
-          contentOffset={{ x: routeIndex * width, y: 0 }}
+          contentOffset={startOffset}
           onLayout={() => scrollTo(activeRef.current, false)}
         >
           {PAGES.map((p, i) => (
