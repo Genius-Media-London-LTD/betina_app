@@ -19,6 +19,7 @@ import ChatBubble from '../../src/components/ChatBubble';
 import GlowButton from '../../src/components/GlowButton';
 import ScreenBg from '../../src/components/ScreenBg';
 import { Headline, Meta } from '../../src/components/Urban';
+import { routeAfterSignIn, sendEmailCode, verifyEmailCode } from '../../src/lib/auth';
 import { useI18n } from '../../src/lib/i18n';
 import { supabase } from '../../src/lib/supabase';
 import { Colors, Fonts, displayType } from '../../src/theme';
@@ -29,8 +30,10 @@ export default function Otp() {
   const { t } = useI18n();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { phone: rawPhone } = useLocalSearchParams<{ phone: string }>();
+  // Either a phone number (GeniusBet OTP server) or an email (Supabase email code).
+  const { phone: rawPhone, email: rawEmail } = useLocalSearchParams<{ phone?: string; email?: string }>();
   const phone = rawPhone ? decodeURIComponent(rawPhone).trim() : '';
+  const email = rawEmail ? decodeURIComponent(rawEmail).trim() : '';
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +51,18 @@ export default function Otp() {
     if (code.length < CODE_LENGTH) return;
     setLoading(true);
     setError(null);
+    if (email) {
+      const ok = await verifyEmailCode(email, code);
+      if (!ok) {
+        setLoading(false);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        setError(t.otpErrWrong);
+        return;
+      }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace(await routeAfterSignIn());
+      return;
+    }
     try {
       const res = await fetch('https://intelligence.geniusbet.com/api/sms/otp/verify', {
         method: 'POST',
@@ -100,6 +115,7 @@ export default function Otp() {
   const resend = async () => {
     if (resendIn > 0) return;
     setResendIn(24);
+    if (email) { await sendEmailCode(email); return; }
     await fetch('https://intelligence.geniusbet.com/api/sms/otp/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -129,7 +145,7 @@ export default function Otp() {
 
           <Animated.View entering={FadeInDown.duration(600)} style={styles.headerBlock}>
             <Headline text={t.otpHeadline} size={60} accent="last" />
-            <Text style={styles.subtitle}>{t.otpSentTo.replace('{phone}', phone)}</Text>
+            <Text style={styles.subtitle}>{t.otpSentTo.replace('{phone}', email || phone)}</Text>
           </Animated.View>
 
           {/* OTP boxes over a hidden input */}
@@ -175,8 +191,8 @@ export default function Otp() {
             )}
           </View>
 
-          {/* Remember device checkbox */}
-          <Pressable
+          {/* Remember device checkbox — phone only; email sessions persist on their own */}
+          {!email && <Pressable
             onPress={() => setRememberDevice((v) => !v)}
             style={styles.rememberRow}
             hitSlop={8}
@@ -185,7 +201,7 @@ export default function Otp() {
               {rememberDevice && <Text style={styles.checkmark}>✓</Text>}
             </View>
             <Text style={styles.rememberLabel}>{t.otpRememberDevice}</Text>
-          </Pressable>
+          </Pressable>}
 
           <GlowButton
             label={t.otpVerify}

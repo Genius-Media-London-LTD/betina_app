@@ -12,6 +12,7 @@ import SectionLabel from '../src/components/SectionLabel';
 import Toggle from '../src/components/Toggle';
 import { useProfile } from '../src/hooks/useProfile';
 import { useSession } from '../src/hooks/useSession';
+import { appleCodeForDeletion } from '../src/lib/auth';
 import { LANGUAGES, LangCode, useI18n } from '../src/lib/i18n';
 import { signOut } from '../src/lib/session';
 import { supabase } from '../src/lib/supabase';
@@ -39,7 +40,7 @@ function Row({
 }
 
 export default function Settings() {
-  const { profile, phone } = useProfile();
+  const { profile, phone, email } = useProfile();
   const { lang, setLang, t } = useI18n();
   const name = profile?.name ?? '...';
   const tier = profile?.vip_tier ?? 'INITIATE';
@@ -126,7 +127,12 @@ export default function Settings() {
     setDeleting(true);
     setDeleteError(false);
     try {
-      const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
+      // Sign in with Apple accounts: Apple wants its tokens revoked on deletion.
+      const appleCode = await appleCodeForDeletion();
+      const { error } = await supabase.functions.invoke('delete-account', {
+        method: 'POST',
+        body: appleCode ? { apple_code: appleCode } : {},
+      });
       if (error) throw error;
       await SecureStore.deleteItemAsync('betina_device_token');
       await SecureStore.deleteItemAsync('betina_device_phone');
@@ -171,7 +177,7 @@ export default function Settings() {
               </View>
               <View style={styles.profileInfo}>
                 <Text style={styles.profileName} numberOfLines={1}>{name.toUpperCase()}</Text>
-                <Meta>{`${phone ?? '—'} · ${tier}`}</Meta>
+                <Meta>{`${phone ?? email ?? '—'} · ${tier}`}</Meta>
               </View>
             </GlowCard>
           )}

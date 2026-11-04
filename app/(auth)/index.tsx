@@ -7,6 +7,7 @@ import Animated, { Easing, FadeIn, FadeInDown, ZoomIn } from 'react-native-reani
 import ScreenBg from '../../src/components/ScreenBg';
 import XPBar from '../../src/components/XPBar';
 import { Meta, OutlineNumber, Sticker, Ticker } from '../../src/components/Urban';
+import { routeAfterSignIn } from '../../src/lib/auth';
 import { supabase } from '../../src/lib/supabase';
 import { Colors, Fonts } from '../../src/theme';
 
@@ -19,7 +20,8 @@ export default function Splash() {
   useEffect(() => {
     const timer = setTimeout(async () => {
       const { data } = await supabase.auth.getSession();
-      if (data.session) router.replace('/(tabs)');
+      // A session without a name (e.g. back from Google on the web) still needs the register form.
+      if (data.session) router.replace(await routeAfterSignIn());
       else router.replace('/(auth)/login');
     }, LOAD_MS + 600);
     return () => clearTimeout(timer);

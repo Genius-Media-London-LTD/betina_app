@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -19,6 +19,7 @@ import ChatBubble from '../../src/components/ChatBubble';
 import GlowButton from '../../src/components/GlowButton';
 import ScreenBg from '../../src/components/ScreenBg';
 import { Headline } from '../../src/components/Urban';
+import { providerName } from '../../src/lib/auth';
 import { langForCountry, useI18n } from '../../src/lib/i18n';
 import { supabase } from '../../src/lib/supabase';
 import { Colors, Fonts } from '../../src/theme';
@@ -91,6 +92,11 @@ export default function Register() {
   const [year, setYear] = useState('');
   const [birthdayError, setBirthdayError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Google/Apple already told us the name — pre-fill it.
+  useEffect(() => {
+    providerName().then((n) => { if (n) setName((cur) => cur || n); }).catch(() => {});
+  }, []);
 
   const continueSetup = async () => {
     if (!name.trim()) return;

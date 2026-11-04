@@ -1,5 +1,8 @@
 import { langForDialCode, useI18n } from '../../src/lib/i18n';
 import { toE164 } from '../../src/lib/phone';
+import {
+  SignInResult, appleEnabled, googleEnabled, routeAfterSignIn, signInWithApple, signInWithGoogle,
+} from '../../src/lib/auth';
 import React, { useState } from 'react';
 import {
   FlatList,
@@ -9,6 +12,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -17,6 +21,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import DismissKeyboard from '../../src/components/DismissKeyboard';
 import GlowButton from '../../src/components/GlowButton';
@@ -92,6 +97,20 @@ export default function Login() {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [socialBusy, setSocialBusy] = useState(false);
+  const social = async (signIn: () => Promise<SignInResult>) => {
+    if (socialBusy) return;
+    setError(null);
+    setSocialBusy(true);
+    const result = await signIn();
+    if (result === 'ok') {
+      router.replace(await routeAfterSignIn());
+      return;
+    }
+    if (result !== 'redirect') setSocialBusy(false);
+    if (result === 'error') setError(t.loginSocialFailed);
+  };
 
   const sendCode = async () => {
     const fullPhone = toE164(dialEntry.code, phone);
@@ -171,11 +190,52 @@ export default function Login() {
               <Sticker text={t.loginSticker} rotate={4} style={styles.sticker} />
             </Animated.View>
 
-            <View style={[styles.content, { paddingBottom: insets.bottom + 12 }]}>
+            <ScrollView
+              style={styles.flex}
+              contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 12 }]}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
               <Animated.View entering={FadeInDown.delay(150).duration(600)}>
                 <Headline text={t.loginHeadline} size={60} accent="last" />
-                <Text style={styles.subtitle}>{t.enterPhone}. {t.welcomeSubtitle}</Text>
+                <Text style={styles.subtitle}>{t.welcomeSubtitle}</Text>
               </Animated.View>
+
+              {/* One tap for everyone: Apple (iOS), Google, email code. */}
+              <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.social}>
+                {appleEnabled && (
+                  <AppleAuthentication.AppleAuthenticationButton
+                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+                    cornerRadius={0}
+                    style={styles.appleButton}
+                    onPress={() => social(signInWithApple)}
+                  />
+                )}
+                {googleEnabled && (
+                  <Pressable
+                    onPress={() => social(signInWithGoogle)}
+                    disabled={socialBusy}
+                    style={({ pressed }) => [styles.socialButton, styles.socialLight, (pressed || socialBusy) && styles.pressed]}
+                  >
+                    <Text style={styles.googleG}>G</Text>
+                    <Text style={[styles.socialLabel, styles.socialLabelDark]}>{t.loginGoogle}</Text>
+                  </Pressable>
+                )}
+                <Pressable
+                  onPress={() => router.push('/(auth)/email')}
+                  disabled={socialBusy}
+                  style={({ pressed }) => [styles.socialButton, (pressed || socialBusy) && styles.pressed]}
+                >
+                  <Text style={styles.socialLabel}>{`✉  ${t.loginEmail}`}</Text>
+                </Pressable>
+              </Animated.View>
+
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>{t.loginPhoneDivider}</Text>
+                <View style={styles.dividerLine} />
+              </View>
 
               <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.field}>
                 <Meta>{t.phoneLabel}</Meta>
@@ -223,7 +283,7 @@ export default function Login() {
                   <Meta color={Colors.primary}>{`${t.loginGuest} →`}</Meta>
                 </Pressable>
               </View>
-            </View>
+            </ScrollView>
           </View>
         </DismissKeyboard>
       </KeyboardAvoidingView>
@@ -233,14 +293,28 @@ export default function Login() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  photo: { height: '42%', minHeight: 260, overflow: 'hidden', backgroundColor: Colors.surface },
+  photo: { height: '30%', minHeight: 200, overflow: 'hidden', backgroundColor: Colors.surface },
   photoImage: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
   photoTop: { position: 'absolute', left: 16, right: 16 },
   wordmark: { width: 120, height: 22 },
   sticker: { position: 'absolute', right: 16, bottom: 22 },
-  content: { flex: 1, paddingHorizontal: 16, gap: 18, marginTop: -6 },
+  content: { flexGrow: 1, paddingHorizontal: 16, gap: 18, marginTop: -6 },
   subtitle: { color: Colors.textSecondary, fontSize: 15, lineHeight: 21, fontFamily: Fonts.medium, marginTop: 8 },
   field: { gap: 8 },
+  social: { gap: 10 },
+  appleButton: { height: 52, width: '100%' },
+  socialButton: {
+    height: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    borderWidth: 1.5, borderColor: Colors.borderStrong, backgroundColor: Colors.surface,
+  },
+  socialLight: { backgroundColor: Colors.white, borderColor: Colors.white },
+  pressed: { opacity: 0.7 },
+  socialLabel: { color: Colors.white, fontSize: 17, fontFamily: Fonts.label },
+  socialLabelDark: { color: Colors.black },
+  googleG: { color: Colors.black, fontSize: 20, fontFamily: Fonts.display },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.line },
+  dividerText: { color: Colors.textSecondary, fontSize: 12, fontFamily: Fonts.medium, textAlign: 'center', flexShrink: 1 },
   phoneRow: { flexDirection: 'row', gap: 8 },
   dialCode: {
     flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12,

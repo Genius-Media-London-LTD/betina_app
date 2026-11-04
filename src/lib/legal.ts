@@ -33,7 +33,7 @@ export const LEGAL_DOCS: Record<LegalDocKey, LegalDoc> = {
       {
         heading: 'What we collect',
         body:
-          'Account: your phone number, used to sign you in via a one-time code.\n' +
+          'Account: depending on how you sign in, your phone number or email address (each verified with a one-time code), or your Google or Apple account (we receive your name and email address from them).\n' +
           'Profile: the name, birthday, country, favourite sports and team, and language you provide during onboarding.\n' +
           'Chat: the messages you exchange with BETina.\n' +
           'Device: a push notification token, if you allow notifications.\n' +

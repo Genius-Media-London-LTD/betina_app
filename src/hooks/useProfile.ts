@@ -20,6 +20,7 @@ export type Profile = {
 export function useProfile() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [phone, setPhone] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -27,6 +28,7 @@ export function useProfile() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
       setPhone(user.phone ? '+' + user.phone : null);
+      setEmail(user.email ?? null);
       const { data } = await supabase
         .from('profiles')
         .select('name, vip_tier, xp_points, streak_days, favourite_team, favourite_sport, favourite_sports, favourite_team_id, favourite_team_sport, favourite_team_league, country, created_at')
@@ -47,5 +49,5 @@ export function useProfile() {
     setProfile((p) => (p ? { ...p, xp_points: (p.xp_points ?? 0) + delta } : p));
   }, []);
 
-  return { profile, phone, loading, reload: load, bumpXp };
+  return { profile, phone, email, loading, reload: load, bumpXp };
 }
