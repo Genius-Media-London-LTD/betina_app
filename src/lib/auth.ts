@@ -9,8 +9,8 @@ import { supabase } from './supabase';
 
 // OAuth client IDs from Google Cloud — public values, not secrets. While empty,
 // the Google button stays hidden.
-export const GOOGLE_WEB_CLIENT_ID = '';
-export const GOOGLE_IOS_CLIENT_ID = '';
+export const GOOGLE_WEB_CLIENT_ID = '427780186132-n1hgsih2ufj7999a9to3v8h80skq596c.apps.googleusercontent.com';
+export const GOOGLE_IOS_CLIENT_ID = '427780186132-chv9grrokf1euv9af303m8k8nu1qrp4c.apps.googleusercontent.com';
 
 /**
  * 'ok' = signed in, 'cancelled' = the player closed the sheet, 'error' = show a
