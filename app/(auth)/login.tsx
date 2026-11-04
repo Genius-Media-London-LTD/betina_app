@@ -191,7 +191,7 @@ export default function Login() {
             </Animated.View>
 
             <ScrollView
-              style={styles.flex}
+              style={styles.scroll}
               contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 12 }]}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
@@ -298,7 +298,10 @@ const styles = StyleSheet.create({
   photoTop: { position: 'absolute', left: 16, right: 16 },
   wordmark: { width: 120, height: 22 },
   sticker: { position: 'absolute', right: 16, bottom: 22 },
-  content: { flexGrow: 1, paddingHorizontal: 16, gap: 18, marginTop: -6 },
+  // The headline's tight line height lets the glyph tops poke above its box; the
+  // ScrollView clips them, so pad the content and pull the ScrollView up instead.
+  scroll: { flex: 1, marginTop: -22 },
+  content: { flexGrow: 1, paddingHorizontal: 16, gap: 18, paddingTop: 16 },
   subtitle: { color: Colors.textSecondary, fontSize: 15, lineHeight: 21, fontFamily: Fonts.medium, marginTop: 8 },
   field: { gap: 8 },
   social: { gap: 10 },
