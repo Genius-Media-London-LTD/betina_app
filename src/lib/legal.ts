@@ -11,7 +11,7 @@ export const COMPANY = {
   companyNumber: '11133948',
   contactEmail: 'marketing@geniusbet.com',
   privacyEmail: 'marketing@geniusbet.com',
-  effectiveDate: '9 July 2026',
+  effectiveDate: '4 November 2026',
   governingLaw: 'England and Wales',
   directors: 'Dejan Morawietz',
 };
@@ -36,6 +36,7 @@ export const LEGAL_DOCS: Record<LegalDocKey, LegalDoc> = {
           'Account: depending on how you sign in, your phone number or email address (each verified with a one-time code), or your Google or Apple account (we receive your name and email address from them).\n' +
           'Profile: the name, birthday, country, favourite sports and team, and language you provide during onboarding.\n' +
           'Chat: the messages you exchange with BETina.\n' +
+          'Voice calls: if you start a voice call, your voice is streamed live to power BETina\'s spoken replies.\n' +
           'Device: a push notification token, if you allow notifications.\n' +
           'Usage: basic activity such as your XP, streak and tier within the app.',
       },
@@ -47,7 +48,7 @@ export const LEGAL_DOCS: Record<LegalDocKey, LegalDoc> = {
       {
         heading: 'AI and third parties',
         body:
-          'Your chat messages are sent to Anthropic (the Claude AI) to generate BETina\'s replies. Sports fixtures, results and news are retrieved from third-party sports data providers. Account and profile data are stored on our infrastructure provider (Supabase). These providers process data on our behalf under their own terms.',
+          'Your chat messages are sent to Anthropic (the Claude AI) to generate BETina\'s replies. Voice calls are processed by OpenAI to understand you and speak BETina\'s answers. Sports fixtures, results and news are retrieved from third-party sports data providers. Account and profile data are stored on our infrastructure provider (Supabase). These providers process data on our behalf under their own terms.',
       },
       {
         heading: 'Your rights',

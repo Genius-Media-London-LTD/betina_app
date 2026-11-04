@@ -1,459 +1,476 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="./support.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BETina — Your AI Sports Companion</title>
+<meta name="description" content="BETina is your AI sports companion: chat and voice calls, live scores with goal alerts, a just-for-fun prediction game and her own sports news — in 9 languages.">
+<meta name="theme-color" content="#0D0B11">
+<meta property="og:title" content="BETina — Your AI Sports Companion">
+<meta property="og:description" content="Chat, voice calls, live scores, goal alerts, a prediction game and sports news — in 9 languages.">
+<meta property="og:image" content="https://betina.geniusbet.com/assets/v2/betina-hero.jpg">
+<meta property="og:type" content="website">
 <link rel="icon" type="image/png" href="/favicon.png">
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-LRFD2P7EPN"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-LRFD2P7EPN");</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,800;1,900&display=swap" rel="stylesheet">
 <style>
-/* ===== RESPONSIVE ===== */
-@media (max-width: 900px) {
-  nav { padding: 12px 20px !important; gap: 12px !important; }
-  nav div { gap: 16px !important; }
-  nav a:not(:last-child) { display: none; }
-  header { padding: 70px 20px 60px !important; gap: 40px 20px !important; }
-  header h1 { font-size: 52px !important; }
-  header > div > div[style*="350px"] { width: 100% !important; max-width: 360px !important; }
+:root {
+  --lime: #B8E926;
+  --lime-ink: #10120A;
+  --violet: #8B5CF6;
+  --bg: #0D0B11;
+  --surface: #14111A;
+  --card: #16121D;
+  --line: rgba(242, 240, 245, .10);
+  --text: #F2F0F5;
+  --muted: #A29AAF;
+  --gutter: 20px;
+  --max: 1200px;
 }
-@media (max-width: 700px) {
-  nav { flex-wrap: wrap; }
-  nav > a { flex: 0 0 auto; }
-  nav > div { gap: 10px !important; }
-  nav > div > a:not([href*="app.betina"]) { display: none; }
-  header { flex-direction: column !important; padding: 60px 16px 50px !important; }
-  header h1 { font-size: 42px !important; letter-spacing: -1px !important; }
-  header p { font-size: 16px !important; }
-  header div[style*="display: flex; align-items: center; gap: 16px"] { flex-direction: column; align-items: stretch !important; }
-  header div[style*="display: flex; align-items: center; gap: 16px"] a { text-align: center; }
-  header > div > div[style*="350px"] { width: 100% !important; min-width: 0 !important; max-width: 100% !important; }
-  /* stats grid 2x2 */
-  div[style*="grid-template-columns: repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; }
-  /* features + how: 1 col */
-  div[style*="grid-template-columns: repeat(3"] { grid-template-columns: 1fr !important; }
-  section { padding-left: 16px !important; padding-right: 16px !important; }
-  section > div { padding-left: 0 !important; padding-right: 0 !important; }
-  h2[style*="font-size: 52px"] { font-size: 34px !important; }
-  h2[style*="font-size: 58px"] { font-size: 32px !important; }
-  /* CTA buttons */
-  div[style*="justify-content: center"] { flex-direction: column; align-items: stretch !important; }
-  /* ticker */
-  div[style*="tickerScroll"] { animation-duration: 22s !important; }
-  /* footer */
-  footer > div { flex-direction: column !important; gap: 12px !important; text-align: center; }
-  .footer-brand { justify-content: center; flex-wrap: wrap; }
-  /* floating phone card */
-  div[style*="width: 350px"] { width: 100% !important; }
-  div[style*="animation: floatOrb"] { width: 100% !important; margin: 0 !important; }
-  /* cta section */
-  section[id="cta"] { padding: 60px 16px !important; }
-  section[id="cta"] h2 { font-size: 32px !important; }
-  /* nav padding on mobile */
-  div[style*="max-width: 1200px"] { padding-left: 16px !important; padding-right: 16px !important; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: 'Archivo', system-ui, sans-serif; font-size: 16px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
 }
-@media (max-width: 480px) {
-  header h1 { font-size: 36px !important; }
-  div[style*="font-size: 46px"] { font-size: 36px !important; }
-  span[style*="font-size: 46px"] { font-size: 36px !important; }
+img { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+.wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
+
+/* Type */
+.display {
+  font-weight: 900; font-style: italic; text-transform: uppercase;
+  letter-spacing: -0.02em; line-height: .92; margin: 0;
+}
+.display .accent { color: var(--lime); }
+.kicker {
+  display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--lime); margin-bottom: 18px;
+}
+.sticker {
+  display: inline-block; background: var(--lime); color: var(--lime-ink);
+  font-weight: 900; font-style: italic; text-transform: uppercase; letter-spacing: .02em;
+  font-size: 13px; line-height: 1.15; padding: 7px 11px; transform: rotate(-3deg);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, .55);
+}
+.sticker.violet { background: var(--violet); color: #fff; }
+
+/* Nav */
+nav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(13, 11, 17, .82); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+nav .wrap { display: flex; align-items: center; gap: 20px; height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand img { width: 26px; height: auto; }
+.brand b { font-weight: 900; font-style: italic; font-size: 22px; letter-spacing: -.01em; }
+.brand b span { color: var(--lime); }
+.brand small { font-size: 10px; font-weight: 700; letter-spacing: .16em; color: var(--muted); text-transform: uppercase; }
+.navlinks { display: flex; gap: 26px; margin-left: auto; font-size: 14px; font-weight: 600; color: #CFC9DA; }
+.navlinks a:hover { color: var(--lime); }
+.lang {
+  appearance: none; -webkit-appearance: none; background: transparent; color: var(--text);
+  border: 1px solid var(--line); padding: 7px 12px; font: 700 13px 'Archivo', sans-serif; cursor: pointer;
+}
+.lang option { background: var(--surface); }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  font-weight: 900; font-style: italic; text-transform: uppercase; letter-spacing: .02em;
+  font-size: 14px; padding: 12px 18px; border: 2px solid var(--lime); transition: transform .15s, box-shadow .15s;
+}
+.btn.solid { background: var(--lime); color: var(--lime-ink); }
+.btn.ghost { color: var(--lime); }
+.btn:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 rgba(184, 233, 38, .35); }
+
+/* Hero */
+.hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
+.hero .wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; min-height: calc(100vh - 64px); padding-top: 56px; padding-bottom: 56px; }
+.hero h1 { font-size: clamp(56px, 9vw, 128px); margin: 22px 0 26px; }
+.hero p.lead { font-size: 19px; color: #CFC9DA; max-width: 540px; margin: 0 0 30px; }
+.stores { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.store {
+  display: inline-flex; align-items: center; gap: 12px; background: var(--text); color: #000;
+  padding: 10px 18px 10px 14px; min-width: 196px; transition: transform .15s, box-shadow .15s;
+}
+.store:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--lime); }
+.store svg { width: 26px; height: 26px; flex: none; }
+.store span { display: flex; flex-direction: column; line-height: 1.1; }
+.store small { font-size: 11px; font-weight: 600; }
+.store strong { font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+.weblink { font-weight: 800; color: var(--lime); font-size: 15px; padding: 10px 6px; }
+.weblink:hover { text-decoration: underline; }
+.free { margin-top: 18px; font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: .04em; }
+
+.hero-photo { position: relative; justify-self: end; width: 100%; max-width: 460px; }
+.hero-photo .frame { position: relative; aspect-ratio: 560 / 900; overflow: hidden; border: 2px solid var(--lime); box-shadow: 14px 14px 0 rgba(184, 233, 38, .18); }
+.hero-photo .frame img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+.hero-photo .frame::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(13, 11, 17, .75)); }
+.bubble {
+  position: absolute; z-index: 2; max-width: 270px; padding: 12px 14px; font-size: 14px; font-weight: 600; line-height: 1.4;
+  background: rgba(22, 18, 29, .92); border: 1px solid var(--line); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .45); animation: floaty 6s ease-in-out infinite;
+}
+.bubble .who { display: block; font-size: 11px; font-weight: 800; letter-spacing: .12em; color: var(--lime); text-transform: uppercase; margin-bottom: 4px; }
+.bubble.b1 { left: -70px; top: 18%; }
+.bubble.b2 { right: -24px; bottom: 16%; animation-delay: -3s; border-color: rgba(184, 233, 38, .45); }
+.bubble.b2 .who { color: var(--text); }
+.hero-photo .sticker { position: absolute; z-index: 3; top: -14px; right: 18px; font-size: 14px; }
+@keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+/* Marquee */
+.marquee { background: var(--lime); color: var(--lime-ink); overflow: hidden; border-bottom: 1px solid var(--line); }
+.marquee .track { display: flex; width: max-content; animation: slide 32s linear infinite; }
+.marquee ul { display: flex; margin: 0; padding: 0; list-style: none; }
+.marquee li { font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 22px; padding: 14px 0; white-space: nowrap; }
+.marquee li::after { content: '✦'; margin: 0 26px; font-style: normal; font-size: 16px; position: relative; top: -2px; }
+@keyframes slide { to { transform: translateX(-50%); } }
+
+/* Sections */
+section { padding: 110px 0; }
+.section-head { max-width: 760px; margin-bottom: 56px; }
+.section-head h2 { font-size: clamp(40px, 6vw, 76px); }
+
+/* Feature rows */
+.feature { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; padding: 48px 0; border-top: 1px solid var(--line); }
+.section-head + .feature { border-top: 0; }
+.feature.flip .ph { order: 2; }
+.feature .ph { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: var(--card); }
+.feature .ph img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; }
+.feature:hover .ph img { transform: scale(1.04); }
+.feature .ph .sticker { position: absolute; left: 18px; bottom: 22px; font-size: 15px; }
+.feature .num { font-weight: 900; font-style: italic; font-size: 15px; color: var(--muted); letter-spacing: .1em; }
+.feature h3 { font-size: clamp(40px, 5vw, 64px); margin: 10px 0 18px; }
+.feature p { font-size: 18px; color: #CFC9DA; max-width: 470px; margin: 0; }
+.tag { display: inline-block; margin-left: 10px; vertical-align: middle; font-size: 12px; font-style: normal; padding: 5px 8px; transform: rotate(-4deg); }
+
+/* Small grid */
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 40px; }
+.cell { background: var(--bg); padding: 30px 26px 34px; }
+.cell .ico { font-size: 26px; margin-bottom: 18px; }
+.cell h4 { margin: 0 0 8px; font-size: 19px; font-weight: 800; }
+.cell p { margin: 0; color: var(--muted); font-size: 15px; }
+
+/* Steps */
+.how { background: var(--surface); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; counter-reset: step; }
+.step { position: relative; background: var(--card); border: 1px solid var(--line); padding: 34px 28px 32px; }
+.step::before {
+  counter-increment: step; content: counter(step, decimal-leading-zero);
+  display: block; font-weight: 900; font-style: italic; font-size: 64px; line-height: 1; color: var(--lime); margin-bottom: 20px;
+}
+.step h4 { margin: 0 0 8px; font-size: 22px; font-weight: 800; }
+.step p { margin: 0; color: var(--muted); }
+.signins { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.signins span { font-size: 12px; font-weight: 800; letter-spacing: .06em; border: 1px solid var(--line); padding: 5px 9px; color: #CFC9DA; }
+
+/* Languages */
+.langs { display: flex; flex-wrap: wrap; gap: 10px; }
+.langs span { font-weight: 900; font-style: italic; text-transform: uppercase; font-size: clamp(22px, 3vw, 34px); padding: 6px 14px; border: 2px solid var(--line); }
+.langs span:nth-child(3n+1) { border-color: var(--lime); color: var(--lime); }
+
+/* CTA */
+.cta { position: relative; overflow: hidden; padding: 0; border-top: 1px solid var(--line); }
+.cta .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 0; align-items: stretch; }
+.cta .copy { padding: 110px 48px 110px 0; display: flex; flex-direction: column; justify-content: center; }
+.cta h2 { font-size: clamp(42px, 5.6vw, 80px); margin-bottom: 22px; }
+.cta p { font-size: 18px; color: #CFC9DA; margin: 0 0 30px; max-width: 470px; }
+.cta .ph { position: relative; min-height: 520px; }
+.cta .ph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
+.cta .ph::before { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, var(--bg), transparent 35%); }
+
+/* Footer */
+footer { border-top: 1px solid var(--line); padding: 46px 0 56px; color: var(--muted); font-size: 14px; }
+footer .top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px; align-items: center; margin-bottom: 26px; }
+footer .links { display: flex; flex-wrap: wrap; gap: 22px; font-weight: 600; color: #CFC9DA; }
+footer .links a:hover { color: var(--lime); }
+footer .fine { font-size: 13px; line-height: 1.6; max-width: 820px; }
+
+/* Cookie banner */
+#ck {
+  position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 100; max-width: 620px; margin: 0 auto;
+  display: none; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: space-between;
+  background: var(--surface); border: 1px solid rgba(184, 233, 38, .35); padding: 14px 16px; box-shadow: 0 20px 50px rgba(0, 0, 0, .5);
+}
+#ck.show { display: flex; }
+#ck span { font-size: 13px; color: #CFC9DA; }
+#ck a { color: var(--lime); text-decoration: underline; }
+#ck .row { display: flex; gap: 8px; }
+#ck button { font: 800 13px 'Archivo', sans-serif; padding: 9px 14px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--text); }
+#ck button.yes { background: var(--lime); color: var(--lime-ink); border-color: var(--lime); }
+
+/* Reveal */
+.rv { opacity: 0; transform: translateY(26px); transition: opacity .7s ease, transform .7s ease; }
+.rv.in { opacity: 1; transform: none; }
+
+/* Responsive */
+@media (max-width: 980px) {
+  .navlinks { display: none; }
+  nav .wrap { gap: 12px; }
+  .lang { margin-left: auto; }
+  .hero .wrap { grid-template-columns: 1fr; min-height: 0; padding-top: 40px; gap: 56px; }
+  .hero-photo { justify-self: center; max-width: 380px; }
+  .bubble.b1 { left: -14px; }
+  .bubble.b2 { right: -8px; }
+  .feature { grid-template-columns: 1fr; gap: 28px; }
+  .feature.flip .ph { order: 0; }
+  .feature .ph { aspect-ratio: 4 / 3; }
+  .grid4 { grid-template-columns: 1fr 1fr; }
+  .steps { grid-template-columns: 1fr; }
+  .cta .wrap { grid-template-columns: 1fr; }
+  .cta .copy { padding: 80px 0 40px; }
+  .cta .ph { min-height: 420px; margin: 0 calc(var(--gutter) * -1); }
+  .cta .ph::before { background: linear-gradient(180deg, var(--bg), transparent 30%); }
+  section { padding: 80px 0; }
+}
+@media (max-width: 560px) {
+  :root { --gutter: 16px; }
+  .brand small { display: none; }
+  nav .btn { padding: 9px 12px; font-size: 12px; }
+  .hero p.lead { font-size: 17px; }
+  .store { flex: 1 1 100%; }
+  .bubble { max-width: 220px; font-size: 13px; }
+  .bubble.b1 { left: -6px; top: 12%; }
+  .grid4 { grid-template-columns: 1fr; }
+  .marquee li { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .marquee .track, .bubble { animation: none; }
+  .rv { opacity: 1; transform: none; transition: none; }
 }
 </style>
 </head>
-<body>
-<template id="__bundler_thumbnail" data-bg-color="#0d0b11">
-  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
-    <rect width="1200" height="800" fill="#0d0b11"/>
-    <circle cx="900" cy="180" r="320" fill="#8b5cf6" opacity="0.14"/>
-    <text x="600" y="430" text-anchor="middle" font-family="Arial, sans-serif" font-size="150" font-weight="900" font-style="italic" fill="#b8e926">BET<tspan fill="#ffffff">ina</tspan></text>
-  </svg>
-</template>
-<x-dc>
-<helmet>
-<title>BETina — Your AI Sports Companion</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&display=swap" rel="stylesheet">
-<style>
-html { scroll-behavior: smooth; }
-body { margin: 0; background: #0d0b11; color: #f2f0f5; font-family: 'Archivo', sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-a { color: #c4ee3a; text-decoration: none; }
-a:hover { color: #d8ff55; }
-::selection { background: #b8e926; color: #10120a; }
-@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-@keyframes floatOrb { 0%,100% { transform: translate3d(0,0,0); } 50% { transform: translate3d(0,-28px,0); } }
-@keyframes pulseGlow { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
-@keyframes blinkDot { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
-@keyframes typingBounce { 0%,80%,100% { transform: translateY(0); opacity:.4; } 40% { transform: translateY(-4px); opacity:1; } }
-@keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-</style>
-</helmet>
+<body id="top">
 
-<div style="position: relative; min-height: 100vh; background: #0d0b11; overflow: clip;">
-
-  <!-- ambient glows -->
-  <div data-parallax="0.25" style="position: absolute; top: -220px; left: -180px; width: 720px; height: 720px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,0.22) 0%, transparent 65%); pointer-events: none; animation: pulseGlow 7s ease-in-out infinite;"></div>
-  <div data-parallax="0.15" style="position: absolute; top: 320px; right: -260px; width: 820px; height: 820px; border-radius: 50%; background: radial-gradient(circle, rgba(184,233,38,0.10) 0%, transparent 62%); pointer-events: none; animation: pulseGlow 9s ease-in-out infinite;"></div>
-  <div data-parallax="0.35" style="position: absolute; top: 1300px; left: -240px; width: 700px; height: 700px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,0.16) 0%, transparent 65%); pointer-events: none;"></div>
-
-  <!-- NAV -->
-  <nav style="position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 14px 40px; background: rgba(13,11,17,0.72); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid rgba(255,255,255,0.07);">
-    <a href="#top" style="display: flex; align-items: baseline; gap: 10px;">
-      <span style="font-size: 26px; font-weight: 900; font-style: italic; letter-spacing: -0.5px; color: #b8e926; text-shadow: 0 0 24px rgba(184,233,38,0.45);">BET<span style="color: #ffffff;">ina</span></span>
-      <span style="font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #9b93a8;">by GeniusBet</span>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="BETina">
+      <img src="/assets/v2/logo-mark.png" alt="">
+      <b>BET<span>INA</span></b>
+      <small>by GeniusBet</small>
     </a>
-    <div style="display: flex; align-items: center; gap: 28px;">
-      <a href="#features" style="color: #cfc9da; font-size: 14px; font-weight: 600;" style-hover="color: #b8e926;">Features</a>
-      <a href="#how" style="color: #cfc9da; font-size: 14px; font-weight: 600;" style-hover="color: #b8e926;">How it works</a>
-      <a href="/privacy" style="color: #cfc9da; font-size: 14px; font-weight: 600;" style-hover="color: #b8e926;">Privacy</a>
-      <a href="/support" style="color: #cfc9da; font-size: 14px; font-weight: 600;" style-hover="color: #b8e926;">Support</a>
-      <select id="language-select" aria-label="Language" style="padding: 8px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.18); background: #17131e; color: #f2f0f5; font: 700 12px Archivo, sans-serif; cursor: pointer;">
-        <option value="en">EN</option><option value="de">DE</option><option value="es">ES</option><option value="fr">FR</option><option value="pt">PT</option>
-      </select>
-      <a href="https://app.betina.geniusbet.com" target="_blank" rel="noopener" style="display: inline-block; padding: 10px 22px; border-radius: 999px; background: #b8e926; color: #10120a; font-size: 14px; font-weight: 800; box-shadow: 0 0 22px rgba(184,233,38,0.35); transition: transform .15s ease, box-shadow .15s ease;" style-hover="transform: translateY(-2px); box-shadow: 0 0 34px rgba(184,233,38,0.6); color: #10120a;">Try Web App →</a>
+    <div class="navlinks">
+      <a href="#features" data-i="navFeatures">Features</a>
+      <a href="#how" data-i="navHow">How it works</a>
+      <a href="/support" data-i="navSupport">Support</a>
     </div>
-  </nav>
+    <select class="lang" id="language-select" aria-label="Language">
+      <option value="en">EN</option><option value="de">DE</option><option value="es">ES</option>
+      <option value="fr">FR</option><option value="pt">PT</option><option value="it">IT</option>
+      <option value="ro">RO</option><option value="tr">TR</option><option value="hr">HR</option>
+    </select>
+    <a class="btn solid" href="https://app.betina.geniusbet.com" data-i="navWeb">Web app →</a>
+  </div>
+</nav>
 
-  <!-- LIVE TICKER -->
-  <sc-if value="{{ tickerOn }}" hint-placeholder-val="{{ true }}">
-    <div style="position: relative; z-index: 5; margin-top: 61px; overflow: hidden; background: #121016; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 9px 0;">
-      <div style="display: flex; gap: 0; width: max-content; animation: tickerScroll 32s linear infinite;">
-        <div style="display: flex; gap: 42px; padding-right: 42px; white-space: nowrap;">
-          <span style="font-size: 13px; font-weight: 700; color: #cfc9da;"><span style="color:#b8e926;">LIVE</span> · ARS 2–1 CHE <span style="color:#8b5cf6;">78'</span></span>
-          <span style="font-size: 13px; font-weight: 700; color: #cfc9da;">RMA 1–0 BAR <span style="color:#8b5cf6;">HT</span></span>
-          <span style="font-size: 13px; font-weight: 700; color: #cfc9da;">LAL 98–95 BOS <span style="color:#8b5cf6;">Q4</span></span>
-          <span style="font-size: 13px; font-weight: 700; color: #cfc9da;">BAY 3–2 BVB <span style="color:#8b5cf6;">FT</span></span>
-          <span style="font-size: 13px; font-weight: 700; color: #cfc9da;"><span style="color:#b8e926;">LIVE</span> · MCI 0–0 LIV <span style="color:#8b5cf6;">34'</span></span>
-          <span style="font-size: 13px; font-weight: 700; color: #cfc9da;">DJOKOVIC 6–4 3–2 ALCARAZ</span>
-          <span style="font-size: 13px; font-weight: 700; color: #cfc9da;">JUV 1–1 MIL <span style="color:#8b5cf6;">62'</span></span>
-        </div>
-        <div style="display: flex; gap: 42px; padding-right: 42px; white-space: nowrap;">
-          <span style="font-size: 13px; font-weight: 700; color: #cfc9da;"><span style="color:#b8e926;">LIVE</span> · ARS 2–1 CHE <span style="color:#8b5cf6;">78'</span></span>
-          <span style="font-size: 13px; font-weight: 700; color: #cfc9da;">RMA 1–0 BAR <span style="color:#8b5cf6;">HT</span></span>
-          <span style="font-size: 13px; font-weight: 700; color: #cfc9da;">LAL 98–95 BOS <span style="color:#8b5cf6;">Q4</span></span>
-          <span style="font-size: 13px; font-weight: 700; color: #cfc9da;">BAY 3–2 BVB <span style="color:#8b5cf6;">FT</span></span>
-          <span style="font-size: 13px; font-weight: 700; color: #cfc9da;"><span style="color:#b8e926;">LIVE</span> · MCI 0–0 LIV <span style="color:#8b5cf6;">34'</span></span>
-          <span style="font-size: 13px; font-weight: 700; color: #cfc9da;">DJOKOVIC 6–4 3–2 ALCARAZ</span>
-          <span style="font-size: 13px; font-weight: 700; color: #cfc9da;">JUV 1–1 MIL <span style="color:#8b5cf6;">62'</span></span>
-        </div>
-      </div>
-    </div>
-  </sc-if>
-
-  <!-- HERO -->
-  <header id="top" style="position: relative; z-index: 2; display: flex; flex-wrap: wrap; gap: 60px 40px; align-items: center; justify-content: center; max-width: 1200px; margin: 0 auto; padding: 90px 40px 110px;">
-    <div>
-      <div style="display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 999px; border: 1px solid rgba(184,233,38,0.35); background: rgba(184,233,38,0.07); margin-bottom: 26px;">
-        <span style="width: 7px; height: 7px; border-radius: 50%; background: #b8e926; box-shadow: 0 0 10px #b8e926; animation: blinkDot 1.6s infinite;"></span>
-        <span style="font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #b8e926;">Powered by GeniusBet AI</span>
-      </div>
-      <h1 style="margin: 0 0 22px; font-size: 76px; line-height: 0.98; font-weight: 900; font-style: italic; letter-spacing: -2px; text-transform: uppercase; text-wrap: balance;">
-        <span style="display: block; color: #ffffff; text-shadow: 0 0 40px rgba(139,92,246,0.5);">Sports,</span>
-        <span style="display: block; background: linear-gradient(100deg, #b8e926 20%, #e4ff6a 50%, #b8e926 80%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 26px rgba(184,233,38,0.35));">reimagined</span>
-        <span style="display: block; color: #ffffff;">with AI.</span>
-      </h1>
-      <p style="margin: 0 0 34px; max-width: 480px; font-size: 18px; line-height: 1.6; color: #b3abc2; text-wrap: pretty;">Meet BETina — your personal AI sports companion. Live scores, smart predictions, instant answers and real conversation. One app, every match.</p>
-      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-        <a href="#cta" aria-label="Choose an iOS or Android download" style="display: inline-block; padding: 16px 34px; border-radius: 999px; background: #b8e926; color: #10120a; font-size: 16px; font-weight: 900; letter-spacing: 0.3px; box-shadow: 0 0 32px rgba(184,233,38,0.4), 0 8px 24px rgba(0,0,0,0.4); transition: transform .15s ease, box-shadow .15s ease;" style-hover="transform: translateY(-3px) scale(1.02); box-shadow: 0 0 50px rgba(184,233,38,0.65), 0 12px 30px rgba(0,0,0,0.5); color: #10120a;">Download BETina</a>
-        <a href="https://app.betina.geniusbet.com" target="_blank" rel="noopener" style="display: inline-block; padding: 15px 32px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.18); color: #f2f0f5; font-size: 16px; font-weight: 700; transition: border-color .15s ease, background .15s ease;" style-hover="border-color: #b8e926; background: rgba(184,233,38,0.06); color: #f2f0f5;">Try on Web →</a>
-      </div>
-    </div>
-
-    <!-- animated chat phone -->
-    <div data-tilt style="position: relative; transition: transform .2s ease-out; transform-style: preserve-3d;">
-      <div style="position: absolute; inset: -40px; border-radius: 60px; background: radial-gradient(circle, rgba(139,92,246,0.28) 0%, transparent 70%); animation: pulseGlow 5s ease-in-out infinite; pointer-events: none;"></div>
-      <div style="position: relative; width: 350px; margin: 0 auto; border-radius: 36px; border: 1px solid rgba(255,255,255,0.12); background: linear-gradient(165deg, #1b1626 0%, #141019 100%); box-shadow: 0 40px 90px rgba(0,0,0,0.6), 0 0 0 8px rgba(255,255,255,0.03); padding: 20px; animation: floatOrb 8s ease-in-out infinite;">
-        <div style="display: flex; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.08);">
-          <img src="assets/betina-avatar.png" alt="BETina" style="width: 42px; height: 42px; border-radius: 50%; display: block; box-shadow: 0 0 18px rgba(184,233,38,0.4); border: 1.5px solid rgba(184,233,38,0.6);">
-          <div style="display: flex; flex-direction: column; gap: 2px;">
-            <span style="font-weight: 800; font-size: 15px;">BETina</span>
-            <span style="display: flex; align-items: center; gap: 5px; font-size: 11px; color: #b8e926;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #b8e926; animation: blinkDot 1.6s infinite;"></span>online · ready to talk sports</span>
-          </div>
-          <span style="margin-left: auto; font-size: 11px; font-weight: 700; color: #8b5cf6; border: 1px solid rgba(139,92,246,0.4); padding: 4px 10px; border-radius: 999px;">148 XP · INITIATE</span>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px 0 6px; min-height: 300px;">
-          <sc-for list="{{ chatMsgs }}" as="msg" hint-placeholder-count="2">
-            <div style="display: flex; flex-direction: column; align-self: {{ msg.align }}; max-width: 84%; opacity: 0; animation: msgIn .35s ease forwards;">
-              <div style="padding: 10px 14px; border-radius: {{ msg.radius }}; background: {{ msg.bg }}; color: {{ msg.color }}; font-size: 13.5px; line-height: 1.45; font-weight: 500; box-shadow: {{ msg.shadow }}; border: {{ msg.border }};">{{ msg.text }}</div>
-              <sc-if value="{{ msg.xpTag }}" hint-placeholder-val="{{ false }}">
-                <span style="margin-top: 4px; font-size: 10.5px; color: #6f6780;">+1 XP for chatting <span style="color: #b8e926;">●</span></span>
-              </sc-if>
-            </div>
-          </sc-for>
-          <sc-if value="{{ typing }}" hint-placeholder-val="{{ false }}">
-            <div style="display: flex; gap: 5px; align-self: flex-start; padding: 12px 16px; border-radius: 16px 16px 16px 4px; background: #241d31;">
-              <span style="width: 7px; height: 7px; border-radius: 50%; background: #9b93a8; animation: typingBounce 1.1s infinite;"></span>
-              <span style="width: 7px; height: 7px; border-radius: 50%; background: #9b93a8; animation: typingBounce 1.1s .15s infinite;"></span>
-              <span style="width: 7px; height: 7px; border-radius: 50%; background: #9b93a8; animation: typingBounce 1.1s .3s infinite;"></span>
-            </div>
-          </sc-if>
-        </div>
-        <div style="display: flex; gap: 8px; padding-bottom: 12px;">
-          <span style="padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); font-size: 11.5px; font-weight: 600; color: #cfc9da;">Show lineups</span>
-          <span style="padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); font-size: 11.5px; font-weight: 600; color: #cfc9da;">Head-to-head</span>
-          <span style="padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(184,233,38,0.4); font-size: 11.5px; font-weight: 600; color: #b8e926;">Remind me</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 999px; background: #241d31; border: 1px solid rgba(255,255,255,0.07);">
-          <span style="font-size: 13px; color: #6f6780;">Ask BETina anything…</span>
-          <span style="margin-left: auto; width: 30px; height: 30px; border-radius: 50%; background: #b8e926; display: flex; align-items: center; justify-content: center; color: #10120a; font-weight: 900; font-size: 14px;">↑</span>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- STATS -->
-  <section style="position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 0 40px 90px;">
-    <div data-reveal style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.08);">
-      <div style="background: #14111a; padding: 34px 20px; text-align: center;">
-        <div style="font-size: 46px; font-weight: 900; font-style: italic; color: #b8e926; text-shadow: 0 0 26px rgba(184,233,38,0.4);"><span data-count="50">0</span>+</div>
-        <div style="margin-top: 6px; font-size: 13px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #9b93a8;">Sports &amp; Leagues</div>
-      </div>
-      <div style="background: #14111a; padding: 34px 20px; text-align: center;">
-        <div style="font-size: 46px; font-weight: 900; font-style: italic; color: #b8e926; text-shadow: 0 0 26px rgba(184,233,38,0.4);"><span data-count="24">0</span>/7</div>
-        <div style="margin-top: 6px; font-size: 13px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #9b93a8;">Live AI Chat</div>
-      </div>
-      <div style="background: #14111a; padding: 34px 20px; text-align: center;">
-        <div style="font-size: 46px; font-weight: 900; font-style: italic; color: #b8e926; text-shadow: 0 0 26px rgba(184,233,38,0.4);"><span data-count="7">0</span></div>
-        <div style="margin-top: 6px; font-size: 13px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #9b93a8;">Languages</div>
-      </div>
-      <div style="background: #14111a; padding: 34px 20px; text-align: center;">
-        <div style="font-size: 46px; font-weight: 900; font-style: italic; color: #b8e926; text-shadow: 0 0 26px rgba(184,233,38,0.4);">∞</div>
-        <div style="margin-top: 6px; font-size: 13px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #9b93a8;">XP &amp; Rewards</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FEATURES -->
-  <section id="features" style="position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 40px 40px 100px;">
-    <div data-reveal style="margin-bottom: 50px;">
-      <div style="font-size: 13px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase; color: #8b5cf6; margin-bottom: 12px;">What's inside</div>
-      <h2 style="margin: 0; font-size: 52px; font-weight: 900; font-style: italic; letter-spacing: -1.5px; text-transform: uppercase; color: #ffffff;">Everything a sports fan <span style="color: #b8e926; text-shadow: 0 0 30px rgba(184,233,38,0.4);">needs.</span></h2>
-    </div>
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;">
-      <sc-for list="{{ features }}" as="f" hint-placeholder-count="6">
-        <div data-reveal data-tilt style="position: relative; padding: 30px 28px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); background: linear-gradient(160deg, #1a1523 0%, #131018 100%); transition: transform .2s ease-out, border-color .25s ease, box-shadow .25s ease; transform-style: preserve-3d;" style-hover="border-color: rgba(184,233,38,0.45); box-shadow: 0 0 40px rgba(184,233,38,0.12), 0 24px 50px rgba(0,0,0,0.45);">
-          <div style="width: 52px; height: 52px; border-radius: 14px; background: {{ f.iconBg }}; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 18px; box-shadow: {{ f.iconShadow }};">{{ f.icon }}</div>
-          <h3 style="margin: 0 0 10px; font-size: 20px; font-weight: 800; color: #ffffff;">{{ f.title }}</h3>
-          <p style="margin: 0; font-size: 14.5px; line-height: 1.6; color: #a29aaf; text-wrap: pretty;">{{ f.desc }}</p>
-        </div>
-      </sc-for>
-    </div>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section id="how" style="position: relative; z-index: 2; background: #110e16; border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06);">
-    <div style="max-width: 1200px; margin: 0 auto; padding: 90px 40px;">
-      <div data-reveal style="margin-bottom: 50px; text-align: center;">
-        <div style="font-size: 13px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase; color: #8b5cf6; margin-bottom: 12px;">Getting started</div>
-        <h2 style="margin: 0; font-size: 52px; font-weight: 900; font-style: italic; letter-spacing: -1.5px; text-transform: uppercase; color: #ffffff;">Up &amp; running in <span style="color: #b8e926; text-shadow: 0 0 30px rgba(184,233,38,0.4);">60 seconds.</span></h2>
-      </div>
-      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px;">
-        <div data-reveal style="position: relative; padding: 34px 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); background: #16121d;">
-          <div style="font-size: 72px; font-weight: 900; font-style: italic; line-height: 1; color: transparent; -webkit-text-stroke: 1.5px rgba(184,233,38,0.55); margin-bottom: 16px;">1</div>
-          <h3 style="margin: 0 0 10px; font-size: 20px; font-weight: 800;">Download the app</h3>
-          <p style="margin: 0; font-size: 14.5px; line-height: 1.6; color: #a29aaf;">Available now on Google Play and the Apple App Store.</p>
-        </div>
-        <div data-reveal style="position: relative; padding: 34px 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); background: #16121d;">
-          <div style="font-size: 72px; font-weight: 900; font-style: italic; line-height: 1; color: transparent; -webkit-text-stroke: 1.5px rgba(184,233,38,0.55); margin-bottom: 16px;">2</div>
-          <h3 style="margin: 0 0 10px; font-size: 20px; font-weight: 800;">Pick your teams</h3>
-          <p style="margin: 0; font-size: 14.5px; line-height: 1.6; color: #a29aaf;">Sign in with your phone number and choose your favorites — BETina personalizes everything from day one.</p>
-        </div>
-        <div data-reveal style="position: relative; padding: 34px 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08); background: #16121d;">
-          <div style="font-size: 72px; font-weight: 900; font-style: italic; line-height: 1; color: transparent; -webkit-text-stroke: 1.5px rgba(184,233,38,0.55); margin-bottom: 16px;">3</div>
-          <h3 style="margin: 0 0 10px; font-size: 20px; font-weight: 800;">Chat &amp; earn XP</h3>
-          <p style="margin: 0; font-size: 14.5px; line-height: 1.6; color: #a29aaf;">Ask anything, set reminders, predict matches. Every interaction earns XP — from Initiate all the way to Genius.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA -->
-  <section id="cta" style="position: relative; z-index: 2; padding: 120px 40px; text-align: center; overflow: hidden;">
-    <div style="position: absolute; left: 50%; top: 50%; width: 900px; height: 500px; transform: translate(-50%,-50%); background: radial-gradient(ellipse, rgba(184,233,38,0.12) 0%, rgba(139,92,246,0.10) 45%, transparent 70%); pointer-events: none; animation: pulseGlow 6s ease-in-out infinite;"></div>
-    <div data-reveal style="position: relative; max-width: 760px; margin: 0 auto;">
-      <h2 style="margin: 0 0 20px; font-size: 58px; font-weight: 900; font-style: italic; letter-spacing: -1.5px; text-transform: uppercase; line-height: 1.02; text-wrap: balance;">Your team deserves better than a <span style="color: #b8e926; text-shadow: 0 0 34px rgba(184,233,38,0.5);">search bar.</span></h2>
-      <p style="margin: 0 0 36px; font-size: 18px; color: #b3abc2;">Join thousands of fans who talk sports with BETina every day.</p>
-      <div style="display: flex; justify-content: center; align-items: stretch; gap: 14px; flex-wrap: wrap;">
-        <a href="https://apps.apple.com/at/app/betina-ai/id6796780870" target="_blank" rel="noopener" aria-label="Download BETina AI from the Apple App Store" style="position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 26px 12px 20px; border-radius: 16px; border: 1px solid rgba(139,92,246,0.55); background: #17131e; color: #f2f0f5; box-shadow: 0 0 28px rgba(139,92,246,0.2); transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;" style-hover="transform: translateY(-3px); border-color: #8b5cf6; box-shadow: 0 0 40px rgba(139,92,246,0.4); color: #f2f0f5;">
-          <span style="width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; color: #f2f0f5;">iOS</span>
-          <span style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15;">
-            <span style="font-size: 10.5px; font-weight: 600; letter-spacing: 0.5px; color: #9b93a8;">Available on</span>
-            <span style="font-size: 17px; font-weight: 800; color: #f2f0f5;">iOS</span>
-          </span>
-          <span style="position: absolute; top: -10px; right: -8px; padding: 4px 10px; border-radius: 999px; background: #8b5cf6; color: #ffffff; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; box-shadow: 0 4px 14px rgba(139,92,246,0.5);">Available now</span>
+<header class="hero">
+  <div class="wrap">
+    <div class="rv">
+      <span class="sticker" data-i="heroSticker">AI sports companion · 18+</span>
+      <h1 class="display"><span data-i="heroA">Your game.</span><br><span class="accent" data-i="heroB">Your vibe.</span></h1>
+      <p class="lead" data-i="heroLead">Meet BETina — your AI sports companion. She follows your teams, knows every sport, picks up when you call and talks sport with you any time, in your language.</p>
+      <div class="stores">
+        <a class="store" href="https://apps.apple.com/at/app/betina-ai/id6796780870" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.7c-.03-2.6 2.12-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.89-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.34.86 1.25 1.89 2.65 3.23 2.6 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.38.81 1.4-.02 2.28-1.27 3.13-2.52.99-1.45 1.4-2.85 1.42-2.92-.03-.01-2.72-1.04-2.71-4.14zM13.8 5.06c.71-.86 1.19-2.06 1.06-3.26-1.03.04-2.27.69-3.01 1.55-.66.76-1.24 1.98-1.08 3.16 1.14.09 2.31-.58 3.03-1.45z"/></svg>
+          <span><small data-i="storeApple">Download on the</small><strong>App Store</strong></span>
         </a>
-        <a href="https://play.google.com/store/apps/details?id=com.geniusbet.betina&amp;pcampaignid=web_share" target="_blank" rel="noopener" aria-label="Download BETina on Google Play" style="position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 26px 12px 20px; border-radius: 16px; border: 1px solid rgba(184,233,38,0.45); background: #17131e; color: #f2f0f5; box-shadow: 0 0 28px rgba(184,233,38,0.18); transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;" style-hover="transform: translateY(-3px); border-color: #b8e926; box-shadow: 0 0 40px rgba(184,233,38,0.35); color: #f2f0f5;">
-          <span style="width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900; color: #f2f0f5;">▷</span>
-          <span style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15;">
-            <span style="font-size: 10.5px; font-weight: 600; letter-spacing: 0.5px; color: #9b93a8;">Get it on</span>
-            <span style="font-size: 17px; font-weight: 800; color: #f2f0f5;">Google Play</span>
-          </span>
-          <span style="position: absolute; top: -10px; right: -8px; padding: 4px 10px; border-radius: 999px; background: #b8e926; color: #10120a; font-size: 10px; font-weight: 900; letter-spacing: 0.8px; text-transform: uppercase; box-shadow: 0 4px 14px rgba(184,233,38,0.35);">Available now</span>
+        <a class="store" href="https://play.google.com/store/apps/details?id=com.geniusbet.betina&amp;pcampaignid=web_share" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#00D7FE" d="M3.6 1.8 13.4 12 3.6 22.2c-.4-.2-.6-.7-.6-1.2V3c0-.5.2-1 .6-1.2z"/><path fill="#FFCE00" d="m17 8.4 3.3 1.9c1 .6 1 2.8 0 3.4L17 15.6 13.4 12z"/><path fill="#FF3A44" d="M17 15.6 13.4 12 3.6 22.2c.4.2.9.2 1.4-.1z"/><path fill="#00F076" d="M5 1.9c-.5-.3-1-.3-1.4-.1L13.4 12 17 8.4z"/></svg>
+          <span><small data-i="storeGoogle">Get it on</small><strong>Google Play</strong></span>
         </a>
-        <a href="https://app.betina.geniusbet.com" target="_blank" rel="noopener" style="display: flex; align-items: center; padding: 12px 36px; border-radius: 16px; background: #b8e926; color: #10120a; font-size: 17px; font-weight: 900; box-shadow: 0 0 40px rgba(184,233,38,0.5); transition: transform .15s ease, box-shadow .15s ease;" style-hover="transform: translateY(-3px) scale(1.03); box-shadow: 0 0 60px rgba(184,233,38,0.75); color: #10120a;">Try on Web →</a>
+        <a class="weblink" href="https://app.betina.geniusbet.com" data-i="tryWeb">or try it on the web →</a>
       </div>
+      <div class="free" data-i="heroFree">Free · iPhone, Android &amp; web</div>
     </div>
-  </section>
 
-  <!-- FOOTER -->
-  <footer style="position: relative; z-index: 2; border-top: 1px solid rgba(255,255,255,0.07); background: #0b090f;">
-    <div style="max-width: 1200px; margin: 0 auto; padding: 40px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;">
-      <div class="footer-brand" style="display: flex; align-items: center; gap: 14px;">
-        <span style="font-size: 13px; color: #6f6780;">© 2026 Genius Media London Ltd · Company No. 11133948</span>
-      </div>
-      <div style="display: flex; gap: 24px;">
-        <a href="/privacy" style="font-size: 13px; font-weight: 600; color: #9b93a8;" style-hover="color: #b8e926;">Privacy</a>
-        <a href="/support" style="font-size: 13px; font-weight: 600; color: #9b93a8;" style-hover="color: #b8e926;">Support</a>
-        <a href="/terms" style="font-size: 13px; font-weight: 600; color: #9b93a8;" style-hover="color: #b8e926;">Terms</a>
-        <a href="mailto:marketing@geniusbet.com" style="font-size: 13px; font-weight: 600; color: #9b93a8;" style-hover="color: #b8e926;">Contact</a>
-      </div>
+    <div class="hero-photo rv">
+      <span class="sticker violet" data-i="heroOnline">● Online now</span>
+      <div class="frame"><img src="/assets/v2/betina-hero.jpg" alt="BETina, your AI sports companion" fetchpriority="high"></div>
+      <div class="bubble b1"><span class="who">BETina</span><span data-i="bubble1">Your team kicks off in 2 hours. Want the line-ups? ⚽</span></div>
+      <div class="bubble b2"><span class="who" data-i="bubble2Who">⚡ Goal alert</span><span data-i="bubble2">GOAL! 1–0 in the 34th minute.</span></div>
     </div>
-  </footer>
+  </div>
+</header>
+
+<div class="marquee" aria-hidden="true">
+  <div class="track">
+    <ul>
+      <li data-i="mq1">Chat</li><li data-i="mq2">Voice calls</li><li data-i="mq3">Live scores</li><li data-i="mq4">Goal alerts</li>
+      <li data-i="mq5">Prediction game</li><li data-i="mq6">BETina News</li><li data-i="mq7">9 languages</li>
+    </ul>
+    <ul>
+      <li data-i="mq1">Chat</li><li data-i="mq2">Voice calls</li><li data-i="mq3">Live scores</li><li data-i="mq4">Goal alerts</li>
+      <li data-i="mq5">Prediction game</li><li data-i="mq6">BETina News</li><li data-i="mq7">9 languages</li>
+    </ul>
+  </div>
 </div>
-</x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;tickerOn&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Effects&quot;}, &quot;tiltOn&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Effects&quot;}}">
-class Component extends DCLogic {
-  state = { shown: 0, typing: false };
 
-  script = [
-    { from: 'bot', text: "Hey! Arsenal are playing tonight — want the team news?" },
-    { from: 'user', text: "Yes! And what's their recent form?" },
-    { from: 'bot', text: "W-W-D-W-W in their last 5. Saka's back from injury — this one's looking good 💪" },
-    { from: 'user', text: "Remind me 1h before kickoff" },
-    { from: 'bot', text: "Done! I'll ping you at 19:45 ✅ +5 XP earned" }
-  ];
+<section id="features">
+  <div class="wrap">
+    <div class="section-head rv">
+      <span class="kicker" data-i="featKicker">What's inside</span>
+      <h2 class="display"><span data-i="featA">Everything a fan needs.</span> <span class="accent" data-i="featB">One companion.</span></h2>
+    </div>
 
-  componentDidMount() {
-    this.injectMsgKeyframes();
-    this.startChatLoop();
-    this.setupReveals();
-    this.setupCounters();
-    this.setupParallax();
-    if (this.props.tiltOn ?? true) this.setupTilt();
-  }
+    <div class="feature rv">
+      <div class="ph"><img src="/assets/v2/betina-smile.jpg" alt="" loading="lazy"><span class="sticker" data-i="f1Sticker">Always up for it</span></div>
+      <div>
+        <div class="num">01</div>
+        <h3 class="display" data-i="f1Title">Chat with BETina</h3>
+        <p data-i="f1Text">Ask her anything about sport. She knows your teams, remembers what you talked about and gets better with every chat.</p>
+      </div>
+    </div>
 
-  componentWillUnmount() {
-    clearTimeout(this._t);
-    if (this._obs) this._obs.disconnect();
-    if (this._cObs) this._cObs.disconnect();
-    window.removeEventListener('scroll', this._onScroll);
-  }
+    <div class="feature flip rv">
+      <div class="ph"><img src="/assets/v2/betina-home.jpg" alt="" loading="lazy"><span class="sticker violet" data-i="f2Sticker">She picks up</span></div>
+      <div>
+        <div class="num">02</div>
+        <h3 class="display"><span data-i="f2Title">Call her</span><span class="sticker tag" data-i="newTag">New</span></h3>
+        <p data-i="f2Text">Real voice calls with BETina. Talk about the match hands-free — like calling a friend who never misses a game.</p>
+      </div>
+    </div>
 
-  injectMsgKeyframes() {
-    if (document.getElementById('betina-kf')) return;
-    const s = document.createElement('style');
-    s.id = 'betina-kf';
-    s.textContent = '@keyframes msgIn { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }';
-    document.head.appendChild(s);
-  }
+    <div class="feature rv">
+      <div class="ph"><img src="/assets/v2/betina-boxing.jpg" alt="" loading="lazy"><span class="sticker" data-i="f3Sticker">GOAL! ⚡</span></div>
+      <div>
+        <div class="num">03</div>
+        <h3 class="display" data-i="f3Title">BETina Live</h3>
+        <p data-i="f3Text">Live scores for your teams and a push the second the ball hits the net. Never miss a kick-off again.</p>
+      </div>
+    </div>
 
-  startChatLoop() {
-    const step = () => {
-      const n = this.state.shown;
-      if (n >= this.script.length) {
-        this._t = setTimeout(() => { this.setState({ shown: 0, typing: false }); this._t = setTimeout(step, 700); }, 4200);
-        return;
-      }
-      const next = this.script[n];
-      if (next.from === 'bot') {
-        this.setState({ typing: true });
-        this._t = setTimeout(() => { this.setState({ shown: n + 1, typing: false }); this._t = setTimeout(step, 1300); }, 1100);
-      } else {
-        this._t = setTimeout(() => { this.setState({ shown: n + 1 }); this._t = setTimeout(step, 1100); }, 500);
-      }
-    };
-    this._t = setTimeout(step, 900);
-  }
+    <div class="feature flip rv">
+      <div class="ph"><img src="/assets/v2/betina-wink.jpg" alt="" loading="lazy"><span class="sticker" data-i="f4Sticker">Just for fun</span></div>
+      <div>
+        <div class="num">04</div>
+        <h3 class="display" data-i="f4Title">Prediction game</h3>
+        <p data-i="f4Text">Predict the scores, take on your friends and climb the leaderboard. No money, no stakes — pure bragging rights.</p>
+      </div>
+    </div>
 
-  setupReveals() {
-    const els = document.querySelectorAll('[data-reveal]');
-    els.forEach(el => {
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(30px)';
-      el.style.transition = 'opacity .7s ease, transform .7s cubic-bezier(.2,.7,.3,1)';
-    });
-    this._obs = new IntersectionObserver(entries => {
-      entries.forEach((e, i) => {
-        if (e.isIntersecting) {
-          const el = e.target;
-          setTimeout(() => { el.style.opacity = '1'; el.style.transform = 'none'; }, (i % 3) * 110);
-          this._obs.unobserve(el);
-        }
-      });
-    }, { threshold: 0.15 });
-    els.forEach(el => this._obs.observe(el));
-  }
+    <div class="feature rv">
+      <div class="ph"><img src="/assets/v2/betina-voice.jpg" alt="" loading="lazy"><span class="sticker violet" data-i="f5Sticker">Fresh every day</span></div>
+      <div>
+        <div class="num">05</div>
+        <h3 class="display" data-i="f5Title">BETina News</h3>
+        <p data-i="f5Text">Her own sports newsroom: the stories that matter for your teams, written for you in your language.</p>
+      </div>
+    </div>
 
-  setupCounters() {
-    this._cObs = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (!e.isIntersecting) return;
-        const el = e.target, target = +el.dataset.count, t0 = performance.now();
-        const tick = now => {
-          const p = Math.min((now - t0) / 1400, 1);
-          el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
-          if (p < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-        this._cObs.unobserve(el);
-      });
-    }, { threshold: 0.6 });
-    document.querySelectorAll('[data-count]').forEach(el => this._cObs.observe(el));
-  }
+    <div class="grid4 rv">
+      <div class="cell"><div class="ico">⏰</div><h4 data-i="s1Title">Smart reminders</h4><p data-i="s1Text">Say “remind me before the match” and she takes care of the rest.</p></div>
+      <div class="cell"><div class="ico">🏆</div><h4 data-i="s2Title">XP &amp; tiers</h4><p data-i="s2Text">Earn XP for chats, daily streaks and correct predictions — and level up.</p></div>
+      <div class="cell"><div class="ico">🏟️</div><h4 data-i="s3Title">Every sport</h4><p data-i="s3Text">Football, tennis, basketball, NFL, MMA, cricket, rugby, hockey, golf, esports and more.</p></div>
+      <div class="cell"><div class="ico">🌍</div><h4 data-i="s4Title">9 languages</h4><p data-i="s4Text">BETina speaks your language — and switches whenever you do.</p></div>
+    </div>
+  </div>
+</section>
 
-  setupParallax() {
-    const els = [...document.querySelectorAll('[data-parallax]')];
-    this._onScroll = () => {
-      const y = window.scrollY;
-      els.forEach(el => { el.style.marginTop = (y * -parseFloat(el.dataset.parallax) * 0.4) + 'px'; });
-    };
-    window.addEventListener('scroll', this._onScroll, { passive: true });
-  }
+<section class="how" id="how">
+  <div class="wrap">
+    <div class="section-head rv">
+      <span class="kicker" data-i="howKicker">Get started</span>
+      <h2 class="display"><span data-i="howA">Up and running</span> <span class="accent" data-i="howB">in 60 seconds.</span></h2>
+    </div>
+    <div class="steps">
+      <div class="step rv"><h4 data-i="st1Title">Download BETina</h4><p data-i="st1Text">Free on the App Store and Google Play — or try it right in your browser.</p></div>
+      <div class="step rv"><h4 data-i="st2Title">Sign in your way</h4><p data-i="st2Text">Whatever's easiest for you — it takes a few seconds.</p>
+        <div class="signins"><span>Apple</span><span>Google</span><span data-i="siEmail">Email</span><span data-i="siPhone">Phone</span></div></div>
+      <div class="step rv"><h4 data-i="st3Title">Pick your teams</h4><p data-i="st3Text">Choose your favourite teams and sports. BETina personalises everything from day one.</p></div>
+    </div>
+  </div>
+</section>
 
-  setupTilt() {
-    document.querySelectorAll('[data-tilt]').forEach(el => {
-      el.addEventListener('mousemove', ev => {
-        const r = el.getBoundingClientRect();
-        const rx = ((ev.clientY - r.top) / r.height - 0.5) * -8;
-        const ry = ((ev.clientX - r.left) / r.width - 0.5) * 8;
-        el.style.transform = 'perspective(800px) rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg)';
-      });
-      el.addEventListener('mouseleave', () => { el.style.transform = ''; });
-    });
-  }
+<section id="languages">
+  <div class="wrap">
+    <div class="section-head rv">
+      <span class="kicker" data-i="lgKicker">Speaks your language</span>
+      <h2 class="display"><span data-i="lgA">Nine languages.</span> <span class="accent" data-i="lgB">One BETina.</span></h2>
+    </div>
+    <div class="langs rv">
+      <span>English</span><span>Deutsch</span><span>Español</span><span>Français</span><span>Português</span>
+      <span>Italiano</span><span>Română</span><span>Türkçe</span><span>Hrvatski</span>
+    </div>
+  </div>
+</section>
 
-  renderVals() {
-    const styleFor = m => m.from === 'bot'
-      ? { align: 'flex-start', bg: 'rgba(139,92,246,0.16)', color: '#e9e4f2', radius: '16px 16px 16px 4px', shadow: '0 4px 14px rgba(0,0,0,0.3)', border: '1px solid rgba(139,92,246,0.3)', xpTag: true }
-      : { align: 'flex-end', bg: 'rgba(184,233,38,0.14)', color: '#dff59a', radius: '16px 16px 4px 16px', shadow: 'none', border: '1px solid rgba(184,233,38,0.45)', xpTag: false };
-    return {
-      tickerOn: this.props.tickerOn ?? true,
-      typing: this.state.typing,
-      chatMsgs: this.script.slice(0, this.state.shown).map(m => ({ text: m.text, ...styleFor(m) })),
-      features: [
-        { icon: '⚡', title: 'Live Scores & Fixtures', desc: 'Real-time match updates, upcoming games and league tables for your teams — always one glance away.', iconBg: 'rgba(184,233,38,0.12)', iconShadow: '0 0 20px rgba(184,233,38,0.15)' },
-        { icon: '🧠', title: 'AI-Powered Chat', desc: 'Talk to BETina about anything sports. She remembers your team, your style, and gets sharper with every chat.', iconBg: 'rgba(139,92,246,0.15)', iconShadow: '0 0 20px rgba(139,92,246,0.2)' },
-        { icon: '🎯', title: 'Match Predictions', desc: 'AI-powered insights on upcoming matches. Call the result, earn XP, climb the leaderboard.', iconBg: 'rgba(184,233,38,0.12)', iconShadow: '0 0 20px rgba(184,233,38,0.15)' },
-        { icon: '🔔', title: 'Smart Reminders', desc: 'Just say "remind me before the game" — BETina handles the rest. Never miss a kickoff again.', iconBg: 'rgba(139,92,246,0.15)', iconShadow: '0 0 20px rgba(139,92,246,0.2)' },
-        { icon: '🌟', title: 'XP & Rewards', desc: 'Earn XP for chatting, daily streaks and correct predictions. Climb the tiers: Initiate → Thinker → Analyst → Mastermind → Genius.', iconBg: 'rgba(184,233,38,0.12)', iconShadow: '0 0 20px rgba(184,233,38,0.15)' },
-        { icon: '🌍', title: '7 Languages', desc: 'English, German, Spanish, Portuguese, French, Italian and Romanian — BETina speaks yours.', iconBg: 'rgba(139,92,246,0.15)', iconShadow: '0 0 20px rgba(139,92,246,0.2)' }
-      ]
-    };
-  }
-}
-</script>
+<section class="cta" id="download">
+  <div class="wrap">
+    <div class="copy rv">
+      <h2 class="display"><span data-i="ctaA">Your team deserves more</span> <span class="accent" data-i="ctaB">than a search bar.</span></h2>
+      <p data-i="ctaText">Download BETina and talk sport with someone who's always up for it.</p>
+      <div class="stores">
+        <a class="store" href="https://apps.apple.com/at/app/betina-ai/id6796780870" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.7c-.03-2.6 2.12-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.89-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.34.86 1.25 1.89 2.65 3.23 2.6 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.38.81 1.4-.02 2.28-1.27 3.13-2.52.99-1.45 1.4-2.85 1.42-2.92-.03-.01-2.72-1.04-2.71-4.14zM13.8 5.06c.71-.86 1.19-2.06 1.06-3.26-1.03.04-2.27.69-3.01 1.55-.66.76-1.24 1.98-1.08 3.16 1.14.09 2.31-.58 3.03-1.45z"/></svg>
+          <span><small data-i="storeApple">Download on the</small><strong>App Store</strong></span>
+        </a>
+        <a class="store" href="https://play.google.com/store/apps/details?id=com.geniusbet.betina&amp;pcampaignid=web_share" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#00D7FE" d="M3.6 1.8 13.4 12 3.6 22.2c-.4-.2-.6-.7-.6-1.2V3c0-.5.2-1 .6-1.2z"/><path fill="#FFCE00" d="m17 8.4 3.3 1.9c1 .6 1 2.8 0 3.4L17 15.6 13.4 12z"/><path fill="#FF3A44" d="M17 15.6 13.4 12 3.6 22.2c.4.2.9.2 1.4-.1z"/><path fill="#00F076" d="M5 1.9c-.5-.3-1-.3-1.4-.1L13.4 12 17 8.4z"/></svg>
+          <span><small data-i="storeGoogle">Get it on</small><strong>Google Play</strong></span>
+        </a>
+      </div>
+      <a class="weblink" style="display:inline-block;margin-top:14px" href="https://app.betina.geniusbet.com" data-i="tryWeb">or try it on the web →</a>
+    </div>
+    <div class="ph"><img src="/assets/v2/betina-ring.jpg" alt="" loading="lazy"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="top">
+      <a class="brand" href="#top" aria-label="BETina"><img src="/assets/v2/logo-mark.png" alt=""><b>BET<span>INA</span></b><small>by GeniusBet</small></a>
+      <div class="links">
+        <a href="/privacy" data-i="fPrivacy">Privacy</a>
+        <a href="/terms" data-i="fTerms">Terms</a>
+        <a href="/support" data-i="navSupport">Support</a>
+        <a href="/delete-account" data-i="fDelete">Delete account</a>
+        <a href="mailto:marketing@geniusbet.com" data-i="fContact">Contact</a>
+      </div>
+    </div>
+    <p class="fine"><span data-i="fFine">18+ only. BETina is an AI companion for sports fans and entertainment — no real money is wagered or moved in the app.</span><br>© 2026 Genius Media London Ltd · Company No. 11133948</p>
+  </div>
+</footer>
+
+<div id="ck" role="dialog" aria-live="polite">
+  <span><span data-i="ckText">We'd like to use cookies for anonymous usage statistics.</span> <a href="/privacy" data-i="fPrivacy">Privacy</a></span>
+  <div class="row"><button id="ck-e" data-i="ckNo">Essential only</button><button id="ck-a" class="yes" data-i="ckYes">Accept all</button></div>
+</div>
 
 <script>
-(function() {
-  if (!localStorage.getItem('ck')) {
-    window.addEventListener('DOMContentLoaded', function() {
-      var bar = document.createElement('div');
-      bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#1a1523;border-top:1px solid rgba(184,233,38,.3);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-family:Archivo,sans-serif;';
-      bar.innerHTML = '<span style="font-size:13px;color:#b3abc2;">We use cookies. <a href="/privacy" style="color:#b8e926;">Privacy Policy</a></span><div style="display:flex;gap:10px;"><button id="ck-e" style="padding:9px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#cfc9da;font-size:13px;font-weight:700;cursor:pointer;">Essential only</button><button id="ck-a" style="padding:9px 20px;border-radius:999px;border:none;background:#b8e926;color:#10120a;font-size:13px;font-weight:800;cursor:pointer;">Accept all</button></div>';
-      document.body.appendChild(bar);
-      function d() { bar.remove(); localStorage.setItem('ck','1'); }
-      document.getElementById('ck-a').onclick = document.getElementById('ck-e').onclick = d;
-    });
+// Analytics only after consent ("ck" = "all"); "essential" keeps Google out entirely.
+(function () {
+  var KEY = 'betina_ck';
+  function store(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+  function read() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+  function loadGA() {
+    var s = document.createElement('script');
+    s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=G-LRFD2P7EPN';
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { dataLayer.push(arguments); };
+    gtag('js', new Date()); gtag('config', 'G-LRFD2P7EPN', { anonymize_ip: true });
   }
+  var choice = read();
+  if (choice === 'all') loadGA();
+  else if (choice !== 'essential') {
+    var bar = document.getElementById('ck');
+    bar.classList.add('show');
+    document.getElementById('ck-a').onclick = function () { store('all'); bar.remove(); loadGA(); };
+    document.getElementById('ck-e').onclick = function () { store('essential'); bar.remove(); };
+  }
+})();
+
+// Reveal on scroll.
+(function () {
+  var els = document.querySelectorAll('.rv');
+  if (!('IntersectionObserver' in window)) { els.forEach(function (e) { e.classList.add('in'); }); return; }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+  }, { threshold: .12 });
+  els.forEach(function (e) { io.observe(e); });
 })();
 </script>
 <script src="/i18n.js"></script>

@@ -33,6 +33,18 @@
         "dist"
       ],
       "port": 8099
+    },
+    {
+      "name": "landing",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8098",
+        "--directory",
+        "web/landing"
+      ],
+      "port": 8098
     }
   ]
 }

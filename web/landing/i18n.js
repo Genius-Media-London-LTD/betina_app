@@ -1,117 +1,296 @@
+// Landing page translations. English lives in the HTML; every element with
+// data-i="key" gets swapped for the chosen language. Language pick order:
+// ?lang= → saved choice → browser language → country from /api/locale → English.
 (function () {
   'use strict';
 
-  const SUPPORTED = ['en', 'de', 'es', 'fr', 'pt'];
-  const countryLanguage = {
+  var SUPPORTED = ['en', 'de', 'es', 'fr', 'pt', 'it', 'ro', 'tr', 'hr'];
+  var COUNTRY = {
     AT:'de', DE:'de', LI:'de',
     ES:'es', MX:'es', AR:'es', CL:'es', CO:'es', PE:'es', VE:'es', EC:'es', BO:'es', PY:'es', UY:'es', SV:'es', GT:'es', HN:'es', NI:'es', CR:'es', PA:'es', DO:'es', CU:'es', GQ:'es',
     PT:'pt', BR:'pt', AO:'pt', MZ:'pt', CV:'pt', GW:'pt', ST:'pt', TL:'pt',
-    FR:'fr', BE:'fr', LU:'fr', MC:'fr', CH:'fr', CA:'fr', SN:'fr', CI:'fr', CM:'fr', CD:'fr', CG:'fr', ML:'fr', BF:'fr', NE:'fr', TG:'fr', BJ:'fr', GA:'fr', GN:'fr', DJ:'fr', HT:'fr', MG:'fr', RW:'fr', BI:'fr'
+    FR:'fr', BE:'fr', LU:'fr', MC:'fr', CH:'fr', SN:'fr', CI:'fr', CM:'fr', CD:'fr', CG:'fr', ML:'fr', BF:'fr', NE:'fr', TG:'fr', BJ:'fr', GA:'fr', GN:'fr', DJ:'fr', HT:'fr', MG:'fr', RW:'fr', BI:'fr',
+    IT:'it', SM:'it', VA:'it',
+    RO:'ro', MD:'ro',
+    TR:'tr',
+    HR:'hr', BA:'hr'
   };
 
-  const translations = {
+  var T = {
     de: {
-      'Features':'Funktionen','How it works':'So funktioniert’s','Privacy':'Datenschutz','Support':'Support','Terms':'AGB','Contact':'Kontakt','Try Web App →':'Web-App testen →','Try on Web →':'Im Web testen →',
-      'Powered by GeniusBet AI':'Unterstützt von GeniusBet AI','Sports,':'Sport,','reimagined':'neu gedacht','with AI.':'mit KI.',
-      'Meet BETina — your personal AI sports companion. Live scores, smart predictions, instant answers and real conversation. One app, every match.':'Lerne BETina kennen — deine persönliche KI-Sportbegleiterin. Live-Ergebnisse, smarte Prognosen, sofortige Antworten und echte Gespräche. Eine App für jedes Spiel.',
-      'Download BETina':'BETina herunterladen','online · ready to talk sports':'online · bereit für Sportgespräche','Show lineups':'Aufstellungen zeigen','Head-to-head':'Direkter Vergleich','Remind me':'Erinnere mich','Ask BETina anything…':'Frag BETina alles …','+1 XP for chatting':'Eine XP fürs Chatten',
-      'Sports & Leagues':'Sportarten & Ligen','Live AI Chat':'Live-KI-Chat','Languages':'Sprachen','XP & Rewards':'XP & Belohnungen','What’s inside':'Das steckt drin',"What's inside":'Das steckt drin','Everything a sports fan':'Alles, was Sportfans','needs.':'brauchen.',
-      'Live Scores & Fixtures':'Live-Ergebnisse & Spiele','Real-time match updates, upcoming games and league tables for your teams — always one glance away.':'Live-Updates, kommende Spiele und Tabellen deiner Teams — immer sofort im Blick.',
-      'AI-Powered Chat':'KI-gestützter Chat','Talk to BETina about anything sports. She remembers your team, your style, and gets sharper with every chat.':'Sprich mit BETina über alles rund um Sport. Sie kennt dein Team, deinen Stil und wird mit jedem Chat besser.',
-      'Match Predictions':'Spielprognosen','AI-powered insights on upcoming matches. Call the result, earn XP, climb the leaderboard.':'KI-gestützte Einblicke in kommende Spiele. Tippe das Ergebnis, sammle XP und steige in der Rangliste auf.',
-      'Smart Reminders':'Smarte Erinnerungen','Just say "remind me before the game" — BETina handles the rest. Never miss a kickoff again.':'Sag einfach „Erinnere mich vor dem Spiel“ — BETina erledigt den Rest. Verpasse keinen Anpfiff mehr.',
-      'Earn XP for chatting, daily streaks and correct predictions. Climb the tiers: Initiate → Thinker → Analyst → Mastermind → Genius.':'Sammle XP durch Chats, tägliche Serien und richtige Prognosen. Steige auf: Initiate → Thinker → Analyst → Mastermind → Genius.',
-      '7 Languages':'7 Sprachen','English, German, Spanish, Portuguese, French, Italian and Romanian — BETina speaks yours.':'Englisch, Deutsch, Spanisch, Portugiesisch, Französisch, Italienisch und Rumänisch — BETina spricht deine Sprache.',
-      'Getting started':'Erste Schritte','Up & running in':'Startklar in','60 seconds.':'60 Sekunden.','Download the app':'App herunterladen','Available now on Google Play and the Apple App Store.':'Jetzt bei Google Play und im Apple App Store verfügbar.',
-      'Pick your teams':'Wähle deine Teams','Sign in with your phone number and choose your favorites — BETina personalizes everything from day one.':'Melde dich mit deiner Telefonnummer an und wähle deine Favoriten — BETina personalisiert alles vom ersten Tag an.',
-      'Chat & earn XP':'Chatten & XP sammeln','Ask anything, set reminders, predict matches. Every interaction earns XP — from Initiate all the way to Genius.':'Frag alles, setze Erinnerungen und tippe Spiele. Jede Interaktion bringt XP — von Initiate bis Genius.',
-      'Your team deserves better than a':'Dein Team verdient mehr als eine','search bar.':'Suchleiste.','Join thousands of fans who talk sports with BETina every day.':'Schließe dich Tausenden Fans an, die täglich mit BETina über Sport sprechen.',
-      'Available on':'Verfügbar für','Available now':'Jetzt verfügbar','Get it on':'Jetzt bei','We use cookies.':'Wir verwenden Cookies.','Privacy Policy':'Datenschutzrichtlinie','Essential only':'Nur notwendige','Accept all':'Alle akzeptieren'
+      title:'BETina — Deine KI-Sportbegleiterin',
+      navFeatures:'Funktionen', navHow:'So geht’s', navSupport:'Support', navWeb:'Web-App →',
+      heroSticker:'KI-Sportbegleiterin · 18+', heroA:'Dein Spiel.', heroB:'Dein Vibe.',
+      heroLead:'Lerne BETina kennen — deine KI-Sportbegleiterin. Sie folgt deinen Teams, kennt jede Sportart, geht ran, wenn du anrufst, und redet jederzeit mit dir über Sport — in deiner Sprache.',
+      storeApple:'Laden im', storeGoogle:'Jetzt bei', tryWeb:'oder im Browser testen →', heroFree:'Kostenlos · iPhone, Android & Web',
+      heroOnline:'● Jetzt online', bubble1:'Dein Team spielt in 2 Stunden. Willst du die Aufstellungen? ⚽', bubble2Who:'⚡ Tor-Alarm', bubble2:'TOR! 1:0 in der 34. Minute.',
+      mq1:'Chat', mq2:'Sprachanrufe', mq3:'Live-Ergebnisse', mq4:'Tor-Alarm', mq5:'Tippspiel', mq6:'BETina News', mq7:'9 Sprachen',
+      featKicker:'Das steckt drin', featA:'Alles, was Fans brauchen.', featB:'Eine Begleiterin.',
+      f1Sticker:'Immer für dich da', f1Title:'Chatte mit BETina', f1Text:'Frag sie alles rund um Sport. Sie kennt deine Teams, merkt sich, worüber ihr gesprochen habt, und wird mit jedem Chat besser.',
+      f2Sticker:'Sie geht ran', f2Title:'Ruf sie an', newTag:'Neu', f2Text:'Echte Sprachanrufe mit BETina. Rede freihändig über das Spiel — wie mit einer Freundin, die kein Match verpasst.',
+      f3Sticker:'TOR! ⚡', f3Title:'BETina Live', f3Text:'Live-Ergebnisse deiner Teams und eine Push-Nachricht, sobald der Ball im Netz zappelt. Nie wieder einen Anpfiff verpassen.',
+      f4Sticker:'Nur zum Spaß', f4Title:'Tippspiel', f4Text:'Tippe die Ergebnisse, tritt gegen deine Freunde an und klettere in der Rangliste nach oben. Kein Geld, kein Einsatz — nur Ruhm und Ehre.',
+      f5Sticker:'Jeden Tag frisch', f5Title:'BETina News', f5Text:'Ihre eigene Sportredaktion: die Geschichten, die für deine Teams zählen — für dich geschrieben, in deiner Sprache.',
+      s1Title:'Smarte Erinnerungen', s1Text:'Sag „Erinnere mich vor dem Spiel“ — den Rest erledigt sie.',
+      s2Title:'XP & Level', s2Text:'Sammle XP für Chats, tägliche Serien und richtige Tipps — und steig auf.',
+      s3Title:'Jede Sportart', s3Text:'Fußball, Tennis, Basketball, NFL, MMA, Cricket, Rugby, Eishockey, Golf, E-Sport und mehr.',
+      s4Title:'9 Sprachen', s4Text:'BETina spricht deine Sprache — und wechselt, wann immer du willst.',
+      howKicker:'Erste Schritte', howA:'Startklar', howB:'in 60 Sekunden.',
+      st1Title:'BETina laden', st1Text:'Kostenlos im App Store und bei Google Play — oder direkt im Browser testen.',
+      st2Title:'Anmelden, wie du willst', st2Text:'Wähle, was für dich am einfachsten ist — dauert nur Sekunden.', siEmail:'E-Mail', siPhone:'Telefon',
+      st3Title:'Teams wählen', st3Text:'Wähle deine Lieblingsteams und Sportarten. BETina passt alles vom ersten Tag an dich an.',
+      lgKicker:'Spricht deine Sprache', lgA:'Neun Sprachen.', lgB:'Eine BETina.',
+      ctaA:'Dein Team verdient mehr', ctaB:'als eine Suchleiste.', ctaText:'Lade BETina und rede über Sport mit jemandem, der immer Lust darauf hat.',
+      fPrivacy:'Datenschutz', fTerms:'AGB', fDelete:'Konto löschen', fContact:'Kontakt',
+      fFine:'Nur ab 18. BETina ist eine KI-Begleiterin für Sportfans und Unterhaltung — in der App wird kein echtes Geld gesetzt oder bewegt.',
+      ckText:'Wir würden gern Cookies für anonyme Nutzungsstatistiken verwenden.', ckNo:'Nur notwendige', ckYes:'Alle akzeptieren'
     },
     es: {
-      'Features':'Funciones','How it works':'Cómo funciona','Privacy':'Privacidad','Support':'Soporte','Terms':'Términos','Contact':'Contacto','Try Web App →':'Probar versión web →','Try on Web →':'Probar en la web →','Powered by GeniusBet AI':'Con tecnología de GeniusBet AI','Sports,':'Deportes,','reimagined':'reinventados','with AI.':'con IA.',
-      'Meet BETina — your personal AI sports companion. Live scores, smart predictions, instant answers and real conversation. One app, every match.':'Conoce a BETina, tu compañera deportiva con IA. Resultados en vivo, predicciones inteligentes, respuestas instantáneas y conversaciones reales. Una app para cada partido.','Download BETina':'Descargar BETina','online · ready to talk sports':'en línea · lista para hablar de deportes','Show lineups':'Ver alineaciones','Head-to-head':'Cara a cara','Remind me':'Recuérdame','Ask BETina anything…':'Pregúntale a BETina…','+1 XP for chatting':'+1 XP por chatear','Sports & Leagues':'Deportes y ligas','Live AI Chat':'Chat con IA en vivo','Languages':'Idiomas','XP & Rewards':'XP y recompensas',"What's inside":'Qué incluye','Everything a sports fan':'Todo lo que un fan','needs.':'necesita.',
-      'Live Scores & Fixtures':'Resultados y partidos en vivo','Real-time match updates, upcoming games and league tables for your teams — always one glance away.':'Actualizaciones en tiempo real, próximos partidos y clasificaciones de tus equipos, siempre a un vistazo.','AI-Powered Chat':'Chat con IA','Talk to BETina about anything sports. She remembers your team, your style, and gets sharper with every chat.':'Habla con BETina de cualquier tema deportivo. Recuerda tu equipo y tu estilo, y mejora con cada conversación.','Match Predictions':'Predicciones','AI-powered insights on upcoming matches. Call the result, earn XP, climb the leaderboard.':'Análisis con IA de próximos partidos. Predice el resultado, gana XP y sube en la clasificación.','Smart Reminders':'Recordatorios inteligentes','Just say "remind me before the game" — BETina handles the rest. Never miss a kickoff again.':'Di “recuérdame antes del partido” y BETina hará el resto. No vuelvas a perderte un inicio.','Earn XP for chatting, daily streaks and correct predictions. Climb the tiers: Initiate → Thinker → Analyst → Mastermind → Genius.':'Gana XP por chatear, mantener rachas y acertar predicciones. Sube de Initiate a Genius.','7 Languages':'7 idiomas','English, German, Spanish, Portuguese, French, Italian and Romanian — BETina speaks yours.':'Inglés, alemán, español, portugués, francés, italiano y rumano: BETina habla tu idioma.','Getting started':'Primeros pasos','Up & running in':'Empieza en','60 seconds.':'60 segundos.','Download the app':'Descarga la app','Available now on Google Play and the Apple App Store.':'Ya disponible en Google Play y Apple App Store.','Pick your teams':'Elige tus equipos','Sign in with your phone number and choose your favorites — BETina personalizes everything from day one.':'Inicia sesión con tu número y elige tus favoritos. BETina personaliza todo desde el primer día.','Chat & earn XP':'Chatea y gana XP','Ask anything, set reminders, predict matches. Every interaction earns XP — from Initiate all the way to Genius.':'Pregunta, crea recordatorios y predice partidos. Cada interacción suma XP, de Initiate a Genius.','Your team deserves better than a':'Tu equipo merece más que una','search bar.':'barra de búsqueda.','Join thousands of fans who talk sports with BETina every day.':'Únete a miles de fans que hablan de deportes con BETina cada día.','Available on':'Disponible en','Available now':'Ya disponible','Get it on':'Consíguela en','We use cookies.':'Usamos cookies.','Privacy Policy':'Política de privacidad','Essential only':'Solo esenciales','Accept all':'Aceptar todo'
+      title:'BETina — Tu compañera deportiva con IA',
+      navFeatures:'Funciones', navHow:'Cómo funciona', navSupport:'Soporte', navWeb:'App web →',
+      heroSticker:'Compañera deportiva IA · 18+', heroA:'Tu juego.', heroB:'Tu vibe.',
+      heroLead:'Conoce a BETina, tu compañera deportiva con IA. Sigue a tus equipos, conoce todos los deportes, contesta cuando la llamas y habla de deporte contigo cuando quieras, en tu idioma.',
+      storeApple:'Descárgalo en el', storeGoogle:'Disponible en', tryWeb:'o pruébala en la web →', heroFree:'Gratis · iPhone, Android y web',
+      heroOnline:'● En línea', bubble1:'Tu equipo juega en 2 horas. ¿Quieres las alineaciones? ⚽', bubble2Who:'⚡ Alerta de gol', bubble2:'¡GOL! 1–0 en el minuto 34.',
+      mq1:'Chat', mq2:'Llamadas de voz', mq3:'Resultados en vivo', mq4:'Alertas de gol', mq5:'Juego de pronósticos', mq6:'BETina News', mq7:'9 idiomas',
+      featKicker:'Lo que incluye', featA:'Todo lo que un fan necesita.', featB:'Una compañera.',
+      f1Sticker:'Siempre lista', f1Title:'Chatea con BETina', f1Text:'Pregúntale lo que quieras sobre deporte. Conoce a tus equipos, recuerda de qué hablasteis y mejora con cada chat.',
+      f2Sticker:'Ella contesta', f2Title:'Llámala', newTag:'Nuevo', f2Text:'Llamadas de voz reales con BETina. Habla del partido sin manos, como llamar a una amiga que no se pierde ni un juego.',
+      f3Sticker:'¡GOL! ⚡', f3Title:'BETina Live', f3Text:'Resultados en vivo de tus equipos y un aviso en cuanto el balón entra. No te pierdas ni un saque inicial.',
+      f4Sticker:'Solo por diversión', f4Title:'Juego de pronósticos', f4Text:'Pronostica los marcadores, reta a tus amigos y sube en la clasificación. Sin dinero, sin apuestas: solo por presumir.',
+      f5Sticker:'Nuevo cada día', f5Title:'BETina News', f5Text:'Su propia redacción deportiva: las historias que importan para tus equipos, escritas para ti en tu idioma.',
+      s1Title:'Recordatorios inteligentes', s1Text:'Di «recuérdamelo antes del partido» y ella se encarga del resto.',
+      s2Title:'XP y niveles', s2Text:'Gana XP por chatear, por rachas diarias y por pronósticos acertados, y sube de nivel.',
+      s3Title:'Todos los deportes', s3Text:'Fútbol, tenis, baloncesto, NFL, MMA, críquet, rugby, hockey, golf, esports y más.',
+      s4Title:'9 idiomas', s4Text:'BETina habla tu idioma y cambia cuando tú quieras.',
+      howKicker:'Empieza ya', howA:'Lista para usar', howB:'en 60 segundos.',
+      st1Title:'Descarga BETina', st1Text:'Gratis en App Store y Google Play, o pruébala directamente en tu navegador.',
+      st2Title:'Entra como prefieras', st2Text:'Elige lo que te resulte más fácil: tarda unos segundos.', siEmail:'Email', siPhone:'Teléfono',
+      st3Title:'Elige tus equipos', st3Text:'Elige tus equipos y deportes favoritos. BETina lo personaliza todo desde el primer día.',
+      lgKicker:'Habla tu idioma', lgA:'Nueve idiomas.', lgB:'Una BETina.',
+      ctaA:'Tu equipo merece más', ctaB:'que una barra de búsqueda.', ctaText:'Descarga BETina y habla de deporte con alguien que siempre tiene ganas.',
+      fPrivacy:'Privacidad', fTerms:'Términos', fDelete:'Eliminar cuenta', fContact:'Contacto',
+      fFine:'Solo mayores de 18. BETina es una compañera IA para fans del deporte y entretenimiento: en la app no se apuesta ni se mueve dinero real.',
+      ckText:'Nos gustaría usar cookies para estadísticas de uso anónimas.', ckNo:'Solo esenciales', ckYes:'Aceptar todo'
     },
     fr: {
-      'Features':'Fonctionnalités','How it works':'Comment ça marche','Privacy':'Confidentialité','Support':'Assistance','Terms':'Conditions','Contact':'Contact','Try Web App →':'Essayer sur le Web →','Try on Web →':'Essayer sur le Web →','Powered by GeniusBet AI':'Propulsé par GeniusBet AI','Sports,':'Le sport,','reimagined':'réinventé','with AI.':'avec l’IA.','Meet BETina — your personal AI sports companion. Live scores, smart predictions, instant answers and real conversation. One app, every match.':'Découvrez BETina, votre compagne sportive IA. Scores en direct, prédictions intelligentes, réponses instantanées et vraies conversations. Une seule app pour chaque match.','Download BETina':'Télécharger BETina','online · ready to talk sports':'en ligne · prête à parler sport','Show lineups':'Voir les compositions','Head-to-head':'Face-à-face','Remind me':'Me rappeler','Ask BETina anything…':'Demandez à BETina…','+1 XP for chatting':'+1 XP pour le chat','Sports & Leagues':'Sports et ligues','Live AI Chat':'Chat IA en direct','Languages':'Langues','XP & Rewards':'XP et récompenses',"What's inside":'Au programme','Everything a sports fan':'Tout ce dont un fan','needs.':'a besoin.','Live Scores & Fixtures':'Scores et matchs en direct','Real-time match updates, upcoming games and league tables for your teams — always one glance away.':'Suivi en temps réel, prochains matchs et classements de vos équipes, toujours à portée de regard.','AI-Powered Chat':'Chat propulsé par l’IA','Talk to BETina about anything sports. She remembers your team, your style, and gets sharper with every chat.':'Parlez sport avec BETina. Elle retient votre équipe et votre style, et s’améliore à chaque conversation.','Match Predictions':'Prédictions de matchs','AI-powered insights on upcoming matches. Call the result, earn XP, climb the leaderboard.':'Analyses IA des prochains matchs. Prédisez le résultat, gagnez des XP et grimpez au classement.','Smart Reminders':'Rappels intelligents','Just say "remind me before the game" — BETina handles the rest. Never miss a kickoff again.':'Dites « rappelle-moi avant le match » et BETina s’occupe du reste. Ne manquez plus aucun coup d’envoi.','Earn XP for chatting, daily streaks and correct predictions. Climb the tiers: Initiate → Thinker → Analyst → Mastermind → Genius.':'Gagnez des XP grâce aux chats, aux séries et aux bonnes prédictions. Progressez de Initiate à Genius.','7 Languages':'7 langues','English, German, Spanish, Portuguese, French, Italian and Romanian — BETina speaks yours.':'Anglais, allemand, espagnol, portugais, français, italien et roumain : BETina parle votre langue.','Getting started':'Bien démarrer','Up & running in':'Prêt en','60 seconds.':'60 secondes.','Download the app':'Téléchargez l’app','Available now on Google Play and the Apple App Store.':'Disponible maintenant sur Google Play et l’Apple App Store.','Pick your teams':'Choisissez vos équipes','Sign in with your phone number and choose your favorites — BETina personalizes everything from day one.':'Connectez-vous avec votre numéro et choisissez vos favoris. BETina personnalise tout dès le premier jour.','Chat & earn XP':'Discutez et gagnez des XP','Ask anything, set reminders, predict matches. Every interaction earns XP — from Initiate all the way to Genius.':'Posez vos questions, créez des rappels et prédisez les matchs. Chaque interaction rapporte des XP.','Your team deserves better than a':'Votre équipe mérite mieux qu’une','search bar.':'barre de recherche.','Join thousands of fans who talk sports with BETina every day.':'Rejoignez les milliers de fans qui parlent sport avec BETina chaque jour.','Available on':'Disponible sur','Available now':'Disponible','Get it on':'Disponible sur','We use cookies.':'Nous utilisons des cookies.','Privacy Policy':'Politique de confidentialité','Essential only':'Essentiels uniquement','Accept all':'Tout accepter'
+      title:'BETina — Ta compagne sportive IA',
+      navFeatures:'Fonctionnalités', navHow:'Comment ça marche', navSupport:'Support', navWeb:'App web →',
+      heroSticker:'Compagne sportive IA · 18+', heroA:'Ton match.', heroB:'Ton vibe.',
+      heroLead:'Découvre BETina, ta compagne sportive IA. Elle suit tes équipes, connaît tous les sports, décroche quand tu l’appelles et parle sport avec toi à tout moment, dans ta langue.',
+      storeApple:'Télécharger dans l’', storeGoogle:'Disponible sur', tryWeb:'ou essaie-la sur le web →', heroFree:'Gratuit · iPhone, Android et web',
+      heroOnline:'● En ligne', bubble1:'Ton équipe joue dans 2 heures. Tu veux les compos ? ⚽', bubble2Who:'⚡ Alerte but', bubble2:'BUT ! 1–0 à la 34e minute.',
+      mq1:'Chat', mq2:'Appels vocaux', mq3:'Scores en direct', mq4:'Alertes but', mq5:'Jeu de pronostics', mq6:'BETina News', mq7:'9 langues',
+      featKicker:'Au programme', featA:'Tout ce qu’il faut à un fan.', featB:'Une seule compagne.',
+      f1Sticker:'Toujours partante', f1Title:'Discute avec BETina', f1Text:'Pose-lui toutes tes questions de sport. Elle connaît tes équipes, se souvient de vos échanges et s’améliore à chaque conversation.',
+      f2Sticker:'Elle décroche', f2Title:'Appelle-la', newTag:'Nouveau', f2Text:'De vrais appels vocaux avec BETina. Parle du match les mains libres, comme avec une amie qui ne rate aucun match.',
+      f3Sticker:'BUT ! ⚡', f3Title:'BETina Live', f3Text:'Les scores en direct de tes équipes et une notification dès que le ballon fait trembler les filets. Ne rate plus aucun coup d’envoi.',
+      f4Sticker:'Juste pour le fun', f4Title:'Jeu de pronostics', f4Text:'Pronostique les scores, défie tes amis et grimpe au classement. Pas d’argent, pas de mise : juste pour la gloire.',
+      f5Sticker:'Frais chaque jour', f5Title:'BETina News', f5Text:'Sa propre rédaction sportive : les infos qui comptent pour tes équipes, écrites pour toi dans ta langue.',
+      s1Title:'Rappels malins', s1Text:'Dis « rappelle-moi avant le match » et elle s’occupe du reste.',
+      s2Title:'XP et niveaux', s2Text:'Gagne de l’XP en discutant, avec tes séries quotidiennes et tes bons pronostics, et monte de niveau.',
+      s3Title:'Tous les sports', s3Text:'Football, tennis, basket, NFL, MMA, cricket, rugby, hockey, golf, esport et plus encore.',
+      s4Title:'9 langues', s4Text:'BETina parle ta langue et change quand tu veux.',
+      howKicker:'C’est parti', howA:'Prête', howB:'en 60 secondes.',
+      st1Title:'Télécharge BETina', st1Text:'Gratuite sur l’App Store et Google Play, ou à essayer directement dans ton navigateur.',
+      st2Title:'Connecte-toi comme tu veux', st2Text:'Choisis ce qui est le plus simple pour toi : quelques secondes suffisent.', siEmail:'E-mail', siPhone:'Téléphone',
+      st3Title:'Choisis tes équipes', st3Text:'Choisis tes équipes et sports préférés. BETina personnalise tout dès le premier jour.',
+      lgKicker:'Parle ta langue', lgA:'Neuf langues.', lgB:'Une seule BETina.',
+      ctaA:'Ton équipe mérite mieux', ctaB:'qu’une barre de recherche.', ctaText:'Télécharge BETina et parle sport avec quelqu’un qui est toujours partant.',
+      fPrivacy:'Confidentialité', fTerms:'Conditions', fDelete:'Supprimer le compte', fContact:'Contact',
+      fFine:'Réservé aux 18 ans et plus. BETina est une compagne IA pour les fans de sport et le divertissement : aucun argent réel n’est misé ni déplacé dans l’app.',
+      ckText:'Nous aimerions utiliser des cookies pour des statistiques d’utilisation anonymes.', ckNo:'Essentiels uniquement', ckYes:'Tout accepter'
     },
     pt: {
-      'Features':'Funcionalidades','How it works':'Como funciona','Privacy':'Privacidade','Support':'Suporte','Terms':'Termos','Contact':'Contato','Try Web App →':'Testar na Web →','Try on Web →':'Testar na Web →','Powered by GeniusBet AI':'Com tecnologia GeniusBet AI','Sports,':'Esportes,','reimagined':'reinventados','with AI.':'com IA.','Meet BETina — your personal AI sports companion. Live scores, smart predictions, instant answers and real conversation. One app, every match.':'Conheça a BETina, sua companheira esportiva com IA. Placar ao vivo, previsões inteligentes, respostas instantâneas e conversas reais. Um app para cada jogo.','Download BETina':'Baixar BETina','online · ready to talk sports':'online · pronta para falar de esportes','Show lineups':'Ver escalações','Head-to-head':'Confronto direto','Remind me':'Lembrar-me','Ask BETina anything…':'Pergunte à BETina…','+1 XP for chatting':'+1 XP por conversar','Sports & Leagues':'Esportes e ligas','Live AI Chat':'Chat de IA ao vivo','Languages':'Idiomas','XP & Rewards':'XP e recompensas',"What's inside":'O que tem dentro','Everything a sports fan':'Tudo que um fã','needs.':'precisa.','Live Scores & Fixtures':'Placares e jogos ao vivo','Real-time match updates, upcoming games and league tables for your teams — always one glance away.':'Atualizações em tempo real, próximos jogos e tabelas dos seus times sempre à vista.','AI-Powered Chat':'Chat com IA','Talk to BETina about anything sports. She remembers your team, your style, and gets sharper with every chat.':'Fale com a BETina sobre esportes. Ela lembra seu time e seu estilo e melhora a cada conversa.','Match Predictions':'Previsões de jogos','AI-powered insights on upcoming matches. Call the result, earn XP, climb the leaderboard.':'Análises por IA dos próximos jogos. Acerte o resultado, ganhe XP e suba no ranking.','Smart Reminders':'Lembretes inteligentes','Just say "remind me before the game" — BETina handles the rest. Never miss a kickoff again.':'Diga “lembre-me antes do jogo” e a BETina cuida do resto. Nunca mais perca o início.','Earn XP for chatting, daily streaks and correct predictions. Climb the tiers: Initiate → Thinker → Analyst → Mastermind → Genius.':'Ganhe XP conversando, mantendo sequências e acertando previsões. Suba de Initiate até Genius.','7 Languages':'7 idiomas','English, German, Spanish, Portuguese, French, Italian and Romanian — BETina speaks yours.':'Inglês, alemão, espanhol, português, francês, italiano e romeno — a BETina fala o seu idioma.','Getting started':'Primeiros passos','Up & running in':'Comece em','60 seconds.':'60 segundos.','Download the app':'Baixe o app','Available now on Google Play and the Apple App Store.':'Disponível agora no Google Play e na Apple App Store.','Pick your teams':'Escolha seus times','Sign in with your phone number and choose your favorites — BETina personalizes everything from day one.':'Entre com seu telefone e escolha seus favoritos. A BETina personaliza tudo desde o primeiro dia.','Chat & earn XP':'Converse e ganhe XP','Ask anything, set reminders, predict matches. Every interaction earns XP — from Initiate all the way to Genius.':'Pergunte, crie lembretes e faça previsões. Cada interação rende XP, de Initiate até Genius.','Your team deserves better than a':'Seu time merece mais que uma','search bar.':'barra de pesquisa.','Join thousands of fans who talk sports with BETina every day.':'Junte-se a milhares de fãs que falam de esportes com a BETina todos os dias.','Available on':'Disponível no','Available now':'Disponível agora','Get it on':'Baixe no','We use cookies.':'Usamos cookies.','Privacy Policy':'Política de privacidade','Essential only':'Somente essenciais','Accept all':'Aceitar tudo'
+      title:'BETina — A tua companheira desportiva com IA',
+      navFeatures:'Funcionalidades', navHow:'Como funciona', navSupport:'Suporte', navWeb:'App web →',
+      heroSticker:'Companheira desportiva IA · 18+', heroA:'O teu jogo.', heroB:'A tua vibe.',
+      heroLead:'Conhece a BETina, a tua companheira desportiva com IA. Segue as tuas equipas, conhece todos os desportos, atende quando ligas e fala de desporto contigo a qualquer hora, na tua língua.',
+      storeApple:'Descarregar na', storeGoogle:'Disponível no', tryWeb:'ou experimenta na web →', heroFree:'Grátis · iPhone, Android e web',
+      heroOnline:'● Online', bubble1:'A tua equipa joga daqui a 2 horas. Queres os onzes? ⚽', bubble2Who:'⚡ Alerta de golo', bubble2:'GOLO! 1–0 aos 34 minutos.',
+      mq1:'Chat', mq2:'Chamadas de voz', mq3:'Resultados ao vivo', mq4:'Alertas de golo', mq5:'Jogo de previsões', mq6:'BETina News', mq7:'9 línguas',
+      featKicker:'O que tem', featA:'Tudo o que um fã precisa.', featB:'Uma companheira.',
+      f1Sticker:'Sempre pronta', f1Title:'Conversa com a BETina', f1Text:'Pergunta-lhe tudo sobre desporto. Conhece as tuas equipas, lembra-se do que falaram e fica melhor a cada conversa.',
+      f2Sticker:'Ela atende', f2Title:'Liga-lhe', newTag:'Novo', f2Text:'Chamadas de voz reais com a BETina. Fala do jogo sem usar as mãos, como ligar a uma amiga que não perde um jogo.',
+      f3Sticker:'GOLO! ⚡', f3Title:'BETina Live', f3Text:'Resultados ao vivo das tuas equipas e uma notificação assim que a bola entra. Nunca mais percas um pontapé de saída.',
+      f4Sticker:'Só por diversão', f4Title:'Jogo de previsões', f4Text:'Prevê os resultados, desafia os teus amigos e sobe na classificação. Sem dinheiro, sem apostas: só pela glória.',
+      f5Sticker:'Fresco todos os dias', f5Title:'BETina News', f5Text:'A sua própria redação desportiva: as histórias que importam para as tuas equipas, escritas para ti na tua língua.',
+      s1Title:'Lembretes inteligentes', s1Text:'Diz “lembra-me antes do jogo” e ela trata do resto.',
+      s2Title:'XP e níveis', s2Text:'Ganha XP com conversas, sequências diárias e previsões certas, e sobe de nível.',
+      s3Title:'Todos os desportos', s3Text:'Futebol, ténis, basquetebol, NFL, MMA, críquete, râguebi, hóquei, golfe, esports e mais.',
+      s4Title:'9 línguas', s4Text:'A BETina fala a tua língua e muda quando quiseres.',
+      howKicker:'Começa já', howA:'Pronta a usar', howB:'em 60 segundos.',
+      st1Title:'Descarrega a BETina', st1Text:'Grátis na App Store e no Google Play, ou experimenta diretamente no browser.',
+      st2Title:'Entra como preferires', st2Text:'Escolhe o que for mais fácil para ti: demora poucos segundos.', siEmail:'Email', siPhone:'Telemóvel',
+      st3Title:'Escolhe as tuas equipas', st3Text:'Escolhe as tuas equipas e desportos favoritos. A BETina personaliza tudo desde o primeiro dia.',
+      lgKicker:'Fala a tua língua', lgA:'Nove línguas.', lgB:'Uma BETina.',
+      ctaA:'A tua equipa merece mais', ctaB:'do que uma barra de pesquisa.', ctaText:'Descarrega a BETina e fala de desporto com alguém que está sempre disponível.',
+      fPrivacy:'Privacidade', fTerms:'Termos', fDelete:'Eliminar conta', fContact:'Contacto',
+      fFine:'Apenas maiores de 18. A BETina é uma companheira IA para fãs de desporto e entretenimento: na app não se aposta nem se movimenta dinheiro real.',
+      ckText:'Gostaríamos de usar cookies para estatísticas de utilização anónimas.', ckNo:'Só essenciais', ckYes:'Aceitar tudo'
+    },
+    it: {
+      title:'BETina — La tua compagna sportiva IA',
+      navFeatures:'Funzioni', navHow:'Come funziona', navSupport:'Supporto', navWeb:'Web app →',
+      heroSticker:'Compagna sportiva IA · 18+', heroA:'Il tuo gioco.', heroB:'Il tuo vibe.',
+      heroLead:'Ecco BETina, la tua compagna sportiva con IA. Segue le tue squadre, conosce ogni sport, risponde quando la chiami e parla di sport con te in qualsiasi momento, nella tua lingua.',
+      storeApple:'Scarica su', storeGoogle:'Disponibile su', tryWeb:'oppure provala sul web →', heroFree:'Gratis · iPhone, Android e web',
+      heroOnline:'● Online', bubble1:'La tua squadra gioca tra 2 ore. Vuoi le formazioni? ⚽', bubble2Who:'⚡ Allerta gol', bubble2:'GOL! 1–0 al 34° minuto.',
+      mq1:'Chat', mq2:'Chiamate vocali', mq3:'Risultati live', mq4:'Allerte gol', mq5:'Gioco dei pronostici', mq6:'BETina News', mq7:'9 lingue',
+      featKicker:'Cosa c’è dentro', featA:'Tutto ciò che serve a un tifoso.', featB:'Una compagna.',
+      f1Sticker:'Sempre pronta', f1Title:'Chatta con BETina', f1Text:'Chiedile tutto sullo sport. Conosce le tue squadre, ricorda di cosa avete parlato e migliora a ogni chat.',
+      f2Sticker:'Lei risponde', f2Title:'Chiamala', newTag:'Novità', f2Text:'Vere chiamate vocali con BETina. Parla della partita a mani libere, come chiamare un’amica che non perde una gara.',
+      f3Sticker:'GOL! ⚡', f3Title:'BETina Live', f3Text:'Risultati live delle tue squadre e una notifica appena la palla entra in rete. Non perderai più un calcio d’inizio.',
+      f4Sticker:'Solo per divertimento', f4Title:'Gioco dei pronostici', f4Text:'Pronostica i risultati, sfida i tuoi amici e scala la classifica. Niente soldi, niente puntate: solo gloria.',
+      f5Sticker:'Fresco ogni giorno', f5Title:'BETina News', f5Text:'La sua redazione sportiva: le notizie che contano per le tue squadre, scritte per te nella tua lingua.',
+      s1Title:'Promemoria smart', s1Text:'Dì «ricordamelo prima della partita» e pensa a tutto lei.',
+      s2Title:'XP e livelli', s2Text:'Guadagna XP con le chat, le serie giornaliere e i pronostici azzeccati, e sali di livello.',
+      s3Title:'Ogni sport', s3Text:'Calcio, tennis, basket, NFL, MMA, cricket, rugby, hockey, golf, esport e altro ancora.',
+      s4Title:'9 lingue', s4Text:'BETina parla la tua lingua e cambia quando vuoi tu.',
+      howKicker:'Inizia ora', howA:'Pronta', howB:'in 60 secondi.',
+      st1Title:'Scarica BETina', st1Text:'Gratis su App Store e Google Play, oppure provala direttamente nel browser.',
+      st2Title:'Accedi come preferisci', st2Text:'Scegli quello che per te è più comodo: bastano pochi secondi.', siEmail:'Email', siPhone:'Telefono',
+      st3Title:'Scegli le tue squadre', st3Text:'Scegli le tue squadre e i tuoi sport preferiti. BETina personalizza tutto dal primo giorno.',
+      lgKicker:'Parla la tua lingua', lgA:'Nove lingue.', lgB:'Una BETina.',
+      ctaA:'La tua squadra merita di più', ctaB:'di una barra di ricerca.', ctaText:'Scarica BETina e parla di sport con qualcuno che ne ha sempre voglia.',
+      fPrivacy:'Privacy', fTerms:'Termini', fDelete:'Elimina account', fContact:'Contatti',
+      fFine:'Solo maggiorenni. BETina è una compagna IA per tifosi e intrattenimento: nell’app non si scommette né si muove denaro reale.',
+      ckText:'Vorremmo usare i cookie per statistiche di utilizzo anonime.', ckNo:'Solo essenziali', ckYes:'Accetta tutti'
+    },
+    ro: {
+      title:'BETina — Partenera ta sportivă AI',
+      navFeatures:'Funcții', navHow:'Cum funcționează', navSupport:'Asistență', navWeb:'Aplicația web →',
+      heroSticker:'Parteneră sportivă AI · 18+', heroA:'Jocul tău.', heroB:'Vibe-ul tău.',
+      heroLead:'Fă cunoștință cu BETina, partenera ta sportivă AI. Îți urmărește echipele, știe orice sport, răspunde când o suni și vorbește cu tine despre sport oricând, în limba ta.',
+      storeApple:'Descarcă din', storeGoogle:'Disponibil pe', tryWeb:'sau încearc-o pe web →', heroFree:'Gratuit · iPhone, Android și web',
+      heroOnline:'● Online acum', bubble1:'Echipa ta joacă în 2 ore. Vrei formațiile? ⚽', bubble2Who:'⚡ Alertă de gol', bubble2:'GOL! 1–0 în minutul 34.',
+      mq1:'Chat', mq2:'Apeluri vocale', mq3:'Scoruri live', mq4:'Alerte de gol', mq5:'Joc de pronosticuri', mq6:'BETina News', mq7:'9 limbi',
+      featKicker:'Ce găsești', featA:'Tot ce îi trebuie unui fan.', featB:'O singură parteneră.',
+      f1Sticker:'Mereu pe fază', f1Title:'Vorbește cu BETina', f1Text:'Întreab-o orice despre sport. Îți cunoaște echipele, ține minte ce ați vorbit și devine mai bună cu fiecare chat.',
+      f2Sticker:'Ea răspunde', f2Title:'Sun-o', newTag:'Nou', f2Text:'Apeluri vocale reale cu BETina. Vorbește despre meci fără mâini, ca și cum ai suna o prietenă care nu ratează niciun meci.',
+      f3Sticker:'GOL! ⚡', f3Title:'BETina Live', f3Text:'Scoruri live pentru echipele tale și o notificare imediat ce mingea intră în poartă. Nu mai ratezi niciun start de meci.',
+      f4Sticker:'Doar pentru distracție', f4Title:'Joc de pronosticuri', f4Text:'Ghicește scorurile, provoacă-ți prietenii și urcă în clasament. Fără bani, fără mize: doar pentru glorie.',
+      f5Sticker:'Proaspăt în fiecare zi', f5Title:'BETina News', f5Text:'Propria ei redacție sportivă: știrile care contează pentru echipele tale, scrise pentru tine în limba ta.',
+      s1Title:'Mementouri inteligente', s1Text:'Spune „amintește-mi înainte de meci” și se ocupă ea de rest.',
+      s2Title:'XP și niveluri', s2Text:'Câștigă XP pentru chat-uri, serii zilnice și pronosticuri corecte și avansează în nivel.',
+      s3Title:'Orice sport', s3Text:'Fotbal, tenis, baschet, NFL, MMA, cricket, rugby, hochei, golf, esports și multe altele.',
+      s4Title:'9 limbi', s4Text:'BETina vorbește limba ta și o schimbă oricând vrei tu.',
+      howKicker:'Începe acum', howA:'Gata de start', howB:'în 60 de secunde.',
+      st1Title:'Descarcă BETina', st1Text:'Gratuit în App Store și Google Play sau încearc-o direct în browser.',
+      st2Title:'Conectează-te cum vrei', st2Text:'Alege varianta cea mai simplă pentru tine: durează câteva secunde.', siEmail:'Email', siPhone:'Telefon',
+      st3Title:'Alege-ți echipele', st3Text:'Alege echipele și sporturile preferate. BETina personalizează totul din prima zi.',
+      lgKicker:'Vorbește limba ta', lgA:'Nouă limbi.', lgB:'O singură BETina.',
+      ctaA:'Echipa ta merită mai mult', ctaB:'decât o bară de căutare.', ctaText:'Descarcă BETina și vorbește despre sport cu cineva care are mereu chef.',
+      fPrivacy:'Confidențialitate', fTerms:'Termeni', fDelete:'Șterge contul', fContact:'Contact',
+      fFine:'Doar 18+. BETina este o parteneră AI pentru fanii sportului și divertisment: în aplicație nu se pariază și nu se transferă bani reali.',
+      ckText:'Am dori să folosim cookie-uri pentru statistici de utilizare anonime.', ckNo:'Doar esențiale', ckYes:'Accept toate'
+    },
+    tr: {
+      title:'BETina — Yapay zekâ spor arkadaşın',
+      navFeatures:'Özellikler', navHow:'Nasıl çalışır', navSupport:'Destek', navWeb:'Web uygulaması →',
+      heroSticker:'Yapay zekâ spor arkadaşı · 18+', heroA:'Senin oyunun.', heroB:'Senin havan.',
+      heroLead:'BETina ile tanış: yapay zekâ spor arkadaşın. Takımlarını takip eder, her sporu bilir, aradığında açar ve istediğin zaman seninle kendi dilinde spor konuşur.',
+      storeApple:'İndir:', storeGoogle:'Şimdi edinin:', tryWeb:'ya da web’de dene →', heroFree:'Ücretsiz · iPhone, Android ve web',
+      heroOnline:'● Şu an çevrimiçi', bubble1:'Takımının maçı 2 saat sonra. Kadroları ister misin? ⚽', bubble2Who:'⚡ Gol bildirimi', bubble2:'GOL! 34. dakikada 1–0.',
+      mq1:'Sohbet', mq2:'Sesli aramalar', mq3:'Canlı skorlar', mq4:'Gol bildirimleri', mq5:'Tahmin oyunu', mq6:'BETina News', mq7:'9 dil',
+      featKicker:'İçinde neler var', featA:'Bir taraftarın ihtiyacı olan her şey.', featB:'Tek bir arkadaş.',
+      f1Sticker:'Her zaman hazır', f1Title:'BETina ile sohbet et', f1Text:'Spor hakkında ona her şeyi sor. Takımlarını tanır, ne konuştuğunuzu hatırlar ve her sohbette daha iyi olur.',
+      f2Sticker:'Telefonu açar', f2Title:'Onu ara', newTag:'Yeni', f2Text:'BETina ile gerçek sesli aramalar. Maçı eller serbest konuş; hiçbir maçı kaçırmayan bir arkadaşı aramak gibi.',
+      f3Sticker:'GOL! ⚡', f3Title:'BETina Live', f3Text:'Takımların için canlı skorlar ve top ağlarla buluştuğu an bir bildirim. Bir daha hiçbir başlama düdüğünü kaçırma.',
+      f4Sticker:'Sadece eğlence', f4Title:'Tahmin oyunu', f4Text:'Skorları tahmin et, arkadaşlarınla yarış ve sıralamada yüksel. Para yok, bahis yok; sadece övünme hakkı.',
+      f5Sticker:'Her gün taze', f5Title:'BETina News', f5Text:'Kendi spor haber masası: takımların için önemli haberler, senin için senin dilinde yazılıyor.',
+      s1Title:'Akıllı hatırlatıcılar', s1Text:'“Maçtan önce bana hatırlat” de, gerisini o halleder.',
+      s2Title:'XP ve seviyeler', s2Text:'Sohbetler, günlük seriler ve doğru tahminlerle XP kazan ve seviye atla.',
+      s3Title:'Her spor', s3Text:'Futbol, tenis, basketbol, NFL, MMA, kriket, ragbi, hokey, golf, e-spor ve daha fazlası.',
+      s4Title:'9 dil', s4Text:'BETina senin dilini konuşur ve istediğin an dil değiştirir.',
+      howKicker:'Hemen başla', howA:'60 saniyede', howB:'hazırsın.',
+      st1Title:'BETina’yı indir', st1Text:'App Store ve Google Play’de ücretsiz; ya da doğrudan tarayıcında dene.',
+      st2Title:'İstediğin gibi giriş yap', st2Text:'Senin için en kolayını seç; sadece birkaç saniye sürer.', siEmail:'E-posta', siPhone:'Telefon',
+      st3Title:'Takımlarını seç', st3Text:'Favori takımlarını ve sporlarını seç. BETina her şeyi ilk günden sana göre ayarlar.',
+      lgKicker:'Senin dilini konuşur', lgA:'Dokuz dil.', lgB:'Tek BETina.',
+      ctaA:'Takımın bir arama çubuğundan', ctaB:'fazlasını hak ediyor.', ctaText:'BETina’yı indir ve sporu her zaman konuşmaya hazır biriyle konuş.',
+      fPrivacy:'Gizlilik', fTerms:'Koşullar', fDelete:'Hesabı sil', fContact:'İletişim',
+      fFine:'Yalnızca 18 yaş ve üzeri. BETina spor severler için bir yapay zekâ arkadaşı ve eğlence uygulamasıdır; uygulamada gerçek parayla bahis yapılmaz ve para transferi olmaz.',
+      ckText:'Anonim kullanım istatistikleri için çerez kullanmak istiyoruz.', ckNo:'Yalnızca gerekli', ckYes:'Tümünü kabul et'
+    },
+    hr: {
+      title:'BETina — Tvoja AI sportska družica',
+      navFeatures:'Značajke', navHow:'Kako radi', navSupport:'Podrška', navWeb:'Web aplikacija →',
+      heroSticker:'AI sportska družica · 18+', heroA:'Tvoja igra.', heroB:'Tvoj vibe.',
+      heroLead:'Upoznaj BETinu, svoju AI sportsku družicu. Prati tvoje timove, zna svaki sport, javi se kad je nazoveš i priča s tobom o sportu kad god želiš, na tvom jeziku.',
+      storeApple:'Preuzmi u', storeGoogle:'Nabavi na', tryWeb:'ili je isprobaj na webu →', heroFree:'Besplatno · iPhone, Android i web',
+      heroOnline:'● Sada online', bubble1:'Tvoj tim igra za 2 sata. Želiš sastave? ⚽', bubble2Who:'⚡ Obavijest o golu', bubble2:'GOL! 1:0 u 34. minuti.',
+      mq1:'Chat', mq2:'Glasovni pozivi', mq3:'Rezultati uživo', mq4:'Obavijesti o golovima', mq5:'Igra prognoza', mq6:'BETina News', mq7:'9 jezika',
+      featKicker:'Što te čeka', featA:'Sve što navijaču treba.', featB:'Jedna družica.',
+      f1Sticker:'Uvijek za', f1Title:'Chataj s BETinom', f1Text:'Pitaj je sve o sportu. Poznaje tvoje timove, pamti o čemu ste razgovarali i sa svakim chatom postaje bolja.',
+      f2Sticker:'Ona se javi', f2Title:'Nazovi je', newTag:'Novo', f2Text:'Pravi glasovni pozivi s BETinom. Pričaj o utakmici bez ruku, kao da zoveš prijateljicu koja ne propušta nijednu utakmicu.',
+      f3Sticker:'GOL! ⚡', f3Title:'BETina Live', f3Text:'Rezultati uživo za tvoje timove i obavijest čim lopta završi u mreži. Više nikad ne propusti početak utakmice.',
+      f4Sticker:'Samo iz zabave', f4Title:'Igra prognoza', f4Text:'Pogađaj rezultate, izazovi prijatelje i penji se na ljestvici. Bez novca, bez uloga: samo za slavu.',
+      f5Sticker:'Svaki dan svježe', f5Title:'BETina News', f5Text:'Njezina vlastita sportska redakcija: priče koje su važne za tvoje timove, napisane za tebe na tvom jeziku.',
+      s1Title:'Pametni podsjetnici', s1Text:'Reci „podsjeti me prije utakmice” i ona se pobrine za ostalo.',
+      s2Title:'XP i razine', s2Text:'Skupljaj XP za chatove, dnevne nizove i točne prognoze i napreduj.',
+      s3Title:'Svaki sport', s3Text:'Nogomet, tenis, košarka, NFL, MMA, kriket, ragbi, hokej, golf, esport i još mnogo toga.',
+      s4Title:'9 jezika', s4Text:'BETina govori tvoj jezik i mijenja ga kad god ti želiš.',
+      howKicker:'Kreni odmah', howA:'Spremno', howB:'za 60 sekundi.',
+      st1Title:'Preuzmi BETinu', st1Text:'Besplatno u App Storeu i na Google Playu ili je isprobaj izravno u pregledniku.',
+      st2Title:'Prijavi se kako želiš', st2Text:'Odaberi što ti je najjednostavnije: traje svega nekoliko sekundi.', siEmail:'E-mail', siPhone:'Mobitel',
+      st3Title:'Odaberi svoje timove', st3Text:'Odaberi omiljene timove i sportove. BETina sve prilagođava tebi od prvog dana.',
+      lgKicker:'Govori tvoj jezik', lgA:'Devet jezika.', lgB:'Jedna BETina.',
+      ctaA:'Tvoj tim zaslužuje više', ctaB:'od tražilice.', ctaText:'Preuzmi BETinu i pričaj o sportu s nekim tko je uvijek raspoložen za to.',
+      fPrivacy:'Privatnost', fTerms:'Uvjeti', fDelete:'Izbriši račun', fContact:'Kontakt',
+      fFine:'Samo 18+. BETina je AI družica za ljubitelje sporta i zabavu: u aplikaciji se ne kladi niti se prenosi pravi novac.',
+      ckText:'Željeli bismo koristiti kolačiće za anonimnu statistiku korištenja.', ckNo:'Samo nužni', ckYes:'Prihvati sve'
     }
   };
 
-  const reverse = new Map();
-  Object.keys(translations).forEach(lang => Object.entries(translations[lang]).forEach(([en, value]) => reverse.set(value, en)));
+  var EN_TITLE = document.title;
+  var originals = null;
 
-  function translateText(root, lang) {
-    const dict = translations[lang] || {};
-    function translateNode(node) {
-      const raw = node.nodeValue;
-      const text = raw.trim();
-      if (!text || text.includes('{{')) return;
-      const source = reverse.get(text) || text;
-      const value = lang === 'en' ? source : dict[source];
-      if (value && value !== text) node.nodeValue = raw.replace(text, value);
-    }
-    if (root.nodeType === Node.TEXT_NODE) {
-      translateNode(root);
-      return;
-    }
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-    nodes.forEach(translateNode);
+  function remember() {
+    originals = new Map();
+    document.querySelectorAll('[data-i]').forEach(function (el) { originals.set(el, el.textContent); });
   }
 
-  function applyLanguage(lang, persist) {
-    if (!SUPPORTED.includes(lang)) lang = 'en';
+  function apply(lang, persist) {
+    if (SUPPORTED.indexOf(lang) < 0) lang = 'en';
+    if (!originals) remember();
+    var dict = T[lang] || {};
+    document.querySelectorAll('[data-i]').forEach(function (el) {
+      var key = el.getAttribute('data-i');
+      el.textContent = (lang !== 'en' && dict[key]) || originals.get(el);
+    });
     document.documentElement.lang = lang;
-    const select = document.getElementById('language-select');
+    document.title = (lang !== 'en' && dict.title) || EN_TITLE;
+    var select = document.getElementById('language-select');
     if (select) select.value = lang;
-    translateText(document.body, lang);
-    document.title = lang === 'en' ? 'BETina — Your AI Sports Companion' : ({de:'BETina — Deine KI-Sportbegleiterin',es:'BETina — Tu compañera deportiva con IA',fr:'BETina — Votre compagne sportive IA',pt:'BETina — Sua companheira esportiva com IA'}[lang]);
-    if (persist) localStorage.setItem('betina_lang', lang);
-    window.__betinaLanguage = lang;
+    if (persist) { try { localStorage.setItem('betina_lang', lang); } catch (e) {} }
   }
 
-  function browserLanguage() {
-    const langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
-    for (const value of langs) {
-      const lang = String(value).toLowerCase().split('-')[0];
-      if (SUPPORTED.includes(lang) && lang !== 'en') return lang;
+  function browserLang() {
+    var list = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
+    for (var i = 0; i < list.length; i++) {
+      var l = String(list[i]).toLowerCase().split('-')[0];
+      if (SUPPORTED.indexOf(l) >= 0 && l !== 'en') return l;
     }
     return 'en';
   }
 
   function start() {
-    const select = document.getElementById('language-select');
-    if (select) select.addEventListener('change', event => applyLanguage(event.target.value, true));
-    const query = new URLSearchParams(location.search).get('lang');
-    const saved = localStorage.getItem('betina_lang');
-    const initial = SUPPORTED.includes(query) ? query : (SUPPORTED.includes(saved) ? saved : browserLanguage());
-    applyLanguage(initial, false);
-
-    const observer = new MutationObserver(mutations => {
-      mutations.forEach(mutation => {
-        if (mutation.type === 'characterData') translateText(mutation.target, window.__betinaLanguage || 'en');
-        mutation.addedNodes.forEach(node => {
-          if (node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.TEXT_NODE) translateText(node, window.__betinaLanguage || 'en');
-        });
-      });
-      const currentSelect = document.getElementById('language-select');
-      if (currentSelect && currentSelect.value !== window.__betinaLanguage) currentSelect.value = window.__betinaLanguage;
-    });
-    observer.observe(document.body, {childList:true, characterData:true, subtree:true});
-
+    var select = document.getElementById('language-select');
+    if (select) select.addEventListener('change', function (e) { apply(e.target.value, true); });
+    var query = new URLSearchParams(location.search).get('lang');
+    var saved = null;
+    try { saved = localStorage.getItem('betina_lang'); } catch (e) {}
+    var initial = SUPPORTED.indexOf(query) >= 0 ? query : (SUPPORTED.indexOf(saved) >= 0 ? saved : browserLang());
+    apply(initial, false);
     if (!query && !saved && initial === 'en') {
-      fetch('/api/locale', {credentials:'same-origin'}).then(response => response.ok ? response.json() : null).then(data => {
-        const geoLang = data && countryLanguage[String(data.country || '').toUpperCase()];
-        if (geoLang) applyLanguage(geoLang, false);
-      }).catch(() => {});
+      fetch('/api/locale', { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { var g = d && COUNTRY[String(d.country || '').toUpperCase()]; if (g) apply(g, false); })
+        .catch(function () {});
     }
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(start, 0));
-  else setTimeout(start, 0);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
 })();
