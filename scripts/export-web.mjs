@@ -32,3 +32,8 @@ if (!verified.includes(robotsMeta)) {
   throw new Error('Noindex verification failed for exported index.html');
 }
 console.log('betina_web_noindex_verified');
+
+// dist/ is deployed on its own (no build step on Vercel), so it needs its own
+// copy of the SPA rewrites and noindex header, or deep links like /login 404.
+const { buildCommand, outputDirectory: _out, ...routing } = JSON.parse(readFileSync(resolve('vercel.json'), 'utf8'));
+writeFileSync(resolve(outputDirectory, 'vercel.json'), JSON.stringify(routing, null, 2));
