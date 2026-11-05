@@ -443,6 +443,7 @@ type Translations = {
   tipStageFinal: string;
   tipToday: string;
   tipGuestBody: string;
+  liveGuestBody: string;
   tipNow: string;
   tipProgress: string;
   tipAllDone: string;
@@ -806,6 +807,7 @@ const T: Record<LangCode, Translations> = {
     tipStageFinal: 'Final',
     tipToday: 'Today',
     tipGuestBody: 'Create your free account to tip matches, climb the ranking and play against your friends.',
+    liveGuestBody: 'Create your free account to follow live scores, goal alerts and your favourite team.',
     tipNow: 'Tip now',
     tipProgress: '{done} of {total} tipped',
     tipAllDone: 'All set for the next days ✓',
@@ -1253,6 +1255,7 @@ const T: Record<LangCode, Translations> = {
     tipStageFinal: 'Finale',
     tipToday: 'Heute',
     tipGuestBody: 'Erstelle dein kostenloses Konto, um Spiele zu tippen, in der Tabelle zu klettern und gegen Freunde zu spielen.',
+    liveGuestBody: 'Erstelle dein kostenloses Konto für Live-Ergebnisse, Tor-Alarme und dein Lieblingsteam.',
     tipNow: 'Jetzt tippen',
     tipProgress: '{done} von {total} getippt',
     tipAllDone: 'Für die nächsten Tage ist alles getippt ✓',
@@ -1700,6 +1703,7 @@ const T: Record<LangCode, Translations> = {
     tipStageFinal: 'Final',
     tipToday: 'Hoy',
     tipGuestBody: 'Crea tu cuenta gratuita para pronosticar partidos, escalar en la clasificación y jugar contra tus amigos.',
+    liveGuestBody: 'Crea tu cuenta gratuita para seguir resultados en vivo, alertas de gol y a tu equipo favorito.',
     tipNow: 'Pronosticar',
     tipProgress: '{done} de {total} pronosticados',
     tipAllDone: 'Todo listo para los próximos días ✓',
@@ -2147,6 +2151,7 @@ const T: Record<LangCode, Translations> = {
     tipStageFinal: 'Final',
     tipToday: 'Hoje',
     tipGuestBody: 'Cria a tua conta grátis para dar palpites, subir na classificação e jogar contra os teus amigos.',
+    liveGuestBody: 'Cria a tua conta grátis para acompanhar resultados ao vivo, alertas de golo e a tua equipa favorita.',
     tipNow: 'Dar palpites',
     tipProgress: '{done} de {total} com palpite',
     tipAllDone: 'Tudo pronto para os próximos dias ✓',
@@ -2594,6 +2599,7 @@ const T: Record<LangCode, Translations> = {
     tipStageFinal: 'Finale',
     tipToday: 'Aujourd\'hui',
     tipGuestBody: 'Crée ton compte gratuit pour pronostiquer les matchs, grimper au classement et défier tes amis.',
+    liveGuestBody: 'Crée ton compte gratuit pour suivre les scores en direct, les alertes but et ton équipe préférée.',
     tipNow: 'Pronostiquer',
     tipProgress: '{done} sur {total} pronostiqués',
     tipAllDone: 'Tout est prêt pour les prochains jours ✓',
@@ -3041,6 +3047,7 @@ const T: Record<LangCode, Translations> = {
     tipStageFinal: 'Finale',
     tipToday: 'Oggi',
     tipGuestBody: 'Crea il tuo account gratuito per pronosticare le partite, scalare la classifica e sfidare i tuoi amici.',
+    liveGuestBody: 'Crea il tuo account gratuito per seguire i risultati live, gli avvisi gol e la tua squadra del cuore.',
     tipNow: 'Pronostica ora',
     tipProgress: '{done} su {total} pronosticate',
     tipAllDone: 'Tutto pronto per i prossimi giorni ✓',
@@ -3488,6 +3495,7 @@ const T: Record<LangCode, Translations> = {
     tipStageFinal: 'Finala',
     tipToday: 'Azi',
     tipGuestBody: 'Creează-ți contul gratuit ca să dai pronosticuri, să urci în clasament și să joci cu prietenii.',
+    liveGuestBody: 'Creează-ți contul gratuit ca să urmărești scorurile live, alertele de gol și echipa ta preferată.',
     tipNow: 'Pronostichează',
     tipProgress: '{done} din {total} pronosticate',
     tipAllDone: 'Totul e gata pentru zilele următoare ✓',
@@ -3934,6 +3942,7 @@ const T: Record<LangCode, Translations> = {
     tipStageFinal: "Final",
     tipToday: "Bugün",
     tipGuestBody: "Maç tahmin etmek, sıralamada yükselmek ve arkadaşlarına karşı oynamak için ücretsiz hesabını oluştur.",
+    liveGuestBody: 'Canlı skorları, gol bildirimlerini ve favori takımını takip etmek için ücretsiz hesabını oluştur.',
     tipNow: "Şimdi tahmin et",
     tipProgress: "{total} maçtan {done} tahmin edildi",
     tipAllDone: "Önümüzdeki günler için her şey hazır ✓",
@@ -4380,6 +4389,7 @@ const T: Record<LangCode, Translations> = {
     tipStageFinal: "Finale",
     tipToday: "Danas",
     tipGuestBody: "Napravi besplatni račun da prognoziraš utakmice, napreduješ na ljestvici i igraš protiv prijatelja.",
+    liveGuestBody: 'Napravi besplatni račun za rezultate uživo, obavijesti o golovima i svoj omiljeni klub.',
     tipNow: "Prognoziraj",
     tipProgress: "{done} od {total} prognozirano",
     tipAllDone: "Sve spremno za sljedeće dane ✓",

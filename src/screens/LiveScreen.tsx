@@ -4,12 +4,14 @@
 // of the day below (top leagues open, the rest folded). The live poll
 // (lib/live.ts) refreshes scores every 15 s while this page is on screen.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import HScroll from '../components/HScroll';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import ScreenBg from '../components/ScreenBg';
+import SignInWall from '../components/SignInWall';
+import { useSession } from '../hooks/useSession';
 import { Blink, Meta, Ticker } from '../components/Urban';
 import { Crest, LeagueHeader, LiveCard, LiveMinute, MatchRow, RedCards, Star, useStatusLabel } from '../components/live/LiveParts';
 import { useChrome } from '../components/chrome';
@@ -28,7 +30,22 @@ type Item =
 const DAYS = [-3, -2, -1, 0, 1, 2, 3, 4];
 const OPEN_BY_DEFAULT = 12;
 
+/**
+ * On the web, guests who are just looking around get the sign-in wall instead
+ * of live scores. The native apps keep Live open for guests (non-account
+ * content, Apple 5.1.1(v)).
+ */
 export default function LiveScreen() {
+  const { t } = useI18n();
+  const session = useSession();
+  if (Platform.OS === 'web') {
+    if (session === undefined) return <ScreenBg />;
+    if (session === null) return <SignInWall body={t.liveGuestBody} />;
+  }
+  return <LiveScores />;
+}
+
+function LiveScores() {
   const { t, lang } = useI18n();
   const router = useRouter();
   const chrome = useChrome();
