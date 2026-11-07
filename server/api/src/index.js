@@ -3,6 +3,7 @@
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { cardPng } from './card.js';
 import { G2PError } from './g2p.js';
 import {
   liveDay, liveFind, liveH2H, liveIncidents, liveMatch, liveNext, liveNow, liveStatus, liveTable, liveTake,
@@ -75,6 +76,9 @@ app.get('/v1/voice/budget', voiceBudget);
 app.post('/v1/voice/session', voiceSession);
 app.post('/v1/voice/usage', voiceUsage);
 app.post('/v1/voice/search', voiceSearch);
+
+// --- Image cards for BETina's posts on X (social-desk) ---------------------
+app.get('/v1/social/card/:id', cardPng);
 
 app.notFound((c) => c.json({ error: 'not_found' }, 404));
 app.onError((err, c) => {

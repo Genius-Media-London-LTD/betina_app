@@ -6,13 +6,16 @@
 //   auto    the kinds in auto_kinds go out on their own; replies and anything
 //           the filter flagged still wait for approval
 //
-// What she writes, in Europe/Vienna time:
-//   matchday  09:00  today's biggest matches (Claude picks up to 3 = "featured")
-//   poll      09:00  "who wins?" for the biggest one
-//   goal      live   goals in the featured matches (2 min delay, VAR)
+// What she writes, in Europe/Vienna time — few posts, each with an image card
+// (rendered by betina-server from social_posts.card; agreed with Dejan
+// 2026-11-07 after a first week of ~15 posts a day and few views):
+//   poll      09:00  "who takes it?" for today's biggest match (Claude picks
+//                    the 1–2 biggest = "featured")
+//   goal      live   at most one per featured match: a late, decisive goal
+//                    (from minute 75, equaliser or one-goal lead; 2 min VAR delay)
 //   result    live   full time of the featured matches
-//   news      09–23  one story from our newsroom every 3 hours (importance ≥ 4)
-//   history   12:00  "on this day" from Wikipedia, else social_moments
+//   news      11–21  one story a day from our newsroom (importance ≥ 4)
+//   history   12:00  time travel: "on this day" from Wikipedia, else social_moments
 //   reply     live   answers to @-mentions (always waits for approval)
 // Facts always come from the data; the filters below keep sad news, betting
 // talk and over-long posts away from X.
@@ -35,7 +38,8 @@ const MODEL = 'claude-haiku-5-5';
 const TZ = 'Europe/Vienna';
 const GOAL_DELAY_MS = 2 * 60_000;     // wait for VAR before a goal post
 const LIVE_WINDOW_MS = 15 * 60_000;   // older incidents are not news anymore
-const NEWS_EVERY_MS = 3 * 3_600_000;
+const GOAL_FROM_MINUTE = 75;          // only late goals can get a post
+const FEATURED_MAX = 2;
 const MENTIONS_EVERY_MS = 3 * 60_000;
 const POSTS_PER_RUN = 3;
 
@@ -62,10 +66,55 @@ type Incident = {
   seq: number; at: number; type: string; id: number; side?: 0 | 1; min?: number | null; player?: string | null; detail?: string;
   h: Team; a: Team; g: [number | null, number | null]; league: { id: number; name: string; country: string; round?: string };
 };
+/** What the post's image card shows — see server/api/src/card.js. */
+type Card = Record<string, string | number | boolean | null | undefined> & { t: 'goal' | 'result' | 'poll' | 'history' | 'news'; mood: string };
 type Draft = {
-  kind: SocialKind; text: string; dedupe_key: string; context: string;
+  kind: SocialKind; text: string; dedupe_key: string; context: string; card?: Card;
   poll?: string[]; reply_to?: string; reply_author?: string; reply_text?: string; expires_at?: string;
 };
+
+// ── BETina's mood on the card (photos in server/api/assets/betina) ──────────
+/** Same input, same pick — but varied across matches and days. */
+const pickOf = <T>(list: T[], seed: number) => list[Math.abs(seed) % list.length];
+
+function goalCard(i: Incident, min: number): { card: Card; diff: number } {
+  const [hs, as] = [i.g[0] ?? 0, i.g[1] ?? 0];
+  const diff = i.side === 1 ? as - hs : hs - as; // for the scoring team, after the goal
+  const tag = min >= 85 ? 'Late drama' : diff === 0 ? 'All square' : 'In front';
+  const mood = min >= 85 ? pickOf(['schock', 'jubel'], i.seq) : pickOf(['jubel', 'strasse'], i.seq);
+  return {
+    diff,
+    card: { t: 'goal', mood, tag, league: i.league.name, home: i.h.n, away: i.a.n, hs, as, side: i.side ?? 0, min, scorer: i.player ?? null },
+  };
+}
+
+function resultCard(i: Incident): Card {
+  const [hs, as] = [i.g[0] ?? 0, i.g[1] ?? 0];
+  const total = hs + as, diff = Math.abs(hs - as);
+  const [tag, mood] =
+    total >= 5 ? ['Goal fest', 'schock']
+    : total === 0 ? ['Goalless', 'enttaeuscht']
+    : diff === 0 ? ['All square', 'analyse']
+    : diff >= 3 ? ['Statement win', 'zwinkern']
+    : diff === 1 ? ['Tight one', pickOf(['jubel', 'strasse', 'nervoes'], i.id)]
+    : ['Job done', pickOf(['zwinkern', 'couch-abend'], i.id)];
+  return { t: 'result', mood, tag, league: i.league.name, home: i.h.n, away: i.a.n, hs, as };
+}
+
+/** How the score reads, so her words can't contradict it ("two-nil" at 2–1). */
+function margin(home: string, away: string, hs: number, as: number, done: boolean) {
+  if (hs === as) return done ? 'The match ended level.' : 'The match is level.';
+  const [lead, by] = hs > as ? [home, hs - as] : [away, as - hs];
+  const goals = by === 1 ? 'one goal' : `${by} goals`;
+  return done ? `${lead} won by ${goals}.` : `${lead} lead by ${goals}.`;
+}
+
+function historyMood(year: number, text: string) {
+  if (/\btennis|wimbledon|grand slam\b/i.test(text)) return 'tennis';
+  if (/\bnba|basketball\b/i.test(text)) return 'basketball';
+  if (/\bformula one|grand prix|f1\b/i.test(text)) return 'motorsport';
+  return year < 1980 ? 'zeitreise-1966' : year < 1995 ? 'zeitreise-1986' : 'zeitreise-1998';
+}
 
 const client = new Anthropic();
 const json = (body: unknown) => new Response(JSON.stringify(body), { headers: { 'Content-Type': 'application/json' } });
@@ -93,21 +142,32 @@ const POST_SCHEMA = {
 };
 const MAX_LEN = 270; // X allows 280 — keep a little room for the team's edits
 
+/** Why the last Claude call gave nothing — ends up in the "passed" note in the dashboard. */
+let claudeError = '';
+
 async function claudeJson<T>(system: string, user: string, schema: object): Promise<T | null> {
   try {
     const res = await client.messages.create({
       model: MODEL,
-      max_tokens: 600,
+      max_tokens: 1200,
       system,
       // @ts-ignore: output_config is newer than some SDK type definitions
       output_config: { effort: 'low', format: { type: 'json_schema', schema } },
       messages: [{ role: 'user', content: user }],
     });
-    if (res.stop_reason === 'refusal' || res.stop_reason === 'max_tokens') return null;
+    if (res.stop_reason === 'refusal' || res.stop_reason === 'max_tokens') {
+      claudeError = `stop: ${res.stop_reason}`;
+      return null;
+    }
     const text = res.content.find((b) => b.type === 'text');
-    return text && text.type === 'text' ? (JSON.parse(text.text) as T) : null;
+    if (!text || text.type !== 'text') {
+      claudeError = 'no text block';
+      return null;
+    }
+    return JSON.parse(text.text) as T;
   } catch (err) {
-    console.error('claude:', (err as Error).message);
+    claudeError = (err as Error).message.slice(0, 160);
+    console.error('claude:', claudeError);
     return null;
   }
 }
@@ -127,16 +187,18 @@ async function write(db: Db, kind: SocialKind, lang: string, facts: string, rese
   const input = `${facts}${before ? `\n\nYour latest posts — don’t reuse their openings, jokes or images:\n${before}` : ''}`;
   type Out = { skip: boolean; reason: string; text: string };
 
+  claudeError = '';
   let out = await claudeJson<Out>(socialInstructions(kind, lang), input, POST_SCHEMA);
   for (const target of [160, 110]) {
     if (!out || out.skip || xLength(out.text.trim()) + reserve <= MAX_LEN) break;
+    // A failed rewrite keeps the draft we have (and ends below as "too long").
     out = await claudeJson<Out>(
       socialInstructions(kind, lang),
       `${input}\n\nYour draft has ${xLength(out.text.trim())} characters, too long:\n${out.text}\nRewrite it in under ${target} characters, same shape.`,
       POST_SCHEMA,
-    );
+    ) ?? out;
   }
-  if (!out) return { why: 'model error' };
+  if (!out) return { why: `model error${claudeError ? ` (${claudeError})` : ''}` };
   const text = out.text?.trim();
   if (out.skip || !text) return { why: out.reason?.trim() || 'nothing to say' };
   return xLength(text) + reserve <= MAX_LEN ? { text } : { why: 'too long even after rewriting' };
@@ -182,7 +244,11 @@ function flagsFor(d: Draft): string[] {
   return flags;
 }
 
+/** The card font (Archivo) covers Latin script only; anything else posts without a card. */
+const cardFits = (c?: Card) => !!c && Object.values(c).every((v) => typeof v !== 'string' || !/[^\u0000-ɏḀ-ỿ‐-‧]/.test(v));
+
 async function save(db: Db, s: Settings, d: Draft) {
+  if (d.card && !cardFits(d.card)) d = { ...d, card: undefined };
   const flags = flagsFor(d);
   const auto = s.mode === 'auto' && d.kind !== 'reply' && s.auto_kinds.includes(d.kind) && flags.length === 0;
   const { error } = await db.from('social_posts').insert({ ...d, flags, status: auto ? 'approved' : 'draft' });
@@ -224,29 +290,25 @@ async function matchday(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
   const time = (ts: number) => new Date(ts * 1000).toLocaleTimeString('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
   const lines = candidates.map(({ m, league }) => `[${m.id}] ${m.h.n} vs ${m.a.n} — ${league}, ${time(m.ts)} CET`).join('\n');
   const picked = await claudeJson<{ featured: number[] }>(
-    'You run the social account of a football fan. From today’s fixtures pick the 1 to 3 biggest, most talked-about matches (big clubs, rivalries, title races, knockout games). Return their ids, the biggest first.',
+    'You run the social account of a football fan with followers all over the world. From today’s fixtures pick the 1 or 2 biggest, most talked-about matches (famous clubs with big international fan bases, derbies, title races, knockout games). Fewer is better: pick a second one only if it is truly big. Return their ids, the biggest first.',
     lines,
     { type: 'object', properties: { featured: { type: 'array', items: { type: 'integer' } } }, required: ['featured'], additionalProperties: false },
   );
   const byId = new Map(candidates.map((c) => [c.m.id, c]));
-  const featured = (picked?.featured ?? []).filter((id) => byId.has(id)).slice(0, 3);
+  const featured = (picked?.featured ?? []).filter((id) => byId.has(id)).slice(0, FEATURED_MAX);
   if (!featured.length) return;
   await db.from('social_settings').update({ featured: { date: v.date, ids: featured } }).eq('id', 1);
 
-  const facts = featured.map((id) => {
-    const { m, league } = byId.get(id)!;
-    return `${m.h.n} vs ${m.a.n} — ${league}, kick-off ${time(m.ts)} CET`;
-  }).join('\n');
-  const { text } = await write(db, 'matchday', s.lang, `Today’s biggest matches:\n${facts}`);
-  if (text) await save(db, s, { kind: 'matchday', text, dedupe_key: `matchday:${v.date}`, context: facts, expires_at: `${v.date}T23:00:00Z` });
-
+  // The morning post is the poll on the biggest match (no separate fixture list anymore).
   const top = byId.get(featured[0])!;
+  const leagueName = day.leagues.find((l) => l.matches.some((m) => m.id === top.m.id))?.league.name ?? '';
   const { text: question } = await write(db, 'poll', s.lang, `Match: ${top.m.h.n} vs ${top.m.a.n} — ${top.league}, kick-off ${time(top.m.ts)} CET`);
   if (question) {
     const short = (n: string) => (n.length > 25 ? n.slice(0, 24) + '…' : n);
     await save(db, s, {
       kind: 'poll', text: question, poll: [short(top.m.h.n), 'Draw', short(top.m.a.n)],
       dedupe_key: `poll:${v.date}`, context: `${top.m.h.n} vs ${top.m.a.n}`,
+      card: { t: 'poll', mood: pickOf(['matchday-morgen', 'analyse', 'zwinkern'], top.m.id), league: leagueName, kickoff: `${time(top.m.ts)} CET`, home: top.m.h.n, away: top.m.a.n },
       expires_at: new Date(top.m.ts * 1000 - 30 * 60_000).toISOString(),
     });
   }
@@ -265,29 +327,38 @@ async function live(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
 
     if (i.type === 'goal') {
       if (now - i.at < GOAL_DELAY_MS) continue;
+      // Only the goal that decides it: late, and making it level or a one-goal lead.
+      const min = i.min ?? 0;
+      if (min < GOAL_FROM_MINUTE) continue;
+      const { card, diff } = goalCard(i, min);
+      if (diff < 0 || diff > 1) continue;
       // Taken back by VAR in the meantime: no post.
       if (incidents.some((x) => x.id === i.id && x.type === 'disallowed' && x.seq > i.seq)) continue;
+      // At most one goal post per match.
+      const { count } = await db.from('social_posts').select('id', { count: 'exact', head: true })
+        .like('dedupe_key', `goal:${i.id}:%`).neq('status', 'skipped');
+      if (count) continue;
       const key = `goal:${i.id}:${i.g[0] ?? 0}-${i.g[1] ?? 0}`;
       if (await exists(db, key)) continue;
       const team = i.side === 1 ? i.a.n : i.h.n;
       const facts = [
-        `GOAL for ${team}${i.min ? ` in minute ${i.min}` : ''}${i.player ? `, scored by ${i.player}` : ''}${i.detail && i.detail !== 'Normal Goal' ? ` (${i.detail})` : ''}.`,
-        `Score now: ${score} (${where}).`,
+        `GOAL for ${team} in minute ${min}${i.player ? `, scored by ${i.player}` : ''}${i.detail && i.detail !== 'Normal Goal' ? ` (${i.detail})` : ''}.`,
+        `Score now: ${score} (${where}). ${margin(i.h.n, i.a.n, i.g[0] ?? 0, i.g[1] ?? 0, false)}`,
       ].join('\n');
       // The score line comes from the data, so it's always right.
       const head = `GOAL ⚽ ${score}`;
       const { text, why } = await write(db, 'goal', s.lang, facts, xLength(head) + 2);
-      if (text) await save(db, s, { kind: 'goal', text: `${head}\n\n${text}`, dedupe_key: key, context: facts, expires_at: new Date(i.at + 20 * 60_000).toISOString() });
+      if (text) await save(db, s, { kind: 'goal', text: `${head}\n\n${text}`, dedupe_key: key, context: facts, card, expires_at: new Date(i.at + 20 * 60_000).toISOString() });
       else await pass(db, 'goal', key, facts, why);
     }
 
     if (i.type === 'ft') {
       const key = `result:${i.id}`;
       if (await exists(db, key)) continue;
-      const facts = `FULL TIME: ${score} (${where}).`;
+      const facts = `FULL TIME: ${score} (${where}). ${margin(i.h.n, i.a.n, i.g[0] ?? 0, i.g[1] ?? 0, true)}`;
       const head = `FT: ${score}`;
       const { text, why } = await write(db, 'result', s.lang, facts, xLength(head) + 2);
-      if (text) await save(db, s, { kind: 'result', text: `${head}\n\n${text}`, dedupe_key: key, context: facts, expires_at: new Date(i.at + 60 * 60_000).toISOString() });
+      if (text) await save(db, s, { kind: 'result', text: `${head}\n\n${text}`, dedupe_key: key, context: facts, card: resultCard(i), expires_at: new Date(i.at + 60 * 60_000).toISOString() });
       else await pass(db, 'result', key, facts, why);
     }
   }
@@ -295,12 +366,14 @@ async function live(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
 
 // ── News from our own newsroom ──────────────────────────────────────────────
 async function news(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
-  if (v.hour < 9 || v.hour >= 23) return;
-  const { data: last } = await db.from('social_posts').select('created_at').eq('kind', 'news')
-    .order('created_at', { ascending: false }).limit(1);
-  if (last?.[0] && Date.now() - Date.parse(last[0].created_at) < NEWS_EVERY_MS) return;
+  if (v.hour < 11 || v.hour >= 21) return;
+  // One story a day: the biggest one; stories she passed on don't count.
+  const dayStart = new Date(Date.parse(`${v.date}T00:00:00Z`) - v.offset * 60_000).toISOString();
+  const { count: today } = await db.from('social_posts').select('id', { count: 'exact', head: true })
+    .eq('kind', 'news').neq('status', 'skipped').gte('created_at', dayStart);
+  if (today) return;
 
-  const since = new Date(Date.now() - 6 * 3_600_000).toISOString();
+  const since = new Date(Date.now() - 12 * 3_600_000).toISOString();
   const { data: stories } = await db.from('news_stories')
     .select('id, sport, competition, teams, importance, news_articles!inner(lang, headline, teaser, body, take)')
     .eq('status', 'ready').gte('importance', 4).gte('published_at', since).eq('news_articles.lang', 'en')
@@ -322,8 +395,13 @@ async function news(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
       await pass(db, 'news', key, a.headline, why);
       continue;
     }
-    await save(db, s, { kind: 'news', text, dedupe_key: key, context: a.headline, expires_at: new Date(Date.now() + 12 * 3_600_000).toISOString() });
-    return; // one story per slot
+    const label = st.competition || (st.sport ? st.sport[0].toUpperCase() + st.sport.slice(1) : '');
+    await save(db, s, {
+      kind: 'news', text, dedupe_key: key, context: a.headline,
+      card: { t: 'news', mood: pickOf(['studio', 'analyse', 'matchday-morgen', 'couch-abend'], +v.day), sport: label, headline: a.headline },
+      expires_at: new Date(Date.now() + 12 * 3_600_000).toISOString(),
+    });
+    return; // one story a day
   }
 }
 
@@ -339,6 +417,7 @@ async function history(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
   // 1. Wikipedia "on this day".
   let facts: string | null = null;
   let context = '';
+  let card: Card | undefined;
   try {
     const otd = await getJson<{ events?: { text: string; year: number; pages?: { extract?: string }[] }[] }>(
       `https://en.wikipedia.org/api/rest_v1/feed/onthisday/events/${v.month}/${v.day}`,
@@ -347,10 +426,10 @@ async function history(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
     const events = (otd.events ?? []).filter((e) => SPORTY.test(e.text) && !SENSITIVE.test(e.text)).slice(0, 25);
     if (events.length) {
       const list = events.map((e, k) => `[${k}] ${e.year}: ${e.text}`).join('\n');
-      const pick = await claudeJson<{ index: number }>(
-        'From these events, pick the single best SPORTS moment for a fun post by a sports fan (famous matches, records, titles, great comebacks). Nothing sad, violent or political. Return its index, or -1 if none is a fun sports moment.',
+      const pick = await claudeJson<{ index: number; title: string }>(
+        'From these events, pick the single best SPORTS moment for a fun post by a sports fan (famous matches, records, titles, great comebacks). Nothing sad, violent or political. Return its index, or -1 if none is a fun sports moment, and a short title for it in English (2 to 4 words, only facts from the text, e.g. "Juventus are born", "Bolt runs 9.58").',
         list,
-        { type: 'object', properties: { index: { type: 'integer' } }, required: ['index'], additionalProperties: false },
+        { type: 'object', properties: { index: { type: 'integer' }, title: { type: 'string' } }, required: ['index', 'title'], additionalProperties: false },
       );
       const e = pick && pick.index >= 0 ? events[pick.index] : undefined;
       if (e) {
@@ -358,6 +437,8 @@ async function history(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
         if (!SENSITIVE.test(extract)) {
           facts = `On this day, ${year - e.year} years ago (${e.year}): ${e.text}${extract ? `\nBackground: ${extract}` : ''}`;
           context = `Wikipedia · ${e.year}: ${e.text}`;
+          const title = (pick!.title ?? '').trim().slice(0, 40);
+          if (title) card = { t: 'history', mood: historyMood(e.year, e.text), year: e.year, title, today: true };
         }
       }
     }
@@ -367,8 +448,9 @@ async function history(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
 
   if (facts) {
     const { text } = await write(db, 'history', s.lang, facts);
-    if (text) return save(db, s, { kind: 'history', text, dedupe_key: key, context, expires_at: `${v.date}T23:00:00Z` });
+    if (text) return save(db, s, { kind: 'history', text, dedupe_key: key, context, card, expires_at: `${v.date}T23:00:00Z` });
     facts = null;
+    card = undefined;
   }
 
   // 2. Our own moments: today's anniversary first, else the one unused longest.
@@ -382,10 +464,11 @@ async function history(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
       ? `On this day, ${year - y} years ago (${m.happened_on}): ${m.facts}`
       : `A moment from your time travels (${m.happened_on}, ${year - y} years ago — not today’s date, so don’t say “today”): ${m.facts}`;
     context = `Moment · ${m.title}`;
+    card = { t: 'history', mood: historyMood(y, `${m.sport} ${m.facts}`), year: y, title: m.title, today: !!today };
     await db.from('social_moments').update({ last_used: v.date }).eq('id', m.id);
   }
   const { text, why } = facts ? await write(db, 'history', s.lang, facts) : { text: undefined, why: 'no moment found' };
-  if (text) await save(db, s, { kind: 'history', text, dedupe_key: key, context, expires_at: `${v.date}T23:00:00Z` });
+  if (text) await save(db, s, { kind: 'history', text, dedupe_key: key, context, card, expires_at: `${v.date}T23:00:00Z` });
   else await pass(db, 'history', key, context, why);
 }
 
@@ -400,7 +483,7 @@ const keyShape = () => X_KEYS.map((k) => env(k).length).join('/') +
 const xReady = () => ['X_API_KEY', 'X_API_SECRET', 'X_ACCESS_TOKEN', 'X_ACCESS_SECRET'].every((k) => env(k));
 const enc = (s: string) => encodeURIComponent(s).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
 
-async function xFetch(method: 'GET' | 'POST', url: string, body?: unknown) {
+async function oauthHeader(method: 'GET' | 'POST', url: string) {
   const u = new URL(url);
   const oauth: Record<string, string> = {
     oauth_consumer_key: env('X_API_KEY'),
@@ -421,16 +504,34 @@ async function xFetch(method: 'GET' | 'POST', url: string, body?: unknown) {
   );
   const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(base)));
   oauth.oauth_signature = btoa(String.fromCharCode(...sig));
-  const header = 'OAuth ' + Object.entries(oauth).map(([k, v]) => `${enc(k)}="${enc(v)}"`).join(', ');
+  return 'OAuth ' + Object.entries(oauth).map(([k, v]) => `${enc(k)}="${enc(v)}"`).join(', ');
+}
+
+/** JSON body, or a multipart form for media (neither is part of the OAuth 1.0a signature). */
+async function xFetch(method: 'GET' | 'POST', url: string, body?: unknown) {
+  const form = body instanceof FormData ? body : undefined;
   const res = await fetch(url, {
     method,
-    headers: { Authorization: header, ...(body ? { 'Content-Type': 'application/json' } : {}) },
-    body: body ? JSON.stringify(body) : undefined,
+    headers: { Authorization: await oauthHeader(method, url), ...(body && !form ? { 'Content-Type': 'application/json' } : {}) },
+    body: form ?? (body ? JSON.stringify(body) : undefined),
     signal: AbortSignal.timeout(20_000),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(`x ${res.status}: ${JSON.stringify(data).slice(0, 300)}${res.status === 401 ? ` (keys ${keyShape()})` : ''}`);
   return data;
+}
+
+/** The post's image card: rendered by betina-server, uploaded to X; returns the media id. */
+async function uploadCard(postId: number): Promise<string> {
+  const r = await fetch(`${API}/social/card/${postId}.png`, { signal: AbortSignal.timeout(20_000) });
+  if (!r.ok) throw new Error(`card ${r.status}`);
+  const form = new FormData();
+  form.append('media', new Blob([await r.arrayBuffer()], { type: 'image/png' }), `betina-${postId}.png`);
+  form.append('media_category', 'tweet_image');
+  form.append('media_type', 'image/png');
+  const res = await xFetch('POST', `${X}/media/upload`, form) as { data?: { id?: string } };
+  if (!res.data?.id) throw new Error('media upload: no id');
+  return res.data.id;
 }
 
 async function publish(db: Db, s: Settings) {
@@ -444,7 +545,7 @@ async function publish(db: Db, s: Settings) {
   const room = Math.min(POSTS_PER_RUN, s.daily_limit - (count ?? 0));
   if (room <= 0) return 0;
 
-  const { data: due } = await db.from('social_posts').select('id, text, poll, reply_to')
+  const { data: due } = await db.from('social_posts').select('id, text, poll, reply_to, card')
     .eq('status', 'approved').order('created_at', { ascending: true }).limit(room);
   let sent = 0;
   for (const p of due ?? []) {
@@ -456,8 +557,24 @@ async function publish(db: Db, s: Settings) {
       const body: Record<string, unknown> = { text: p.text };
       if (p.poll?.length) body.poll = { options: p.poll, duration_minutes: 180 };
       if (p.reply_to) body.reply = { in_reply_to_tweet_id: p.reply_to };
+      // X doesn't allow a poll and media in the same post: a poll's card goes
+      // out as a reply right after it. Without the card the post still goes out.
+      let mediaId: string | null = null;
+      let note: string | null = null;
+      if (p.card) {
+        try {
+          mediaId = await uploadCard(p.id);
+        } catch (err) {
+          note = `posted without image: ${(err as Error).message.slice(0, 200)}`;
+        }
+      }
+      if (mediaId && !p.poll?.length) body.media = { media_ids: [mediaId] };
       const res = await xFetch('POST', `${X}/tweets`, body) as { data?: { id: string } };
-      await db.from('social_posts').update({ status: 'posted', x_id: res.data?.id ?? null, posted_at: new Date().toISOString(), error: null }).eq('id', p.id);
+      if (mediaId && p.poll?.length && res.data?.id) {
+        await xFetch('POST', `${X}/tweets`, { text: 'Cast your vote 👆', media: { media_ids: [mediaId] }, reply: { in_reply_to_tweet_id: res.data.id } })
+          .catch((err) => { note = `poll image reply failed: ${(err as Error).message.slice(0, 200)}`; });
+      }
+      await db.from('social_posts').update({ status: 'posted', x_id: res.data?.id ?? null, posted_at: new Date().toISOString(), error: note }).eq('id', p.id);
       sent++;
     } catch (err) {
       await db.from('social_posts').update({ status: 'failed', error: (err as Error).message }).eq('id', p.id);

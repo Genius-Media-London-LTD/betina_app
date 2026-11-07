@@ -67,7 +67,12 @@ export type SocialPost = {
   id: number; kind: string; status: SocialStatus; text: string; poll: string[] | null; context: string | null;
   flags: string[]; reply_author: string | null; reply_text: string | null; expires_at: string | null;
   x_id: string | null; error: string | null; decided_at: string | null; posted_at: string | null; created_at: string;
+  /** The post has an image card (migration 026), rendered by betina-server. */
+  has_card?: boolean;
 };
+
+/** The image card that goes out with a post (1200×675 PNG). */
+export const socialCardUrl = (id: number) => `https://api.betina.geniusbet.com/v1/social/card/${id}.png`;
 export type SocialState = {
   settings: { mode: SocialMode; auto_kinds: string[]; daily_limit: number; lang: string; x_ready: boolean; last_run: string };
   posted_24h: number;

@@ -3,7 +3,7 @@
 // Only for accounts in public.admins (migrations 024, 025); the server checks
 // every call. Internal tool, so the copy is English only.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Image, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AnimatedNumber from '../src/components/AnimatedNumber';
@@ -11,7 +11,7 @@ import BackButton from '../src/components/BackButton';
 import { Meta } from '../src/components/Urban';
 import {
   AdminMessage, AdminUser, Count, Overview, SocialMode, SocialPost, SocialState, SocialStatus,
-  decideSocial, fetchAdminMessages, fetchAdminUsers, fetchOverview, fetchSocial, setSocialMode, useIsAdmin,
+  decideSocial, fetchAdminMessages, socialCardUrl, fetchAdminUsers, fetchOverview, fetchSocial, setSocialMode, useIsAdmin,
 } from '../src/lib/admin';
 import { isDesktopWidth } from '../src/lib/layout';
 import { Colors, Fonts, displayType } from '../src/theme';
@@ -537,6 +537,9 @@ function SocialCard({ post, onDone, style }: { post: SocialPost; onDone: () => v
       {editable
         ? <TextInput multiline value={text} onChangeText={setText} style={[styles.search, styles.postInput]} />
         : <Text style={styles.postText}>{post.text}</Text>}
+      {post.has_card && (
+        <Image source={{ uri: socialCardUrl(post.id) }} style={styles.cardImage} resizeMode="cover" accessibilityLabel="Image card for this post" />
+      )}
       {post.poll && (
         <View style={{ gap: 4 }}>
           {post.poll.map((o) => <Text key={o} style={styles.pollOption}>{o}</Text>)}
@@ -579,6 +582,7 @@ function ErrorBox({ text, onRetry }: { text: string; onRetry?: () => void }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.background },
+  cardImage: { width: '100%', aspectRatio: 16 / 9, backgroundColor: Colors.surface },
   center: { alignItems: 'center', justifyContent: 'center', gap: 14 },
   row: { flex: 1, flexDirection: 'row' },
   content: { padding: 16, gap: 18 },
