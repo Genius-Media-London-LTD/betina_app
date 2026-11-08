@@ -181,10 +181,12 @@ type Written = { text?: string; why?: string };
  * `reserve`: characters the caller adds in front (the score line).
  */
 async function write(db: Db, kind: SocialKind, lang: string, facts: string, reserve = 0): Promise<Written> {
-  const { data: recent } = await db.from('social_posts').select('text')
-    .in('status', ['draft', 'approved', 'posted']).order('created_at', { ascending: false }).limit(12);
-  const before = (recent ?? []).map((r) => `- ${r.text}`).join('\n');
-  const input = `${facts}${before ? `\n\nYour latest posts — don’t reuse their openings, jokes or images:\n${before}` : ''}`;
+  // Replies are compared with replies only, posts with posts.
+  let q = db.from('social_posts').select('text').in('status', ['draft', 'approved', 'posted']);
+  q = kind === 'reply' ? q.eq('kind', 'reply') : q.neq('kind', 'reply');
+  const { data: recent } = await q.order('created_at', { ascending: false }).limit(kind === 'reply' ? 8 : 12);
+  const before = (recent ?? []).map((r) => `- ${r.text.replace(/\s*\n+\s*/g, ' ')}`).join('\n');
+  const input = `${facts}${before ? `\n\nYour latest ${kind === 'reply' ? 'replies' : 'posts'} — don’t reuse their openings, jokes or images:\n${before}` : ''}`;
   type Out = { skip: boolean; reason: string; text: string };
 
   claudeError = '';
@@ -593,10 +595,16 @@ async function mentions(db: Db, s: Settings) {
     me = ((await xFetch('GET', `${X}/users/me`)) as { data: { id: string } }).data.id;
     await db.from('social_settings').update({ x_user_id: me }).eq('id', 1);
   }
-  const q = new URLSearchParams({ max_results: '10', expansions: 'author_id', 'user.fields': 'username' });
+  // Ads bring bursts of comments: take up to 50 per run, plus the post they answered.
+  const q = new URLSearchParams({
+    max_results: '50', expansions: 'author_id,referenced_tweets.id',
+    'user.fields': 'username,name', 'tweet.fields': 'referenced_tweets',
+  });
   if (s.mentions_since) q.set('since_id', s.mentions_since);
+  type Tweet = { id: string; text: string; author_id: string; referenced_tweets?: { type: string; id: string }[] };
   const res = await xFetch('GET', `${X}/users/${me}/mentions?${q}`) as {
-    data?: { id: string; text: string; author_id: string }[]; includes?: { users?: { id: string; username: string }[] }; meta?: { newest_id?: string };
+    data?: Tweet[]; meta?: { newest_id?: string };
+    includes?: { users?: { id: string; username: string; name?: string }[]; tweets?: Tweet[] };
   };
   if (res.meta?.newest_id) await db.from('social_settings').update({ mentions_since: res.meta.newest_id }).eq('id', 1);
   // The very first fetch only sets the starting point; no answers to old mentions.
@@ -604,8 +612,18 @@ async function mentions(db: Db, s: Settings) {
 
   for (const m of res.data ?? []) {
     if (m.author_id === me) continue;
-    const author = res.includes?.users?.find((u) => u.id === m.author_id)?.username ?? 'someone';
-    const { text } = await write(db, 'reply', s.lang, `Mention by @${author}:\n"""${m.text}"""`);
+    const user = res.includes?.users?.find((u) => u.id === m.author_id);
+    const author = user?.username ?? 'someone';
+    const parentId = m.referenced_tweets?.find((r) => r.type === 'replied_to')?.id;
+    const parent = res.includes?.tweets?.find((t) => t.id === parentId);
+    const now = new Date();
+    const when = now.toLocaleString('en-GB', { timeZone: 'Africa/Lagos', weekday: 'long', hour: '2-digit', minute: '2-digit' });
+    const comment = m.text.replace(/^(@\w+\s+)+/, ''); // drop the leading @handles X adds to replies
+    const { text } = await write(db, 'reply', s.lang, [
+      `It is ${when} (West Africa time, where most of your followers are).`,
+      parent ? `${parent.author_id === me ? 'Your post' : 'The post'} they replied to:\n"""${parent.text}"""` : '',
+      `Comment by ${user?.name ? `${user.name} (@${author})` : `@${author}`}:\n"""${comment}"""`,
+    ].filter(Boolean).join('\n\n'));
     if (!text) continue;
     await save(db, s, {
       kind: 'reply', text, dedupe_key: `reply:${m.id}`, context: `@${author}`,
