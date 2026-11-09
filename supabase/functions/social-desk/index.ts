@@ -800,6 +800,9 @@ Deno.serve(async () => {
     await step('publish', async () => { posted = await publish(db, s); });
   }
   let meta = 0;
+  // Connection check: until the page is known, look it (and Instagram) up with
+  // the token on every run, so the dashboard shows the link before anything is posted.
+  if (metaReady() && !s.fb_page_id) await step('meta-auth', () => metaAuth(db, s));
   if (metaReady()) await step('meta', async () => { meta = await metaPublish(db, s, v); });
   if (errors.length) console.error(errors.join(' | '));
   return json({ mode: s.mode, x_ready: ready, posted, meta_mode: s.meta_mode, meta, errors });
