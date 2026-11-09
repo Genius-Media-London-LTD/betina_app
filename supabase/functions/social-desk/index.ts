@@ -547,13 +547,18 @@ async function publish(db: Db, s: Settings) {
   await db.from('social_posts').update({ status: 'skipped', error: 'expired' })
     .eq('status', 'approved').lt('expires_at', now);
 
+  // The daily limit is for BETina's own posts. Replies are approved one by one
+  // and never count against it (7 approved replies blocked all posts on 2026-11-09).
   const { count } = await db.from('social_posts').select('id', { count: 'exact', head: true })
-    .eq('status', 'posted').gt('posted_at', new Date(Date.now() - 86_400_000).toISOString());
-  const room = Math.min(POSTS_PER_RUN, s.daily_limit - (count ?? 0));
-  if (room <= 0) return 0;
+    .eq('status', 'posted').neq('kind', 'reply').gt('posted_at', new Date(Date.now() - 86_400_000).toISOString());
+  const room = Math.max(0, s.daily_limit - (count ?? 0));
 
-  const { data: due } = await db.from('social_posts').select('id, text, poll, reply_to, card')
-    .eq('status', 'approved').order('created_at', { ascending: true }).limit(room);
+  let q = db.from('social_posts').select('id, kind, text, poll, reply_to, card').eq('status', 'approved');
+  if (room <= 0) q = q.eq('kind', 'reply');
+  const { data: queue } = await q.order('created_at', { ascending: true }).limit(POSTS_PER_RUN + room);
+  // At most POSTS_PER_RUN per run, and own posts only while there is room.
+  let own = 0;
+  const due = (queue ?? []).filter((p) => (p.kind === 'reply' ? true : own++ < room)).slice(0, POSTS_PER_RUN);
   let sent = 0;
   for (const p of due ?? []) {
     // Claim it, so an overlapping run can't post it twice.
