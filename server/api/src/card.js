@@ -2,10 +2,12 @@
 // news). The social-desk function stores what a card shows in
 // social_posts.card; this endpoint only renders a post's stored card, so
 // nobody can make BETina-branded images with their own text.
-//   GET /v1/social/card/:id.png   -> 1200×675 PNG
+//   GET /v1/social/card/:id.png       -> 1200×675 PNG (X)
+//   GET /v1/social/card/:id-4x5.jpg   -> 1080×1350 JPEG (Instagram, Facebook)
 import { readFileSync, readdirSync } from 'node:fs';
 import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
+import sharp from 'sharp';
 
 const SUPABASE = 'https://djnmrvhdklpclbrhxxqs.supabase.co';
 // The publishable key the apps ship with (public); the RPC returns only cards.
@@ -166,21 +168,81 @@ function news(c) {
 
 const KINDS = { goal, result, poll, history, news };
 
-export async function renderCard(card) {
-  const build = KINDS[card?.t];
+// ── Portrait 4:5 for Instagram and Facebook (1080×1350) ─────────────────────
+// BETina's photo fills the top, the story sits underneath.
+const PW = 1080;
+const PH = 1350;
+const PHOTO_H = 860;
+
+function pframe(mood, fallback, ...children) {
+  const src = MOODS[mood] ?? MOODS[fallback];
+  const pw = PHOTO_H * 16 / 9;
+  return h('div', { position: 'relative', width: PW, height: PH, background: C.bg, fontFamily: 'Archivo', color: C.text, overflow: 'hidden' },
+    img(src, { position: 'absolute', left: (PW - pw) / 2, top: 0, width: pw, height: PHOTO_H }),
+    h('div', { position: 'absolute', left: 0, top: PHOTO_H - 380, width: PW, height: 382,
+      backgroundImage: `linear-gradient(to bottom, rgba(13,11,17,0), rgba(13,11,17,0.8) 55%, ${C.bg})` }),
+    h('div', { position: 'absolute', left: 0, top: 0, width: PW, height: 200,
+      backgroundImage: 'linear-gradient(to bottom, rgba(13,11,17,0.75), rgba(13,11,17,0))' }),
+    ...children);
+}
+const pbrand = (...chips) => h('div', { position: 'absolute', left: 60, top: 56, alignItems: 'center', gap: 14 },
+  img(LOGO, { width: 36, height: 41 }),
+  h('div', { fontFamily: 'ArchivoBI', fontSize: 38, letterSpacing: -1, color: C.text, marginRight: 8 }, 'BET', h('span', { color: C.lime }, 'INA')),
+  ...chips.filter(Boolean).map((c) => chip(c.text, c.live)));
+const pfoot = () => h('div', { position: 'absolute', left: 60, bottom: 56, fontWeight: 800, fontSize: 22, letterSpacing: 2, color: C.muted },
+  'FREE APP ·', h('span', { color: C.lime, marginLeft: 8 }, 'LINK IN BIO'));
+
+const PORTRAIT = {
+  history: (c) => pframe(c.mood, 'zeitreise-1986',
+    pbrand({ text: c.today ? 'On this day' : 'Time travel', live: true }),
+    h('div', { position: 'absolute', left: 50, top: 700, fontFamily: 'ArchivoBI', fontSize: 230, letterSpacing: -8, color: C.lime, lineHeight: 1 }, String(c.year)),
+    h('div', { position: 'absolute', left: 60, top: 940, width: 960, fontFamily: 'ArchivoBI', fontSize: fit(c.title, 84, 18), letterSpacing: -2, lineHeight: 0.95, textTransform: 'uppercase' }, c.title),
+    c.place && h('div', { position: 'absolute', left: 60, top: 1090, width: 900, fontWeight: 700, fontSize: 30, color: C.muted }, c.place),
+    h('div', { position: 'absolute', right: 60, bottom: 50 }, sticker('I was there')),
+    pfoot()),
+  result: (c) => pframe(c.mood, 'jubel',
+    pbrand({ text: 'Full time' }, c.league && { text: c.league }),
+    h('div', { position: 'absolute', left: 60, top: 720, width: 960, flexDirection: 'column', gap: 6 },
+      teamRow(c.home, undefined, { size: 56 }),
+      h('div', { fontFamily: 'ArchivoBI', fontSize: 250, letterSpacing: -8, lineHeight: 1, marginLeft: -10 },
+        String(c.hs), h('span', { color: C.lime }, '–'), String(c.as)),
+      teamRow(c.away, undefined, { size: 56, color: C.muted, bar: C.line })),
+    c.tag && h('div', { position: 'absolute', right: 60, bottom: 50 }, sticker(c.tag, true)),
+    pfoot()),
+  news: (c) => {
+    const size = c.headline.length > 70 ? 66 : c.headline.length > 45 ? 78 : 92;
+    return pframe(c.mood, 'studio',
+      pbrand({ text: 'News', live: true }, c.sport && { text: c.sport }),
+      h('div', { position: 'absolute', left: 60, top: 760, width: 960, fontFamily: 'ArchivoBI', fontSize: size, letterSpacing: -2, lineHeight: 0.98, textTransform: 'uppercase' }, c.headline),
+      h('div', { position: 'absolute', left: 60, bottom: 56, fontWeight: 800, fontSize: 22, letterSpacing: 2, color: C.muted },
+        'FULL STORY IN THE', h('span', { color: C.lime, marginLeft: 8 }, 'BETINA APP')));
+  },
+};
+
+/** format: 'wide' (1200×675, X) or 'portrait' (1080×1350, Instagram/Facebook). */
+export async function renderCard(card, format = 'wide') {
+  const portrait = format === 'portrait';
+  const build = (portrait ? PORTRAIT : KINDS)[card?.t];
   if (!build) throw Object.assign(new Error('unknown card'), { status: 404 });
-  const svg = await satori(build(card), { width: W, height: H, fonts: FONTS });
-  return new Resvg(svg, { fitTo: { mode: 'width', value: W } }).render().asPng();
+  const [w, hgt] = portrait ? [PW, PH] : [W, H];
+  const svg = await satori(build(card), { width: w, height: hgt, fonts: FONTS });
+  return new Resvg(svg, { fitTo: { mode: 'width', value: w } }).render().asPng();
 }
 
 // Rendered cards don't change; keep the recent ones.
 const cache = new Map();
 
+// GET /v1/social/card/<id>.png        -> wide PNG (X)
+// GET /v1/social/card/<id>-4x5.jpg    -> portrait JPEG (Instagram only takes JPEG)
 export async function cardPng(c) {
-  const id = Number(String(c.req.param('id')).replace(/\.png$/, ''));
-  if (!Number.isInteger(id) || id <= 0) return c.text('bad id', 400);
-  let png = cache.get(id);
-  if (!png) {
+  const m = /^(\d+)(-4x5)?\.(png|jpg)$/.exec(String(c.req.param('id')));
+  if (!m) return c.text('bad id', 400);
+  const id = Number(m[1]);
+  const format = m[2] ? 'portrait' : 'wide';
+  const jpeg = m[3] === 'jpg';
+  const key = `${id}:${format}:${m[3]}`;
+  let body = cache.get(key);
+  if (!body) {
     const r = await fetch(`${SUPABASE}/rest/v1/rpc/social_card`, {
       method: 'POST',
       headers: { apikey: PUBLISHABLE_KEY, 'Content-Type': 'application/json' },
@@ -189,9 +251,11 @@ export async function cardPng(c) {
     });
     const card = r.ok ? await r.json() : null;
     if (!card) return c.text('no card', 404);
-    png = await renderCard(card);
-    cache.set(id, png);
-    if (cache.size > 200) cache.delete(cache.keys().next().value);
+    const png = await renderCard(card, format).catch((e) => (e.status === 404 ? null : Promise.reject(e)));
+    if (!png) return c.text('no card in this format', 404);
+    body = jpeg ? await sharp(png).jpeg({ quality: 88, mozjpeg: true }).toBuffer() : png;
+    cache.set(key, body);
+    if (cache.size > 300) cache.delete(cache.keys().next().value);
   }
-  return c.body(png, 200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=3600' });
+  return c.body(body, 200, { 'Content-Type': jpeg ? 'image/jpeg' : 'image/png', 'Cache-Control': 'public, max-age=3600' });
 }

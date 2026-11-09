@@ -472,6 +472,9 @@ function SocialTab({ desktop }: { desktop: boolean }) {
           <Text style={styles.cardTitle}>BETINA ON X</Text>
           <Text style={[styles.badge, s.x_ready && styles.badgeLime]}>{s.x_ready ? 'X CONNECTED' : 'X NOT CONNECTED · PREVIEW ONLY'}</Text>
         </View>
+        <Text style={styles.userMeta}>
+          {`INSTAGRAM + FACEBOOK: ${!s.meta_ready ? 'NOT CONNECTED' : s.meta_mode === 'auto' ? 'ON (TIME TRAVEL, RESULTS, NEWS)' : 'OFF'}`}
+        </Text>
         <View style={{ flexDirection: 'row', gap: 6 }}>
           {MODES.map((m) => (
             <Pressable key={m.k} disabled={busy} onPress={() => changeMode(m.k)} style={[styles.chip, s.mode === m.k && (m.k === 'off' ? styles.chipDanger : styles.chipOn)]}>
@@ -566,6 +569,13 @@ function SocialCard({ post, onDone, style }: { post: SocialPost; onDone: () => v
         <Pressable onPress={() => Linking.openURL(`https://x.com/i/web/status/${post.x_id}`)}>
           <Text style={styles.errorRetry}>OPEN ON X →</Text>
         </Pressable>
+      )}
+      {post.meta_status && (
+        <Text style={post.meta_status === 'posted' ? styles.userMeta : styles.flagText}>
+          {post.meta_status === 'posted'
+            ? `INSTAGRAM ${post.ig_id ? '✓' : '✗'} · FACEBOOK ${post.fb_id ? '✓' : '✗'}${post.meta_error ? ` — ${post.meta_error}` : ''}`
+            : `INSTAGRAM/FACEBOOK ${post.meta_status.toUpperCase()}${post.meta_error ? `: ${post.meta_error}` : ''}`}
+        </Text>
       )}
     </View>
   );

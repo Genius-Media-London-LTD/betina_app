@@ -20,14 +20,19 @@
 // Facts always come from the data; the filters below keep sad news, betting
 // talk and over-long posts away from X.
 //
+// Instagram + Facebook (migration 027): the best X posts (time travel, big
+// results, news) follow there with a caption of their own and a 4:5 card —
+// see metaPublish().
+//
 // Deploy: supabase functions deploy social-desk --no-verify-jwt
 // Env:    SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY
 //         X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET (optional:
 //         without them nothing is posted — drafts only)
+//         META_PAGE_TOKEN (optional: Instagram + Facebook)
 
 import Anthropic from 'npm:@anthropic-ai/sdk';
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { socialInstructions, SocialKind } from '../_shared/betina-persona.ts';
+import { metaCaptionInstructions, socialInstructions, SocialKind } from '../_shared/betina-persona.ts';
 
 // deno-lint-ignore no-explicit-any
 type Db = SupabaseClient<any, 'public', any>;
@@ -632,15 +637,145 @@ async function mentions(db: Db, s: Settings) {
   }
 }
 
+// ── Instagram + Facebook (Meta Graph API, migration 027) ────────────────────
+// Fewer but nicer than X: BETina's best X posts (social_settings.meta_kinds)
+// get an Instagram caption and the 4:5 card, at most meta_daily_limit a day,
+// 3 h apart, between 08:00 and 23:00 Vienna.
+const GRAPH = 'https://graph.facebook.com/v23.0';
+const META_GAP_MS = 3 * 3_600_000;
+const META_FRESH_MS = 6 * 3_600_000;   // older X posts don't go to Instagram anymore
+const APP_URL = 'https://betina.geniusbet.com';
+const metaReady = () => !!env('META_PAGE_TOKEN');
+
+async function graph<T>(token: string, method: 'GET' | 'POST', path: string, params: Record<string, string> = {}): Promise<T> {
+  const q = new URLSearchParams({ ...params, access_token: token });
+  const r = await fetch(method === 'GET' ? `${GRAPH}/${path}?${q}` : `${GRAPH}/${path}`, {
+    method, body: method === 'POST' ? q : undefined, signal: AbortSignal.timeout(30_000),
+  });
+  const j = await r.json().catch(() => ({})) as T & { error?: { message?: string } };
+  // The message never contains the token; the URL (which does) is not logged.
+  if (!r.ok || j.error) throw new Error(`${path.split('/').pop()} ${r.status}: ${j.error?.message ?? 'no body'}`.slice(0, 300));
+  return j;
+}
+
+/**
+ * META_PAGE_TOKEN may be a Page token or a (system) user token that manages
+ * BETina's page — with a user token, the page's own token is looked up.
+ */
+async function metaAuth(db: Db, s: MetaSettings) {
+  const token = env('META_PAGE_TOKEN');
+  type Page = { id: string; access_token?: string; instagram_business_account?: { id: string } };
+  let page: Page;
+  try {
+    const { data } = await graph<{ data: Page[] }>(token, 'GET', 'me/accounts', { fields: 'id,access_token,instagram_business_account' });
+    page = data.find((p) => p.id === s.fb_page_id) ?? data.find((p) => p.instagram_business_account) ?? data[0];
+    if (!page) throw new Error('the token manages no Facebook page');
+  } catch (err) {
+    if (/no Facebook page/.test((err as Error).message)) throw err;
+    page = await graph<Page>(token, 'GET', 'me', { fields: 'id,instagram_business_account' }); // a Page token
+  }
+  const ig = page.instagram_business_account?.id ?? null;
+  if (page.id !== s.fb_page_id || ig !== s.ig_user_id) {
+    await db.from('social_settings').update({ fb_page_id: page.id, ig_user_id: ig }).eq('id', 1);
+  }
+  return { token: page.access_token ?? token, page: page.id, ig };
+}
+
+/** Puts the app line in front of the hashtags (or at the end if there are none). */
+function withCta(caption: string, cta: string) {
+  const lines = caption.trim().split('\n');
+  const last = lines[lines.length - 1].trim();
+  if (last.startsWith('#')) return [...lines.slice(0, -1), cta, '', last].join('\n').replace(/\n{3,}/g, '\n\n');
+  return `${caption.trim()}\n\n${cta}`;
+}
+
+type MetaSettings = Settings & { meta_mode: 'off' | 'auto'; meta_kinds: string[]; meta_daily_limit: number; fb_page_id: string | null; ig_user_id: string | null };
+
+async function metaPublish(db: Db, s: MetaSettings, v: ReturnType<typeof vienna>) {
+  if (s.meta_mode !== 'auto' || v.hour < 8 || v.hour >= 23) return 0;
+  const dayStart = new Date(Date.parse(`${v.date}T00:00:00Z`) - v.offset * 60_000).toISOString();
+  const { data: done } = await db.from('social_posts').select('meta_posted_at')
+    .eq('meta_status', 'posted').gte('meta_posted_at', new Date(Date.now() - 86_400_000).toISOString())
+    .order('meta_posted_at', { ascending: false });
+  const today = (done ?? []).filter((d) => d.meta_posted_at >= dayStart).length;
+  if (today >= s.meta_daily_limit) return 0;
+  if (done?.length && Date.now() - Date.parse(done[0].meta_posted_at) < META_GAP_MS) return 0;
+
+  const { data: next } = await db.from('social_posts').select('id, kind, text, card')
+    .eq('status', 'posted').in('kind', s.meta_kinds).not('card', 'is', null).is('meta_status', null)
+    .gte('posted_at', new Date(Date.now() - META_FRESH_MS).toISOString())
+    .order('posted_at', { ascending: true }).limit(1);
+  const p = next?.[0];
+  if (!p) return 0;
+  const { data: claimed } = await db.from('social_posts').update({ meta_status: 'posting' })
+    .eq('id', p.id).is('meta_status', null).select('id');
+  if (!claimed?.length) return 0;
+
+  const { mood: _mood, ...facts } = p.card as Card;
+  claudeError = '';
+  const out = await claudeJson<{ skip: boolean; reason: string; text: string }>(
+    metaCaptionInstructions(s.lang),
+    `Your X post:\n"""${p.text}"""\n\nFacts on the image card: ${JSON.stringify(facts)}`,
+    POST_SCHEMA,
+  );
+  const caption = out?.text?.trim();
+  if (!out || out.skip || !caption || BETTING.test(caption) || caption.length > 1500) {
+    const why = !out ? `model error ${claudeError}` : out.skip ? out.reason : !caption ? 'empty' : BETTING.test(caption) ? 'betting words' : 'too long';
+    await db.from('social_posts').update({ meta_status: 'skipped', meta_error: why.slice(0, 300) }).eq('id', p.id);
+    return 0;
+  }
+
+  let auth: Awaited<ReturnType<typeof metaAuth>>;
+  try {
+    auth = await metaAuth(db, s);
+  } catch (err) {
+    await db.from('social_posts').update({ meta_status: 'failed', meta_text: caption, meta_error: `token: ${(err as Error).message}` }).eq('id', p.id);
+    throw err;
+  }
+  const image = `${API}/social/card/${p.id}-4x5.jpg`;
+  const errors: string[] = [];
+  let igId: string | null = null, fbId: string | null = null;
+  if (auth.ig) {
+    try {
+      const box = await graph<{ id: string }>(auth.token, 'POST', `${auth.ig}/media`, { image_url: image, caption: withCta(caption, '📲 BETina app: free, link in bio') });
+      for (let i = 0; i < 10; i++) {
+        const st = await graph<{ status_code?: string }>(auth.token, 'GET', box.id, { fields: 'status_code' });
+        if (st.status_code === 'FINISHED') break;
+        if (st.status_code === 'ERROR' || st.status_code === 'EXPIRED') throw new Error(`container ${st.status_code}`);
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+      igId = (await graph<{ id: string }>(auth.token, 'POST', `${auth.ig}/media_publish`, { creation_id: box.id })).id;
+    } catch (err) {
+      errors.push(`instagram: ${(err as Error).message}`);
+    }
+  } else {
+    errors.push('instagram: no Instagram business account linked to the page');
+  }
+  try {
+    const res = await graph<{ id: string; post_id?: string }>(auth.token, 'POST', `${auth.page}/photos`, {
+      url: image, message: withCta(caption, `📲 BETina app, free on iPhone, Android & web: ${APP_URL}`),
+    });
+    fbId = res.post_id ?? res.id;
+  } catch (err) {
+    errors.push(`facebook: ${(err as Error).message}`);
+  }
+  const ok = !!(igId || fbId);
+  await db.from('social_posts').update({
+    meta_status: ok ? 'posted' : 'failed', meta_text: caption, ig_id: igId, fb_id: fbId,
+    meta_error: errors.join(' | ') || null, meta_posted_at: ok ? new Date().toISOString() : null,
+  }).eq('id', p.id);
+  return ok ? 1 : 0;
+}
+
 // ── Run ──────────────────────────────────────────────────────────────────────
 Deno.serve(async () => {
   const db: Db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   const { data: claimed } = await db.rpc('social_desk_claim', { p_min_seconds: 50 });
   if (!claimed) return json({ skipped: 'busy' });
 
-  const { data: s } = await db.from('social_settings').select('*').eq('id', 1).single<Settings>();
+  const { data: s } = await db.from('social_settings').select('*').eq('id', 1).single<MetaSettings>();
   const ready = xReady();
-  await db.from('social_settings').update({ x_ready: ready }).eq('id', 1);
+  await db.from('social_settings').update({ x_ready: ready, meta_ready: metaReady() }).eq('id', 1);
   if (!s || s.mode === 'off') return json({ mode: 'off' });
 
   const v = vienna();
@@ -664,6 +799,8 @@ Deno.serve(async () => {
     await step('mentions', () => mentions(db, s));
     await step('publish', async () => { posted = await publish(db, s); });
   }
+  let meta = 0;
+  if (metaReady()) await step('meta', async () => { meta = await metaPublish(db, s, v); });
   if (errors.length) console.error(errors.join(' | '));
-  return json({ mode: s.mode, x_ready: ready, posted, errors });
+  return json({ mode: s.mode, x_ready: ready, posted, meta_mode: s.meta_mode, meta, errors });
 });
