@@ -433,7 +433,7 @@ async function news(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
     const label = st.competition || (st.sport ? st.sport[0].toUpperCase() + st.sport.slice(1) : '');
     await save(db, s, {
       kind: 'news', text, dedupe_key: key, context: a.headline,
-      card: { t: 'news', mood: await freshMood(db, NEWS_MOODS, +v.day), sport: label, headline: a.headline },
+      card: { t: 'news', mood: await freshMood(db, NEWS_MOODS, +v.day), sport: label, discipline: st.sport ?? null, headline: a.headline },
       expires_at: new Date(Date.now() + 12 * 3_600_000).toISOString(),
     });
     return; // one story a day
@@ -722,6 +722,57 @@ function withCta(caption: string, cta: string) {
   return `${caption.trim()}\n\n${cta}`;
 }
 
+// ── Instagram/Facebook photos (server/api/assets/betina-ig, 1080×1350) ──────
+// Their own set (60, varied outfits, 2026-11-10), picked per post when it goes out.
+const IG_SETS: Record<string, number> = {
+  'news-fussball': 8, 'news-f1': 5, 'news-tennis': 4, 'news-basketball': 4, 'news-kampfsport': 3, 'news-allgemein': 6,
+  'ergebnis-jubel': 4, 'ergebnis-schock': 3, 'ergebnis-knapp': 3, 'ergebnis-enttaeuscht': 2, 'ergebnis-abend': 2, lifestyle: 8,
+};
+const ZEITREISE = [1930, 1950, 1960, 1970, 1980, 1990, 2000, 2010]; // zeitreise-<decade>
+const igSet = (...names: string[]) => names.flatMap((n) => Array.from({ length: IG_SETS[n] ?? 0 }, (_, i) => `${n}-${i + 1}`));
+
+function newsSport(c: Card) {
+  if (c.discipline) return String(c.discipline);
+  const l = String(c.sport ?? '');
+  return /formula|grand prix|f1|motogp|nascar|indycar/i.test(l) ? 'motorsport'
+    : /tennis|atp|wta|open|wimbledon/i.test(l) ? 'tennis'
+    : /nba|basketball|euroleague/i.test(l) ? 'basketball'
+    : /ufc|mma|boxing/i.test(l) ? 'boxing'
+    : /league|liga|serie a|bundesliga|ligue|cup|champions|football|soccer/i.test(l) ? 'football' : 'other';
+}
+
+/** Photos that fit the post, best first (time travel: the closest decade first). */
+function igChoices(c: Card): string[] {
+  if (c.t === 'history') {
+    const y = Number(c.year) || 1986;
+    return [...ZEITREISE].sort((a, b) => Math.abs(a + 5 - y) - Math.abs(b + 5 - y)).map((d) => `zeitreise-${d}`);
+  }
+  if (c.t === 'result') {
+    const byTag: Record<string, string[]> = {
+      'Goal fest': ['ergebnis-schock', 'ergebnis-jubel'], Goalless: ['ergebnis-enttaeuscht', 'ergebnis-knapp'],
+      'All square': ['ergebnis-knapp', 'ergebnis-enttaeuscht'], 'Statement win': ['ergebnis-jubel', 'ergebnis-abend'],
+      'Tight one': ['ergebnis-knapp', 'ergebnis-jubel'], 'Job done': ['ergebnis-abend', 'ergebnis-jubel'],
+    };
+    return igSet(...(byTag[String(c.tag)] ?? ['ergebnis-jubel']));
+  }
+  const bySport: Record<string, string[]> = {
+    football: ['news-fussball', 'news-allgemein'], tennis: ['news-tennis'], basketball: ['news-basketball'], nfl: ['news-basketball', 'news-allgemein'],
+    motorsport: ['news-f1'], boxing: ['news-kampfsport'], mma: ['news-kampfsport'],
+  };
+  return igSet(...(bySport[newsSport(c)] ?? ['news-allgemein', 'lifestyle']));
+}
+
+/** A fitting photo that wasn't on the feed lately (time travel: only the last two of its own). */
+async function pickIg(db: Db, c: Card, seed: number) {
+  const { data } = await db.from('social_posts').select('kind, card').eq('meta_status', 'posted')
+    .order('meta_posted_at', { ascending: false }).limit(12);
+  const rows = (data ?? []).filter((r) => c.t !== 'history' || r.kind === 'history').slice(0, c.t === 'history' ? 2 : 12);
+  const recent = new Set(rows.map((r) => (r.card as Card | null)?.ig));
+  const list = igChoices(c);
+  const order = c.t === 'history' ? list : list.map((_, i) => list[(Math.abs(seed) + i) % list.length]);
+  return order.find((n) => !recent.has(n)) ?? order[0];
+}
+
 type MetaSettings = Settings & { meta_mode: 'off' | 'auto'; meta_kinds: string[]; meta_daily_limit: number; fb_page_id: string | null; ig_user_id: string | null };
 
 async function metaPublish(db: Db, s: MetaSettings, v: ReturnType<typeof vienna>) {
@@ -747,7 +798,7 @@ async function metaPublish(db: Db, s: MetaSettings, v: ReturnType<typeof vienna>
     .eq('id', p.id).is('meta_status', null).select('id');
   if (!claimed?.length) return 0;
 
-  const { mood: _mood, ...facts } = p.card as Card;
+  const { mood: _mood, ig: _ig, discipline: _d, ...facts } = p.card as Card;
   claudeError = '';
   const out = await claudeJson<{ skip: boolean; reason: string; text: string }>(
     metaCaptionInstructions(s.lang),
@@ -768,6 +819,9 @@ async function metaPublish(db: Db, s: MetaSettings, v: ReturnType<typeof vienna>
     await db.from('social_posts').update({ meta_status: 'failed', meta_text: caption, meta_error: `token: ${(err as Error).message}` }).eq('id', p.id);
     throw err;
   }
+  // Instagram/Facebook get their own photo; the card renders it from card.ig.
+  const card = { ...(p.card as Card), ig: await pickIg(db, p.card as Card, p.id) };
+  await db.from('social_posts').update({ card }).eq('id', p.id);
   const image = `${API}/social/card/${p.id}-4x5.jpg`;
   const errors: string[] = [];
   let igId: string | null = null, fbId: string | null = null;

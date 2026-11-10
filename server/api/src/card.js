@@ -169,54 +169,64 @@ function news(c) {
 const KINDS = { goal, result, poll, history, news };
 
 // ── Portrait 4:5 for Instagram and Facebook (1080×1350) ─────────────────────
-// BETina's photo fills the top, the story sits underneath.
+// Like a normal Instagram post: BETina's photo fills the frame, no logo. News
+// only gets a small label (the story is in the caption); scores and time
+// travel keep their big type. The photos (assets/betina-ig, 1080×1350) are
+// only for Instagram and Facebook; social-desk picks one per post (card.ig).
 const PW = 1080;
 const PH = 1350;
-const PHOTO_H = 860;
-
-function pframe(mood, fallback, ...children) {
-  const src = MOODS[mood] ?? MOODS[fallback];
-  const pw = PHOTO_H * 16 / 9;
-  return h('div', { position: 'relative', width: PW, height: PH, background: C.bg, fontFamily: 'Archivo', color: C.text, overflow: 'hidden' },
-    img(src, { position: 'absolute', left: (PW - pw) / 2, top: 0, width: pw, height: PHOTO_H }),
-    h('div', { position: 'absolute', left: 0, top: PHOTO_H - 380, width: PW, height: 382,
-      backgroundImage: `linear-gradient(to bottom, rgba(13,11,17,0), rgba(13,11,17,0.8) 55%, ${C.bg})` }),
-    h('div', { position: 'absolute', left: 0, top: 0, width: PW, height: 200,
-      backgroundImage: 'linear-gradient(to bottom, rgba(13,11,17,0.75), rgba(13,11,17,0))' }),
-    ...children);
+const IG_PHOTOS = new Set(readdirSync(asset('betina-ig')).filter((f) => f.endsWith('.jpg')).map((f) => f.slice(0, -4)));
+export const igPhotos = () => [...IG_PHOTOS];
+const igCache = new Map();
+/** The post's own photo, else its X mood photo cropped to 4:5. */
+async function igPhoto(c, fallback) {
+  const name = IG_PHOTOS.has(c.ig) ? `ig:${c.ig}` : `x:${MOODS[c.mood] ? c.mood : fallback}`;
+  if (!igCache.has(name)) {
+    const file = name.startsWith('ig:') ? asset(`betina-ig/${name.slice(3)}.jpg`) : asset(`betina/${name.slice(2)}.jpg`);
+    const buf = await sharp(readFileSync(file)).resize(PW, PH, { fit: 'cover', position: 'top' }).jpeg({ quality: 88 }).toBuffer();
+    igCache.set(name, `data:image/jpeg;base64,${buf.toString('base64')}`);
+  }
+  return igCache.get(name);
 }
-const pbrand = (...chips) => h('div', { position: 'absolute', left: 60, top: 56, alignItems: 'center', gap: 14 },
-  img(LOGO, { width: 36, height: 41 }),
-  h('div', { fontFamily: 'ArchivoBI', fontSize: 38, letterSpacing: -1, color: C.text, marginRight: 8 }, 'BET', h('span', { color: C.lime }, 'INA')),
-  ...chips.filter(Boolean).map((c) => chip(c.text, c.live)));
-const pfoot = () => h('div', { position: 'absolute', left: 60, bottom: 56, fontWeight: 800, fontSize: 22, letterSpacing: 2, color: C.muted },
-  'FREE APP ·', h('span', { color: C.lime, marginLeft: 8 }, 'LINK IN BIO'));
+
+/** Full-bleed photo; `shade` = how far up the dark fade reaches (share of the height). */
+const pframe = (src, shade, ...children) => h('div', { position: 'relative', width: PW, height: PH, background: C.bg, fontFamily: 'Archivo', color: C.text, overflow: 'hidden' },
+  img(src, { position: 'absolute', left: 0, top: 0, width: PW, height: PH }),
+  h('div', { position: 'absolute', left: 0, bottom: 0, width: PW, height: Math.round(PH * shade),
+    backgroundImage: 'linear-gradient(to bottom, rgba(13,11,17,0), rgba(13,11,17,0.72) 45%, rgba(13,11,17,0.95))' }),
+  ...children);
+/** Small label: lime tag + topic, e.g. NEWS · FORMULA 1. */
+const plabel = (tag, topic, top) => h('div', { position: 'absolute', left: 64, top, alignItems: 'center', gap: 14 },
+  h('div', { background: C.lime, color: C.ink, fontWeight: 800, fontSize: 24, letterSpacing: 2.5, padding: '8px 14px' }, tag.toUpperCase()),
+  topic ? h('div', { fontWeight: 800, fontSize: 24, letterSpacing: 2.5, color: C.text }, topic.toUpperCase()) : null);
+const pfoot = (lead) => h('div', { position: 'absolute', left: 64, bottom: 58, fontWeight: 800, fontSize: 22, letterSpacing: 2.5, color: 'rgba(242,240,245,0.75)' },
+  lead, h('span', { color: C.lime, marginLeft: 9 }, 'BETINA APP'));
+const psticker = (text, lime) => h('div', { position: 'absolute', right: 64, bottom: 50 },
+  h('div', { background: lime ? C.lime : C.violet, color: lime ? C.ink : '#fff', fontWeight: 800, fontSize: 24,
+    letterSpacing: 1.5, padding: '11px 18px', transform: 'rotate(-3deg)' }, text.toUpperCase()));
+const pteam = (name, color = C.text, bar = C.lime) =>
+  h('div', { alignItems: 'center', gap: 16, fontFamily: 'ArchivoBI', fontSize: fit(name, 60, 16), letterSpacing: -1, color, textTransform: 'uppercase' },
+    h('div', { width: 13, height: 64, background: bar, transform: 'skewX(-12deg)' }), name);
 
 const PORTRAIT = {
-  history: (c) => pframe(c.mood, 'zeitreise-1986',
-    pbrand({ text: c.today ? 'On this day' : 'Time travel', live: true }),
-    h('div', { position: 'absolute', left: 50, top: 700, fontFamily: 'ArchivoBI', fontSize: 230, letterSpacing: -8, color: C.lime, lineHeight: 1 }, String(c.year)),
-    h('div', { position: 'absolute', left: 60, top: 940, width: 960, fontFamily: 'ArchivoBI', fontSize: fit(c.title, 84, 18), letterSpacing: -2, lineHeight: 0.95, textTransform: 'uppercase' }, c.title),
-    c.place && h('div', { position: 'absolute', left: 60, top: 1090, width: 900, fontWeight: 700, fontSize: 30, color: C.muted }, c.place),
-    h('div', { position: 'absolute', right: 60, bottom: 50 }, sticker('I was there')),
-    pfoot()),
-  result: (c) => pframe(c.mood, 'jubel',
-    pbrand({ text: 'Full time' }, c.league && { text: c.league }),
-    h('div', { position: 'absolute', left: 60, top: 720, width: 960, flexDirection: 'column', gap: 6 },
-      teamRow(c.home, undefined, { size: 56 }),
-      h('div', { fontFamily: 'ArchivoBI', fontSize: 250, letterSpacing: -8, lineHeight: 1, marginLeft: -10 },
+  news: async (c) => pframe(await igPhoto(c, 'studio'), 0.3,
+    plabel('News', c.sport, PH - 190),
+    pfoot('FULL STORY IN THE')),
+  result: async (c) => pframe(await igPhoto(c, 'jubel'), 0.55,
+    plabel('Full time', c.league, PH - 640),
+    h('div', { position: 'absolute', left: 64, top: PH - 560, width: 950, flexDirection: 'column', gap: 4 },
+      pteam(c.home),
+      h('div', { fontFamily: 'ArchivoBI', fontSize: 240, letterSpacing: -8, lineHeight: 1, marginLeft: -8 },
         String(c.hs), h('span', { color: C.lime }, '–'), String(c.as)),
-      teamRow(c.away, undefined, { size: 56, color: C.muted, bar: C.line })),
-    c.tag && h('div', { position: 'absolute', right: 60, bottom: 50 }, sticker(c.tag, true)),
-    pfoot()),
-  news: (c) => {
-    const size = c.headline.length > 70 ? 66 : c.headline.length > 45 ? 78 : 92;
-    return pframe(c.mood, 'studio',
-      pbrand({ text: 'News', live: true }, c.sport && { text: c.sport }),
-      h('div', { position: 'absolute', left: 60, top: 760, width: 960, fontFamily: 'ArchivoBI', fontSize: size, letterSpacing: -2, lineHeight: 0.98, textTransform: 'uppercase' }, c.headline),
-      h('div', { position: 'absolute', left: 60, bottom: 56, fontWeight: 800, fontSize: 22, letterSpacing: 2, color: C.muted },
-        'FULL STORY IN THE', h('span', { color: C.lime, marginLeft: 8 }, 'BETINA APP')));
-  },
+      pteam(c.away, C.muted, C.line)),
+    c.tag ? psticker(c.tag, true) : null,
+    pfoot('LIVE SCORES IN THE')),
+  history: async (c) => pframe(await igPhoto(c, 'zeitreise-1986'), 0.55,
+    plabel(c.today ? 'On this day' : 'Time travel', null, PH - 610),
+    h('div', { position: 'absolute', left: 54, top: PH - 545, fontFamily: 'ArchivoBI', fontSize: 230, letterSpacing: -8, color: C.lime, lineHeight: 1 }, String(c.year)),
+    h('div', { position: 'absolute', left: 64, top: PH - 320, width: 950, fontFamily: 'ArchivoBI', fontSize: fit(c.title, 80, 20), letterSpacing: -2, lineHeight: 0.95, textTransform: 'uppercase' }, c.title),
+    psticker('I was there'),
+    pfoot('MORE STORIES IN THE')),
 };
 
 /** format: 'wide' (1200×675, X) or 'portrait' (1080×1350, Instagram/Facebook). */
@@ -225,7 +235,7 @@ export async function renderCard(card, format = 'wide') {
   const build = (portrait ? PORTRAIT : KINDS)[card?.t];
   if (!build) throw Object.assign(new Error('unknown card'), { status: 404 });
   const [w, hgt] = portrait ? [PW, PH] : [W, H];
-  const svg = await satori(build(card), { width: w, height: hgt, fonts: FONTS });
+  const svg = await satori(await build(card), { width: w, height: hgt, fonts: FONTS });
   return new Resvg(svg, { fitTo: { mode: 'width', value: w } }).render().asPng();
 }
 
