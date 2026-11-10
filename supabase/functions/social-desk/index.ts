@@ -14,7 +14,9 @@
 //   goal      live   at most one per featured match: a late, decisive goal
 //                    (from minute 75, equaliser or one-goal lead; 2 min VAR delay)
 //   result    live   full time of the featured matches
-//   news      11–21  one story a day from our newsroom (importance ≥ 4)
+//   news      11–21  one story a day from our newsroom (importance ≥ 4); on a
+//                    day without a featured match a second one from 16:00,
+//                    from another sport
 //   history   12:00  time travel: "on this day" from Wikipedia, else social_moments
 //   reply     live   answers to @-mentions (always waits for approval)
 // Facts always come from the data; the filters below keep sad news, betting
@@ -404,10 +406,15 @@ async function live(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
 async function news(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
   if (v.hour < 11 || v.hour >= 21) return;
   // One story a day: the biggest one; stories she passed on don't count.
+  // A day without a featured match (no poll, goals or results) gets a second
+  // story in the afternoon, from another sport than the first.
   const dayStart = new Date(Date.parse(`${v.date}T00:00:00Z`) - v.offset * 60_000).toISOString();
-  const { count: today } = await db.from('social_posts').select('id', { count: 'exact', head: true })
+  const { data: today } = await db.from('social_posts').select('card')
     .eq('kind', 'news').neq('status', 'skipped').gte('created_at', dayStart);
-  if (today) return;
+  const done = today?.length ?? 0;
+  const quiet = s.featured.date === v.date && !(s.featured.ids ?? []).length;
+  if (done >= (quiet ? 2 : 1) || (done === 1 && v.hour < 16)) return;
+  const used = new Set((today ?? []).map((p) => (p.card as { discipline?: string | null } | null)?.discipline ?? ''));
 
   const since = new Date(Date.now() - 12 * 3_600_000).toISOString();
   const { data: stories } = await db.from('news_stories')
@@ -420,6 +427,7 @@ async function news(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
     if (tries >= 3) return;
     const key = `news:${st.id}`;
     if (await exists(db, key)) continue;
+    if (done && used.has(st.sport ?? '')) continue;
     const a = (st.news_articles as { headline: string; teaser: string; body: string[]; take: string | null }[])[0];
     if (!a) continue;
     const source = [a.headline, a.teaser, ...(a.body ?? [])].join('\n');
@@ -437,7 +445,7 @@ async function news(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
       card: { t: 'news', mood: await freshMood(db, NEWS_MOODS, +v.day), sport: label, discipline: st.sport ?? null, headline: a.headline },
       expires_at: new Date(Date.now() + 12 * 3_600_000).toISOString(),
     });
-    return; // one story a day
+    return; // one story per run
   }
 }
 
@@ -900,8 +908,9 @@ Deno.serve(async () => {
   await step('matchday', () => matchday(db, s, v));
   // Re-read: matchday may just have picked today's featured matches.
   const { data: fresh } = await db.from('social_settings').select('featured').eq('id', 1).single();
-  await step('live', () => live(db, { ...s, featured: fresh?.featured ?? s.featured }, v));
-  await step('news', () => news(db, s, v));
+  const now = { ...s, featured: fresh?.featured ?? s.featured };
+  await step('live', () => live(db, now, v));
+  await step('news', () => news(db, now, v));
   await step('history', () => history(db, s, v));
   await step('shorten', () => shortenDrafts(db, s));
   let posted = 0;
