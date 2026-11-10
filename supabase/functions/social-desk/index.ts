@@ -82,6 +82,14 @@ type Draft = {
 /** Same input, same pick — but varied across matches and days. */
 const pickOf = <T>(list: T[], seed: number) => list[Math.abs(seed) % list.length];
 
+/** Everyday photos for cards whose mood isn't set by the score (15 added 2026-11-10). */
+const NEWS_MOODS = [
+  'studio', 'zeitung', 'podcast', 'analyse', 'kiosk', 'laptop-nacht', 'pressetribuene', 'zug',
+  'regen-fenster', 'buchladen', 'couch-abend', 'nachdenklich', 'dachterrasse', 'stadt-nacht', 'zwinkern',
+];
+/** Morning of a match day. */
+const POLL_MOODS = ['matchday-morgen', 'kueche', 'stadion-gang', 'trainingsplatz', 'zwinkern', 'nachdenklich', 'strand', 'zug'];
+
 /** analyse and matchday-morgen are the same café-and-coffee scene, so they count as one look. */
 const look = (mood: unknown) => (mood === 'matchday-morgen' ? 'analyse' : String(mood));
 
@@ -122,7 +130,7 @@ function resultCard(i: Incident): Card {
     : diff === 0 ? ['All square', 'analyse']
     : diff >= 3 ? ['Statement win', 'zwinkern']
     : diff === 1 ? ['Tight one', pickOf(['jubel', 'strasse', 'nervoes'], i.id)]
-    : ['Job done', pickOf(['zwinkern', 'couch-abend'], i.id)];
+    : ['Job done', pickOf(['zwinkern', 'couch-abend', 'stadt-nacht', 'dachterrasse'], i.id)];
   return { t: 'result', mood, tag, league: i.league.name, home: i.h.n, away: i.a.n, hs, as };
 }
 
@@ -335,7 +343,7 @@ async function matchday(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
     await save(db, s, {
       kind: 'poll', text: question, poll: [short(top.m.h.n), 'Draw', short(top.m.a.n)],
       dedupe_key: `poll:${v.date}`, context: `${top.m.h.n} vs ${top.m.a.n}`,
-      card: { t: 'poll', mood: await freshMood(db, ['matchday-morgen', 'zwinkern', 'studio'], top.m.id), league: leagueName, kickoff: `${time(top.m.ts)} CET`, home: top.m.h.n, away: top.m.a.n },
+      card: { t: 'poll', mood: await freshMood(db, POLL_MOODS, top.m.id), league: leagueName, kickoff: `${time(top.m.ts)} CET`, home: top.m.h.n, away: top.m.a.n },
       expires_at: new Date(top.m.ts * 1000 - 30 * 60_000).toISOString(),
     });
   }
@@ -425,7 +433,7 @@ async function news(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
     const label = st.competition || (st.sport ? st.sport[0].toUpperCase() + st.sport.slice(1) : '');
     await save(db, s, {
       kind: 'news', text, dedupe_key: key, context: a.headline,
-      card: { t: 'news', mood: await freshMood(db, ['studio', 'analyse', 'couch-abend', 'zwinkern'], +v.day), sport: label, headline: a.headline },
+      card: { t: 'news', mood: await freshMood(db, NEWS_MOODS, +v.day), sport: label, headline: a.headline },
       expires_at: new Date(Date.now() + 12 * 3_600_000).toISOString(),
     });
     return; // one story a day
