@@ -284,6 +284,7 @@ const cardFits = (c?: Card) => !!c && Object.values(c).every((v) => typeof v !==
 
 async function save(db: Db, s: Settings, d: Draft) {
   if (d.card && !cardFits(d.card)) d = { ...d, card: undefined };
+  if (d.card) d = { ...d, card: await withXPhoto(db, d.card, d.dedupe_key) };
   const flags = flagsFor(d);
   const auto = s.mode === 'auto' && d.kind !== 'reply' && s.auto_kinds.includes(d.kind) && flags.length === 0;
   const { error } = await db.from('social_posts').insert({ ...d, flags, status: auto ? 'approved' : 'draft' });
@@ -743,6 +744,8 @@ function newsSport(c: Card) {
 
 /** Photos that fit the post, best first (time travel: the closest decade first). */
 function igChoices(c: Card): string[] {
+  if (c.t === 'goal') return igSet(...(Number(c.min) >= 85 ? ['ergebnis-schock', 'ergebnis-jubel'] : ['ergebnis-jubel']));
+  if (c.t === 'poll') return igSet('news-fussball', 'news-allgemein');
   if (c.t === 'history') {
     const y = Number(c.year) || 1986;
     return [...ZEITREISE].sort((a, b) => Math.abs(a + 5 - y) - Math.abs(b + 5 - y)).map((d) => `zeitreise-${d}`);
@@ -767,10 +770,27 @@ async function pickIg(db: Db, c: Card, seed: number) {
   const { data } = await db.from('social_posts').select('kind, card').eq('meta_status', 'posted')
     .order('meta_posted_at', { ascending: false }).limit(12);
   const rows = (data ?? []).filter((r) => c.t !== 'history' || r.kind === 'history').slice(0, c.t === 'history' ? 2 : 12);
-  const recent = new Set(rows.map((r) => (r.card as Card | null)?.ig));
+  const recent = new Set([...rows.map((r) => (r.card as Card | null)?.ig), c.xig]);
   const list = igChoices(c);
   const order = c.t === 'history' ? list : list.map((_, i) => list[(Math.abs(seed) + i) % list.length]);
   return order.find((n) => !recent.has(n)) ?? order[0];
+}
+
+/**
+ * X gets the portrait set too (cropped to the photo area of the wide card),
+ * on every other post, so the timeline mixes both sets (Dejan, 2026-11-10).
+ */
+async function withXPhoto(db: Db, c: Card, key: string): Promise<Card> {
+  let seed = 0;
+  for (const ch of key) seed = (seed * 31 + ch.charCodeAt(0)) | 0;
+  if (Math.abs(seed) % 2) return c;
+  const { data } = await db.from('social_posts').select('card').not('card', 'is', null).in('status', ['approved', 'posted'])
+    .order('created_at', { ascending: false }).limit(8);
+  const recent = new Set((data ?? []).map((r) => (r.card as Card | null)?.xig));
+  const list = igChoices(c);
+  const order = c.t === 'history' ? list : list.map((_, i) => list[(Math.abs(seed) + i) % list.length]);
+  const xig = order.find((n) => !recent.has(n)) ?? order[0];
+  return xig ? { ...c, xig } : c;
 }
 
 type MetaSettings = Settings & { meta_mode: 'off' | 'auto'; meta_kinds: string[]; meta_daily_limit: number; fb_page_id: string | null; ig_user_id: string | null };
@@ -798,7 +818,7 @@ async function metaPublish(db: Db, s: MetaSettings, v: ReturnType<typeof vienna>
     .eq('id', p.id).is('meta_status', null).select('id');
   if (!claimed?.length) return 0;
 
-  const { mood: _mood, ig: _ig, discipline: _d, ...facts } = p.card as Card;
+  const { mood: _mood, ig: _ig, xig: _xig, discipline: _d, ...facts } = p.card as Card;
   claudeError = '';
   const out = await claudeJson<{ skip: boolean; reason: string; text: string }>(
     metaCaptionInstructions(s.lang),

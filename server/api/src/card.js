@@ -69,12 +69,15 @@ const foot = (...parts) => h('div', {
   position: 'absolute', left: 54, bottom: 40, fontWeight: 800, fontSize: 15, letterSpacing: 1.5, color: C.muted,
 }, ...parts);
 
+const X_LEFT = 460; // where a portrait photo starts on the wide card
 /** BETina on the right, fading into the background on the left. */
-function photo(mood, left = 380) {
-  const src = MOODS[mood] ?? MOODS.zwinkern;
+function photo(c, base = 380) {
+  // Portrait photos (card.xig) sit further right, so her face stays clear of the text.
+  const left = c._x ? X_LEFT : base;
   return [
-    img(src, { position: 'absolute', left, top: 0, width: H * 16 / 9, height: H }),
-    h('div', { position: 'absolute', left: left - 2, top: 0, width: 420, height: H,
+    c._x ? img(c._x, { position: 'absolute', left, top: 0, width: W - left, height: H })
+      : img(MOODS[c.mood] ?? MOODS.zwinkern, { position: 'absolute', left, top: 0, width: H * 16 / 9, height: H }),
+    h('div', { position: 'absolute', left: left - 2, top: 0, width: c._x ? 260 : 420, height: H,
       backgroundImage: `linear-gradient(to right, ${C.bg}, rgba(13,11,17,0.75) 40%, rgba(13,11,17,0))` }),
     h('div', { position: 'absolute', left: 0, top: 0, width: left, height: H, background: C.bg }),
     h('div', { position: 'absolute', left: 0, bottom: 0, width: W, height: 160,
@@ -96,7 +99,7 @@ function goal(c) {
   const scorer = c.side === 1 ? 'away' : 'home';
   return frame(
     glow(-150, 150, 700, 550, '184,233,38', 0.22), glow(520, -150, 700, 700, '139,92,246', 0.4),
-    ...photo(c.mood),
+    ...photo(c),
     brand({ text: 'Live', live: true }, c.league && { text: c.league }),
     h('div', { position: 'absolute', left: 46, top: 96, fontFamily: 'ArchivoBI', fontSize: 210, letterSpacing: -6, color: C.lime, lineHeight: 1 }, 'GOAL!'),
     h('div', { position: 'absolute', left: 54, top: 320, flexDirection: 'column', gap: 12 },
@@ -111,7 +114,7 @@ function goal(c) {
 function result(c) {
   return frame(
     glow(150, 80, 760, 600, '139,92,246', 0.38),
-    ...photo(c.mood),
+    ...photo(c),
     brand({ text: 'Full time' }, c.league && { text: c.league }),
     h('div', { position: 'absolute', left: 54, top: 120 }, teamRow(c.home, undefined, { size: 46 })),
     h('div', { position: 'absolute', left: 42, top: 178, fontFamily: 'ArchivoBI', fontSize: 240, letterSpacing: -6, lineHeight: 1 },
@@ -125,7 +128,7 @@ function poll(c) {
   const opt = (t, on) => h('div', { border: `3px solid ${on ? C.lime : C.line}`, padding: '10px 18px', fontWeight: 800, fontSize: fit(t, 22, 14), color: on ? C.text : C.muted }, t);
   return frame(
     glow(-120, 120, 700, 600, '255,140,0', 0.16), glow(480, -120, 700, 700, '139,92,246', 0.4),
-    ...photo(c.mood),
+    ...photo(c),
     brand({ text: [c.league, c.kickoff].filter(Boolean).join(' · ') || 'Today' }),
     h('div', { position: 'absolute', left: 48, top: 112, flexDirection: 'column', fontFamily: 'ArchivoBI', fontSize: 116, letterSpacing: -4, lineHeight: 0.86 },
       'WHO TAKES', h('span', { color: C.lime }, 'IT?')),
@@ -141,10 +144,11 @@ function poll(c) {
 function history(c) {
   const src = MOODS[c.mood] ?? MOODS['zeitreise-1986'];
   return frame(
-    img(src, { position: 'absolute', left: 200, top: 0, width: H * 16 / 9, height: H }),
-    h('div', { position: 'absolute', left: 198, top: 0, width: 460, height: H,
+    c._x ? img(c._x, { position: 'absolute', left: X_LEFT, top: 0, width: W - X_LEFT, height: H })
+      : img(src, { position: 'absolute', left: 200, top: 0, width: H * 16 / 9, height: H }),
+    h('div', { position: 'absolute', left: c._x ? X_LEFT - 2 : 198, top: 0, width: c._x ? 260 : 460, height: H,
       backgroundImage: `linear-gradient(to right, ${C.bg}, rgba(13,11,17,0.7) 45%, rgba(13,11,17,0))` }),
-    h('div', { position: 'absolute', left: 0, top: 0, width: 200, height: H, background: C.bg }),
+    h('div', { position: 'absolute', left: 0, top: 0, width: c._x ? X_LEFT : 200, height: H, background: C.bg }),
     h('div', { position: 'absolute', left: 0, bottom: 0, width: W, height: 200,
       backgroundImage: 'linear-gradient(to top, rgba(13,11,17,0.9), rgba(13,11,17,0))' }),
     brand({ text: c.today ? 'On this day' : 'Time travel', live: true }),
@@ -159,7 +163,7 @@ function news(c) {
   const size = c.headline.length > 70 ? 54 : c.headline.length > 45 ? 64 : 76;
   return frame(
     glow(-150, 150, 760, 600, '139,92,246', 0.34),
-    ...photo(c.mood),
+    ...photo(c),
     brand({ text: 'News', live: true }, c.sport && { text: c.sport }),
     h('div', { position: 'absolute', left: 54, top: 130, width: 640, fontFamily: 'ArchivoBI', fontSize: size, letterSpacing: -2, lineHeight: 0.98, textTransform: 'uppercase' }, c.headline),
     foot('FULL STORY IN THE', h('span', { color: C.lime, marginLeft: 6 }, 'BETINA APP')),
@@ -187,6 +191,16 @@ async function igPhoto(c, fallback) {
     igCache.set(name, `data:image/jpeg;base64,${buf.toString('base64')}`);
   }
   return igCache.get(name);
+}
+
+/** A portrait photo cut to the photo area of the wide X card (width × 675), keeping the top. */
+async function xCrop(name, width) {
+  const key = `xw:${name}:${width}`;
+  if (!igCache.has(key)) {
+    const buf = await sharp(readFileSync(asset(`betina-ig/${name}.jpg`))).resize(width, H, { fit: 'cover', position: 'top' }).jpeg({ quality: 88 }).toBuffer();
+    igCache.set(key, `data:image/jpeg;base64,${buf.toString('base64')}`);
+  }
+  return igCache.get(key);
 }
 
 /** Full-bleed photo; `shade` = how far up the dark fade reaches (share of the height). */
@@ -235,6 +249,8 @@ export async function renderCard(card, format = 'wide') {
   const build = (portrait ? PORTRAIT : KINDS)[card?.t];
   if (!build) throw Object.assign(new Error('unknown card'), { status: 404 });
   const [w, hgt] = portrait ? [PW, PH] : [W, H];
+  // X can use the portrait set too (card.xig): cropped to the photo area, face kept in.
+  if (!portrait && IG_PHOTOS.has(card.xig)) card = { ...card, _x: await xCrop(card.xig, W - X_LEFT) };
   const svg = await satori(await build(card), { width: w, height: hgt, fonts: FONTS });
   return new Resvg(svg, { fitTo: { mode: 'width', value: w } }).render().asPng();
 }
