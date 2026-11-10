@@ -82,6 +82,26 @@ type Draft = {
 /** Same input, same pick — but varied across matches and days. */
 const pickOf = <T>(list: T[], seed: number) => list[Math.abs(seed) % list.length];
 
+/** analyse and matchday-morgen are the same café-and-coffee scene, so they count as one look. */
+const look = (mood: unknown) => (mood === 'matchday-morgen' ? 'analyse' : String(mood));
+
+/**
+ * Like pickOf, but skips looks on BETina's latest cards (X and Instagram), so
+ * the feed never shows the same photo twice in a row (two café shots on 2026-11-10).
+ */
+async function freshMood(db: Db, list: string[], seed: number) {
+  const [{ data: x }, { data: ig }] = await Promise.all([
+    db.from('social_posts').select('card').not('card', 'is', null).in('status', ['approved', 'posted'])
+      .order('created_at', { ascending: false }).limit(5),
+    db.from('social_posts').select('card').eq('meta_status', 'posted')
+      .order('meta_posted_at', { ascending: false }).limit(3),
+  ]);
+  const recent = new Set([...(x ?? []), ...(ig ?? [])].map((r) => look((r.card as Card | null)?.mood)));
+  const start = Math.abs(seed) % list.length;
+  const order = list.map((_, i) => list[(start + i) % list.length]);
+  return order.find((m) => !recent.has(look(m))) ?? order[0];
+}
+
 function goalCard(i: Incident, min: number): { card: Card; diff: number } {
   const [hs, as] = [i.g[0] ?? 0, i.g[1] ?? 0];
   const diff = i.side === 1 ? as - hs : hs - as; // for the scoring team, after the goal
@@ -315,7 +335,7 @@ async function matchday(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
     await save(db, s, {
       kind: 'poll', text: question, poll: [short(top.m.h.n), 'Draw', short(top.m.a.n)],
       dedupe_key: `poll:${v.date}`, context: `${top.m.h.n} vs ${top.m.a.n}`,
-      card: { t: 'poll', mood: pickOf(['matchday-morgen', 'analyse', 'zwinkern'], top.m.id), league: leagueName, kickoff: `${time(top.m.ts)} CET`, home: top.m.h.n, away: top.m.a.n },
+      card: { t: 'poll', mood: await freshMood(db, ['matchday-morgen', 'zwinkern', 'studio'], top.m.id), league: leagueName, kickoff: `${time(top.m.ts)} CET`, home: top.m.h.n, away: top.m.a.n },
       expires_at: new Date(top.m.ts * 1000 - 30 * 60_000).toISOString(),
     });
   }
@@ -405,7 +425,7 @@ async function news(db: Db, s: Settings, v: ReturnType<typeof vienna>) {
     const label = st.competition || (st.sport ? st.sport[0].toUpperCase() + st.sport.slice(1) : '');
     await save(db, s, {
       kind: 'news', text, dedupe_key: key, context: a.headline,
-      card: { t: 'news', mood: pickOf(['studio', 'analyse', 'matchday-morgen', 'couch-abend'], +v.day), sport: label, headline: a.headline },
+      card: { t: 'news', mood: await freshMood(db, ['studio', 'analyse', 'couch-abend', 'zwinkern'], +v.day), sport: label, headline: a.headline },
       expires_at: new Date(Date.now() + 12 * 3_600_000).toISOString(),
     });
     return; // one story a day
@@ -699,7 +719,7 @@ type MetaSettings = Settings & { meta_mode: 'off' | 'auto'; meta_kinds: string[]
 async function metaPublish(db: Db, s: MetaSettings, v: ReturnType<typeof vienna>) {
   if (s.meta_mode !== 'auto' || v.hour < 8 || v.hour >= 23) return 0;
   const dayStart = new Date(Date.parse(`${v.date}T00:00:00Z`) - v.offset * 60_000).toISOString();
-  const { data: done } = await db.from('social_posts').select('meta_posted_at')
+  const { data: done } = await db.from('social_posts').select('meta_posted_at, kind, card')
     .eq('meta_status', 'posted').gte('meta_posted_at', new Date(Date.now() - 86_400_000).toISOString())
     .order('meta_posted_at', { ascending: false });
   const today = (done ?? []).filter((d) => d.meta_posted_at >= dayStart).length;
@@ -709,8 +729,11 @@ async function metaPublish(db: Db, s: MetaSettings, v: ReturnType<typeof vienna>
   const { data: next } = await db.from('social_posts').select('id, kind, text, card')
     .eq('status', 'posted').in('kind', s.meta_kinds).not('card', 'is', null).is('meta_status', null)
     .gte('posted_at', new Date(Date.now() - META_FRESH_MS).toISOString())
-    .order('posted_at', { ascending: true }).limit(1);
-  const p = next?.[0];
+    .order('posted_at', { ascending: true }).limit(5);
+  // The grid should alternate: prefer a post whose type and photo differ from the last one.
+  const last = done?.[0];
+  const p = next?.find((c) => !last || (c.kind !== last.kind && look((c.card as Card).mood) !== look((last.card as Card | null)?.mood)))
+    ?? next?.[0];
   if (!p) return 0;
   const { data: claimed } = await db.from('social_posts').update({ meta_status: 'posting' })
     .eq('id', p.id).is('meta_status', null).select('id');
