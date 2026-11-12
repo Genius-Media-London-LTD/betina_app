@@ -915,7 +915,7 @@ async function metaComments(db: Db, s: MetaSettings) {
   const fresh = (t?: string) => !!t && Date.now() - Date.parse(t) < META_COMMENT_FRESH_MS;
   const when = new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos', weekday: 'long', hour: '2-digit', minute: '2-digit' });
   const errors: string[] = [];
-  let drafts = 0, igOk = 0, igFailed = 0;
+  let drafts = 0, igOk = 0, igFailed = 0, gone = 0;
 
   const draft = async (platform: 'instagram' | 'facebook', post: { text: string; meta_text: string | null }, id: string, who: Who, comment: string) => {
     const key = `reply:${platform === 'instagram' ? 'ig' : 'fb'}:${id}`;
@@ -949,7 +949,9 @@ async function metaComments(db: Db, s: MetaSettings) {
         igOk++;
       } catch (err) {
         igFailed++;
-        errors.push(`instagram: ${(err as Error).message}`);
+        // A post deleted on Instagram answers "does not exist": no error while other posts can be read.
+        if (/does not exist/.test((err as Error).message)) gone++;
+        else errors.push(`instagram: ${(err as Error).message}`);
       }
     }
     if (p.fb_id) {
@@ -967,6 +969,8 @@ async function metaComments(db: Db, s: MetaSettings) {
       }
     }
   }
+  // Nothing readable at all is a permission problem, not deleted posts.
+  if (gone && !igOk) errors.push(`instagram: none of ${gone} posts could be read (does not exist or missing permissions)`);
   // Meta's errors are vague ("Unsupported get request"), so on a failure the
   // dashboard also says which permissions the token lacks. Names only, never the token.
   let missing = '';
