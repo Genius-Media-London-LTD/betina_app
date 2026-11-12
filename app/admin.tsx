@@ -431,6 +431,7 @@ const VIEWS: { k: SocialStatus; label: string; empty: string }[] = [
 const KINDS: Record<string, string> = {
   matchday: 'MATCH DAY', poll: 'POLL', goal: 'GOAL', result: 'FULL TIME', news: 'NEWS', history: 'TIME TRAVEL', reply: 'REPLY',
 };
+const PLATFORMS = { x: 'X', instagram: 'INSTAGRAM', facebook: 'FACEBOOK' } as const;
 /** Like X: most emoji count double. */
 const xLength = (s: string) => [...s].reduce((n, ch) => n + ((ch.codePointAt(0) ?? 0) > 0x10ff ? 2 : 1), 0);
 
@@ -475,6 +476,9 @@ function SocialTab({ desktop }: { desktop: boolean }) {
         <Text style={styles.userMeta}>
           {`INSTAGRAM + FACEBOOK: ${!s.meta_ready ? 'NOT CONNECTED' : s.meta_mode === 'auto' ? 'ON (TIME TRAVEL, RESULTS, NEWS)' : 'OFF'}`}
         </Text>
+        {!!s.meta_comments_error && (
+          <Text style={styles.flagText}>{`COMMENTS ON INSTAGRAM/FACEBOOK CAN'T BE READ: ${s.meta_comments_error}`}</Text>
+        )}
         <View style={{ flexDirection: 'row', gap: 6 }}>
           {MODES.map((m) => (
             <Pressable key={m.k} disabled={busy} onPress={() => changeMode(m.k)} style={[styles.chip, s.mode === m.k && (m.k === 'off' ? styles.chipDanger : styles.chipOn)]}>
@@ -528,12 +532,16 @@ function SocialCard({ post, onDone, style }: { post: SocialPost; onDone: () => v
   return (
     <View style={[styles.card, style]}>
       <View style={styles.breakTop}>
-        <Text style={[styles.badge, styles.badgeLime]}>{KINDS[post.kind] ?? post.kind.toUpperCase()}</Text>
+        <Text style={[styles.badge, styles.badgeLime]}>
+          {post.kind === 'reply' ? `REPLY · ${PLATFORMS[post.platform ?? 'x']}` : KINDS[post.kind] ?? post.kind.toUpperCase()}
+        </Text>
         <Text style={styles.userMeta}>{`${dateTime(post.posted_at ?? post.created_at)} · ${ago(post.posted_at ?? post.created_at)}`}</Text>
       </View>
       {post.reply_author && (
         <View style={styles.quote}>
-          <Text style={styles.userMeta}>{`@${post.reply_author} WROTE`}</Text>
+          <Text style={styles.userMeta}>
+            {`${post.platform === 'facebook' ? '' : '@'}${post.reply_author} WROTE ON ${PLATFORMS[post.platform ?? 'x']}`}
+          </Text>
           <Text style={styles.feedText}>{post.reply_text}</Text>
         </View>
       )}

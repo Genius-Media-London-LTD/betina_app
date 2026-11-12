@@ -72,13 +72,17 @@ export type SocialPost = {
   /** Instagram/Facebook (migration 027): null = not (yet) sent there. */
   meta_status?: 'posting' | 'posted' | 'failed' | 'skipped' | null;
   ig_id?: string | null; fb_id?: string | null; meta_error?: string | null;
+  /** Where it goes out (migration 028): replies to Instagram/Facebook comments carry their platform. */
+  platform?: 'x' | 'instagram' | 'facebook';
 };
 
 /** The image card that goes out with a post (1200×675 PNG). */
 export const socialCardUrl = (id: number) => `https://api.betina.geniusbet.com/v1/social/card/${id}.png`;
 export type SocialState = {
   settings: { mode: SocialMode; auto_kinds: string[]; daily_limit: number; lang: string; x_ready: boolean; last_run: string;
-    meta_mode?: 'off' | 'auto'; meta_ready?: boolean };
+    meta_mode?: 'off' | 'auto'; meta_ready?: boolean;
+    /** Why comments on Instagram/Facebook could not be read (usually a missing token permission). */
+    meta_comments_error?: string | null };
   posted_24h: number;
   counts: Partial<Record<SocialStatus, number>>;
   posts: SocialPost[];

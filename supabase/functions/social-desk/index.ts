@@ -78,6 +78,7 @@ type Card = Record<string, string | number | boolean | null | undefined> & { t: 
 type Draft = {
   kind: SocialKind; text: string; dedupe_key: string; context: string; card?: Card;
   poll?: string[]; reply_to?: string; reply_author?: string; reply_text?: string; expires_at?: string;
+  platform?: 'x' | 'instagram' | 'facebook'; // where it goes out; replies to Instagram/Facebook comments set it
 };
 
 // ── BETina's mood on the card (photos in server/api/assets/betina) ──────────
@@ -590,7 +591,8 @@ async function publish(db: Db, s: Settings) {
     .eq('status', 'posted').neq('kind', 'reply').gt('posted_at', new Date(Date.now() - 86_400_000).toISOString());
   const room = Math.max(0, s.daily_limit - (count ?? 0));
 
-  let q = db.from('social_posts').select('id, kind, text, poll, reply_to, card').eq('status', 'approved');
+  // Replies to Instagram/Facebook comments go out through metaReplies().
+  let q = db.from('social_posts').select('id, kind, text, poll, reply_to, card').eq('status', 'approved').eq('platform', 'x');
   if (room <= 0) q = q.eq('kind', 'reply');
   const { data: queue } = await q.order('created_at', { ascending: true }).limit(POSTS_PER_RUN + room);
   // At most POSTS_PER_RUN per run, and own posts only while there is room.
@@ -801,7 +803,10 @@ async function withXPhoto(db: Db, c: Card, key: string): Promise<Card> {
   return xig ? { ...c, xig } : c;
 }
 
-type MetaSettings = Settings & { meta_mode: 'off' | 'auto'; meta_kinds: string[]; meta_daily_limit: number; fb_page_id: string | null; ig_user_id: string | null };
+type MetaSettings = Settings & {
+  meta_mode: 'off' | 'auto'; meta_kinds: string[]; meta_daily_limit: number; fb_page_id: string | null; ig_user_id: string | null;
+  last_meta_comments: string;
+};
 
 async function metaPublish(db: Db, s: MetaSettings, v: ReturnType<typeof vienna>) {
   if (s.meta_mode !== 'auto' || v.hour < 8 || v.hour >= 23) return 0;
@@ -885,6 +890,114 @@ async function metaPublish(db: Db, s: MetaSettings, v: ReturnType<typeof vienna>
   return ok ? 1 : 0;
 }
 
+// ── Comments on Instagram + Facebook (migration 028) ────────────────────────
+// Same flow as @-mentions on X: BETina drafts a reply to each new comment under
+// her own posts, the team approves it in the dashboard, then it goes out.
+const META_COMMENTS_EVERY_MS = 10 * 60_000;
+const META_COMMENT_POSTS_MS = 5 * 86_400_000;  // comments under posts of the last 5 days
+const META_COMMENT_FRESH_MS = 3 * 86_400_000;  // older comments get no answer anymore
+const META_DRAFTS_PER_RUN = 10;
+
+type Who = { id?: string; username?: string; name?: string };
+type IgComment = { id: string; text?: string; timestamp?: string; username?: string; from?: Who; replies?: { data?: { from?: Who }[] } };
+type FbComment = { id: string; message?: string; created_time?: string; from?: Who; comments?: { data?: { from?: Who }[] } };
+
+async function metaComments(db: Db, s: MetaSettings) {
+  if (Date.now() - Date.parse(s.last_meta_comments) < META_COMMENTS_EVERY_MS) return;
+  await db.from('social_settings').update({ last_meta_comments: new Date().toISOString() }).eq('id', 1);
+
+  const { data: posts } = await db.from('social_posts').select('id, text, meta_text, ig_id, fb_id')
+    .eq('meta_status', 'posted').gte('meta_posted_at', new Date(Date.now() - META_COMMENT_POSTS_MS).toISOString())
+    .order('meta_posted_at', { ascending: false }).limit(15);
+  if (!posts?.length) return;
+  const auth = await metaAuth(db, s);
+  const fresh = (t?: string) => !!t && Date.now() - Date.parse(t) < META_COMMENT_FRESH_MS;
+  const when = new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos', weekday: 'long', hour: '2-digit', minute: '2-digit' });
+  const errors: string[] = [];
+  let drafts = 0;
+
+  const draft = async (platform: 'instagram' | 'facebook', post: { text: string; meta_text: string | null }, id: string, who: Who, comment: string) => {
+    const key = `reply:${platform === 'instagram' ? 'ig' : 'fb'}:${id}`;
+    if (drafts >= META_DRAFTS_PER_RUN || await exists(db, key)) return;
+    drafts++;
+    const author = who.username ?? who.name ?? 'someone';
+    const { text, why } = await write(db, 'reply', s.lang, [
+      `It is ${when} (West Africa time, where most of your followers are).`,
+      `This comment is under your ${platform === 'instagram' ? 'Instagram' : 'Facebook'} post:\n"""${post.meta_text ?? post.text}"""`,
+      `Comment by ${author}:\n"""${comment}"""`,
+    ].join('\n\n'));
+    if (!text) return pass(db, 'reply', key, `${platform} · ${author}`, why);
+    await save(db, s, {
+      kind: 'reply', platform, text, dedupe_key: key, context: `${platform === 'instagram' ? 'Instagram' : 'Facebook'} · ${author}`,
+      reply_to: id, reply_author: author, reply_text: comment, expires_at: new Date(Date.now() + META_COMMENT_FRESH_MS).toISOString(),
+    });
+  };
+
+  for (const p of posts) {
+    if (p.ig_id && auth.ig) {
+      try {
+        const { data } = await graph<{ data?: IgComment[] }>(auth.token, 'GET', `${p.ig_id}/comments`, {
+          fields: 'id,text,timestamp,username,from,replies{from}', limit: '50',
+        });
+        for (const c of data ?? []) {
+          // Her own comments, comments she already answered and old ones need no draft.
+          if (!c.text?.trim() || !fresh(c.timestamp) || c.from?.id === auth.ig) continue;
+          if (c.replies?.data?.some((r) => r.from?.id === auth.ig)) continue;
+          await draft('instagram', p, c.id, { username: c.username ?? c.from?.username }, c.text);
+        }
+      } catch (err) {
+        errors.push(`instagram: ${(err as Error).message}`);
+      }
+    }
+    if (p.fb_id) {
+      try {
+        const { data } = await graph<{ data?: FbComment[] }>(auth.token, 'GET', `${p.fb_id}/comments`, {
+          fields: 'id,message,created_time,from,comments.limit(10){from}', order: 'reverse_chronological', limit: '50',
+        });
+        for (const c of data ?? []) {
+          if (!c.message?.trim() || !fresh(c.created_time) || c.from?.id === auth.page) continue;
+          if (c.comments?.data?.some((r) => r.from?.id === auth.page)) continue;
+          await draft('facebook', p, c.id, { name: c.from?.name }, c.message);
+        }
+      } catch (err) {
+        errors.push(`facebook: ${(err as Error).message}`);
+      }
+    }
+  }
+  // The first error of each kind is enough for the dashboard (usually a missing permission).
+  const note = [...new Set(errors)].slice(0, 2).join(' | ').slice(0, 400) || null;
+  await db.from('social_settings').update({ meta_comments_error: note }).eq('id', 1);
+  if (note) throw new Error(note);
+}
+
+/** Sends the approved replies to Instagram/Facebook comments. */
+async function metaReplies(db: Db, s: MetaSettings) {
+  const { data: queue } = await db.from('social_posts').select('id, platform, text, reply_to')
+    .eq('status', 'approved').eq('kind', 'reply').in('platform', ['instagram', 'facebook'])
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: true }).limit(5);
+  if (!queue?.length) return 0;
+  const auth = await metaAuth(db, s);
+  let sent = 0;
+  for (const p of queue) {
+    const { data: claimed } = await db.from('social_posts').update({ status: 'posting' })
+      .eq('id', p.id).eq('status', 'approved').select('id');
+    if (!claimed?.length) continue;
+    try {
+      const path = p.platform === 'instagram' ? `${p.reply_to}/replies` : `${p.reply_to}/comments`;
+      const res = await graph<{ id: string }>(auth.token, 'POST', path, { message: p.text });
+      await db.from('social_posts').update({
+        status: 'posted', posted_at: new Date().toISOString(), error: null,
+        ...(p.platform === 'instagram' ? { ig_id: res.id } : { fb_id: res.id }),
+      }).eq('id', p.id);
+      sent++;
+    } catch (err) {
+      await db.from('social_posts').update({ status: 'failed', error: (err as Error).message }).eq('id', p.id);
+    }
+  }
+  return sent;
+}
+
 // ── Run ──────────────────────────────────────────────────────────────────────
 Deno.serve(async () => {
   const db: Db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
@@ -923,6 +1036,10 @@ Deno.serve(async () => {
   // the token on every run, so the dashboard shows the link before anything is posted.
   if (metaReady() && !s.fb_page_id) await step('meta-auth', () => metaAuth(db, s));
   if (metaReady()) await step('meta', async () => { meta = await metaPublish(db, s, v); });
+  if (metaReady() && s.fb_page_id) {
+    await step('meta-comments', () => metaComments(db, s));
+    await step('meta-replies', () => metaReplies(db, s));
+  }
   if (errors.length) console.error(errors.join(' | '));
   return json({ mode: s.mode, x_ready: ready, posted, meta_mode: s.meta_mode, meta, errors });
 });
