@@ -82,7 +82,9 @@ export type SocialState = {
   settings: { mode: SocialMode; auto_kinds: string[]; daily_limit: number; lang: string; x_ready: boolean; last_run: string;
     meta_mode?: 'off' | 'auto'; meta_ready?: boolean;
     /** Why comments on Instagram/Facebook could not be read (usually a missing token permission). */
-    meta_comments_error?: string | null };
+    meta_comments_error?: string | null;
+    /** What the last look at the Instagram/Facebook comments found, and when (migration 029). */
+    meta_comments_seen?: string | null; last_meta_comments?: string | null };
   posted_24h: number;
   counts: Partial<Record<SocialStatus, number>>;
   posts: SocialPost[];

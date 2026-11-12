@@ -916,10 +916,13 @@ async function metaComments(db: Db, s: MetaSettings) {
   const when = new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos', weekday: 'long', hour: '2-digit', minute: '2-digit' });
   const errors: string[] = [];
   let drafts = 0, igOk = 0, igFailed = 0, gone = 0;
+  // Per platform: comments Meta returned, and why some got no draft.
+  const seen = { instagram: { all: 0, own: 0, old: 0, answered: 0, known: 0, drafted: 0, passed: 0 }, facebook: { all: 0, own: 0, old: 0, answered: 0, known: 0, drafted: 0, passed: 0 } };
 
   const draft = async (platform: 'instagram' | 'facebook', post: { text: string; meta_text: string | null }, id: string, who: Who, comment: string) => {
     const key = `reply:${platform === 'instagram' ? 'ig' : 'fb'}:${id}`;
-    if (drafts >= META_DRAFTS_PER_RUN || await exists(db, key)) return;
+    if (await exists(db, key)) return void seen[platform].known++;
+    if (drafts >= META_DRAFTS_PER_RUN) return;
     drafts++;
     const author = who.username ?? who.name ?? 'someone';
     const { text, why } = await write(db, 'reply', s.lang, [
@@ -927,7 +930,11 @@ async function metaComments(db: Db, s: MetaSettings) {
       `This comment is under your ${platform === 'instagram' ? 'Instagram' : 'Facebook'} post:\n"""${post.meta_text ?? post.text}"""`,
       `Comment by ${author}:\n"""${comment}"""`,
     ].join('\n\n'));
-    if (!text) return pass(db, 'reply', key, `${platform} · ${author}`, why);
+    if (!text) {
+      seen[platform].passed++;
+      return pass(db, 'reply', key, `${platform} · ${author}`, why);
+    }
+    seen[platform].drafted++;
     await save(db, s, {
       kind: 'reply', platform, text, dedupe_key: key, context: `${platform === 'instagram' ? 'Instagram' : 'Facebook'} · ${author}`,
       reply_to: id, reply_author: author, reply_text: comment, expires_at: new Date(Date.now() + META_COMMENT_FRESH_MS).toISOString(),
@@ -942,8 +949,10 @@ async function metaComments(db: Db, s: MetaSettings) {
         });
         for (const c of data ?? []) {
           // Her own comments, comments she already answered and old ones need no draft.
-          if (!c.text?.trim() || !fresh(c.timestamp) || c.from?.id === auth.ig) continue;
-          if (c.replies?.data?.some((r) => r.from?.id === auth.ig)) continue;
+          seen.instagram.all++;
+          if (c.from?.id === auth.ig) { seen.instagram.own++; continue; }
+          if (!c.text?.trim() || !fresh(c.timestamp)) { seen.instagram.old++; continue; }
+          if (c.replies?.data?.some((r) => r.from?.id === auth.ig)) { seen.instagram.answered++; continue; }
           await draft('instagram', p, c.id, { username: c.username ?? c.from?.username }, c.text);
         }
         igOk++;
@@ -960,8 +969,10 @@ async function metaComments(db: Db, s: MetaSettings) {
           fields: 'id,message,created_time,from,comments.limit(10){from}', order: 'reverse_chronological', limit: '50',
         });
         for (const c of data ?? []) {
-          if (!c.message?.trim() || !fresh(c.created_time) || c.from?.id === auth.page) continue;
-          if (c.comments?.data?.some((r) => r.from?.id === auth.page)) continue;
+          seen.facebook.all++;
+          if (c.from?.id === auth.page) { seen.facebook.own++; continue; }
+          if (!c.message?.trim() || !fresh(c.created_time)) { seen.facebook.old++; continue; }
+          if (c.comments?.data?.some((r) => r.from?.id === auth.page)) { seen.facebook.answered++; continue; }
           await draft('facebook', p, c.id, { name: c.from?.name }, c.message);
         }
       } catch (err) {
@@ -986,7 +997,12 @@ async function metaComments(db: Db, s: MetaSettings) {
     if (igOk + igFailed) missing += `instagram posts readable: ${igOk} of ${igOk + igFailed} | `;
   }
   const note = errors.length ? (missing + [...new Set(errors)].slice(0, 2).join(' | ')).slice(0, 500) : null;
-  await db.from('social_settings').update({ meta_comments_error: note }).eq('id', 1);
+  const line = (n: string, c: typeof seen.instagram) =>
+    `${n}: ${c.all} comments${c.all ? ` (${c.drafted} new drafts, ${c.known} known, ${c.own} her own, ${c.answered} answered, ${c.old} old or empty, ${c.passed} skipped by BETina)` : ''}`;
+  await db.from('social_settings').update({
+    meta_comments_error: note,
+    meta_comments_seen: `${posts.length} posts · ${line('Instagram', seen.instagram)} · ${line('Facebook', seen.facebook)}`,
+  }).eq('id', 1);
   if (note) throw new Error(note);
 }
 

@@ -476,6 +476,11 @@ function SocialTab({ desktop }: { desktop: boolean }) {
         <Text style={styles.userMeta}>
           {`INSTAGRAM + FACEBOOK: ${!s.meta_ready ? 'NOT CONNECTED' : s.meta_mode === 'auto' ? 'ON (TIME TRAVEL, RESULTS, NEWS)' : 'OFF'}`}
         </Text>
+        {!!s.meta_comments_seen && (
+          <Text style={styles.userMeta}>
+            {`COMMENTS CHECKED ${s.last_meta_comments ? ago(s.last_meta_comments) : ''}: ${s.meta_comments_seen}`.toUpperCase()}
+          </Text>
+        )}
         {!!s.meta_comments_error && (
           <Text style={styles.flagText}>{`COMMENTS ON INSTAGRAM/FACEBOOK CAN'T BE READ: ${s.meta_comments_error}`}</Text>
         )}
