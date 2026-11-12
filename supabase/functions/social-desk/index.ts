@@ -897,6 +897,7 @@ const META_COMMENTS_EVERY_MS = 10 * 60_000;
 const META_COMMENT_POSTS_MS = 5 * 86_400_000;  // comments under posts of the last 5 days
 const META_COMMENT_FRESH_MS = 3 * 86_400_000;  // older comments get no answer anymore
 const META_DRAFTS_PER_RUN = 10;
+const META_COMMENT_SCOPES = ['instagram_basic', 'instagram_manage_comments', 'pages_read_engagement', 'pages_read_user_content', 'pages_manage_engagement'];
 
 type Who = { id?: string; username?: string; name?: string };
 type IgComment = { id: string; text?: string; timestamp?: string; username?: string; from?: Who; replies?: { data?: { from?: Who }[] } };
@@ -914,7 +915,7 @@ async function metaComments(db: Db, s: MetaSettings) {
   const fresh = (t?: string) => !!t && Date.now() - Date.parse(t) < META_COMMENT_FRESH_MS;
   const when = new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos', weekday: 'long', hour: '2-digit', minute: '2-digit' });
   const errors: string[] = [];
-  let drafts = 0;
+  let drafts = 0, igOk = 0, igFailed = 0;
 
   const draft = async (platform: 'instagram' | 'facebook', post: { text: string; meta_text: string | null }, id: string, who: Who, comment: string) => {
     const key = `reply:${platform === 'instagram' ? 'ig' : 'fb'}:${id}`;
@@ -945,7 +946,9 @@ async function metaComments(db: Db, s: MetaSettings) {
           if (c.replies?.data?.some((r) => r.from?.id === auth.ig)) continue;
           await draft('instagram', p, c.id, { username: c.username ?? c.from?.username }, c.text);
         }
+        igOk++;
       } catch (err) {
+        igFailed++;
         errors.push(`instagram: ${(err as Error).message}`);
       }
     }
@@ -964,8 +967,21 @@ async function metaComments(db: Db, s: MetaSettings) {
       }
     }
   }
-  // The first error of each kind is enough for the dashboard (usually a missing permission).
-  const note = [...new Set(errors)].slice(0, 2).join(' | ').slice(0, 400) || null;
+  // Meta's errors are vague ("Unsupported get request"), so on a failure the
+  // dashboard also says which permissions the token lacks. Names only, never the token.
+  let missing = '';
+  if (errors.length) {
+    try {
+      const { data } = await graph<{ data: { permission: string; status: string }[] }>(env('META_PAGE_TOKEN'), 'GET', 'me/permissions');
+      const granted = new Set(data.filter((p) => p.status === 'granted').map((p) => p.permission));
+      const lacks = META_COMMENT_SCOPES.filter((p) => !granted.has(p));
+      missing = lacks.length ? `token lacks: ${lacks.join(', ')} | ` : 'token has all comment permissions | ';
+    } catch {
+      // A Page token can't list its permissions; the Graph error below has to do.
+    }
+    if (igOk + igFailed) missing += `instagram posts readable: ${igOk} of ${igOk + igFailed} | `;
+  }
+  const note = errors.length ? (missing + [...new Set(errors)].slice(0, 2).join(' | ')).slice(0, 500) : null;
   await db.from('social_settings').update({ meta_comments_error: note }).eq('id', 1);
   if (note) throw new Error(note);
 }
