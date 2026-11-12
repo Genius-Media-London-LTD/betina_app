@@ -917,6 +917,10 @@ async function metaComments(db: Db, s: MetaSettings) {
   const errors: string[] = [];
   let drafts = 0, igOk = 0, igFailed = 0, gone = 0;
   // Per platform: comments Meta returned, and why some got no draft.
+  // "counted" is the number of comments Meta reports on the posts themselves: if it
+  // is higher than what the comment list returns, Meta is holding comments back
+  // (app without access to other people's comments).
+  const counted = { instagram: 0, facebook: 0 };
   const seen = { instagram: { all: 0, own: 0, old: 0, answered: 0, known: 0, drafted: 0, passed: 0 }, facebook: { all: 0, own: 0, old: 0, answered: 0, known: 0, drafted: 0, passed: 0 } };
 
   const draft = async (platform: 'instagram' | 'facebook', post: { text: string; meta_text: string | null }, id: string, who: Who, comment: string) => {
@@ -956,6 +960,7 @@ async function metaComments(db: Db, s: MetaSettings) {
           await draft('instagram', p, c.id, { username: c.username ?? c.from?.username }, c.text);
         }
         igOk++;
+        counted.instagram += (await graph<{ comments_count?: number }>(auth.token, 'GET', p.ig_id, { fields: 'comments_count' })).comments_count ?? 0;
       } catch (err) {
         igFailed++;
         // A post deleted on Instagram answers "does not exist": no error while other posts can be read.
@@ -975,6 +980,8 @@ async function metaComments(db: Db, s: MetaSettings) {
           if (c.comments?.data?.some((r) => r.from?.id === auth.page)) { seen.facebook.answered++; continue; }
           await draft('facebook', p, c.id, { name: c.from?.name }, c.message);
         }
+        const sum = await graph<{ comments?: { summary?: { total_count?: number } } }>(auth.token, 'GET', p.fb_id, { fields: 'comments.summary(true).limit(0)' });
+        counted.facebook += sum.comments?.summary?.total_count ?? 0;
       } catch (err) {
         errors.push(`facebook: ${(err as Error).message}`);
       }
@@ -998,7 +1005,7 @@ async function metaComments(db: Db, s: MetaSettings) {
   }
   const note = errors.length ? (missing + [...new Set(errors)].slice(0, 2).join(' | ')).slice(0, 500) : null;
   const line = (n: string, c: typeof seen.instagram) =>
-    `${n}: ${c.all} comments${c.all ? ` (${c.drafted} new drafts, ${c.known} known, ${c.own} her own, ${c.answered} answered, ${c.old} old or empty, ${c.passed} skipped by BETina)` : ''}`;
+    `${n}: ${c.all} comments readable, ${counted[n.toLowerCase() as 'instagram' | 'facebook']} counted on the posts${c.all ? ` (${c.drafted} new drafts, ${c.known} known, ${c.own} her own, ${c.answered} answered, ${c.old} old or empty, ${c.passed} skipped by BETina)` : ''}`;
   await db.from('social_settings').update({
     meta_comments_error: note,
     meta_comments_seen: `${posts.length} posts · ${line('Instagram', seen.instagram)} · ${line('Facebook', seen.facebook)}`,
