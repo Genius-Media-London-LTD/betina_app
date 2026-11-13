@@ -74,6 +74,8 @@ export type SocialPost = {
   ig_id?: string | null; fb_id?: string | null; meta_error?: string | null;
   /** Where it goes out (migration 028): replies to Instagram/Facebook comments carry their platform. */
   platform?: 'x' | 'instagram' | 'facebook';
+  /** A reel's video (migration 030). */
+  video_url?: string | null;
 };
 
 /** The image card that goes out with a post (1200×675 PNG). */
@@ -99,6 +101,22 @@ export async function fetchSocial(status: SocialStatus | null): Promise<SocialSt
 
 export async function decideSocial(id: number, action: 'approve' | 'reject', text?: string): Promise<void> {
   const { error } = await supabase.rpc('admin_social_decide', { p_id: id, p_action: action, p_text: text ?? null });
+  if (error) throw error;
+}
+
+const REELS_BUCKET = 'social-reels';
+
+/** Uploads a finished reel (MP4) and returns its public URL. */
+export async function uploadReel(file: Blob): Promise<string> {
+  const path = `${new Date().toISOString().slice(0, 10)}-${Math.random().toString(36).slice(2, 10)}.mp4`;
+  const { error } = await supabase.storage.from(REELS_BUCKET).upload(path, file, { contentType: 'video/mp4' });
+  if (error) throw error;
+  return supabase.storage.from(REELS_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+/** A reel draft: it waits under "to review" like every other post. */
+export async function createReel(videoUrl: string, caption: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_social_reel', { p_video_url: videoUrl, p_caption: caption });
   if (error) throw error;
 }
 

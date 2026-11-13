@@ -3,7 +3,7 @@
 // Only for accounts in public.admins (migrations 024, 025); the server checks
 // every call. Internal tool, so the copy is English only.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Image, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AnimatedNumber from '../src/components/AnimatedNumber';
@@ -11,7 +11,7 @@ import BackButton from '../src/components/BackButton';
 import { Meta } from '../src/components/Urban';
 import {
   AdminMessage, AdminUser, Count, Overview, SocialMode, SocialPost, SocialState, SocialStatus,
-  decideSocial, fetchAdminMessages, socialCardUrl, fetchAdminUsers, fetchOverview, fetchSocial, setSocialMode, useIsAdmin,
+  createReel, decideSocial, fetchAdminMessages, socialCardUrl, fetchAdminUsers, fetchOverview, fetchSocial, setSocialMode, uploadReel, useIsAdmin,
 } from '../src/lib/admin';
 import { isDesktopWidth } from '../src/lib/layout';
 import { Colors, Fonts, displayType } from '../src/theme';
@@ -429,8 +429,9 @@ const VIEWS: { k: SocialStatus; label: string; empty: string }[] = [
   { k: 'rejected', label: 'NOT POSTED', empty: 'Nothing rejected or skipped.' },
 ];
 const KINDS: Record<string, string> = {
-  matchday: 'MATCH DAY', poll: 'POLL', goal: 'GOAL', result: 'FULL TIME', news: 'NEWS', history: 'TIME TRAVEL', reply: 'REPLY',
+  matchday: 'MATCH DAY', poll: 'POLL', goal: 'GOAL', result: 'FULL TIME', news: 'NEWS', history: 'TIME TRAVEL', reply: 'REPLY', reel: 'REEL',
 };
+const REEL_MAX = 2200; // Instagram's caption limit
 const PLATFORMS = { x: 'X', instagram: 'INSTAGRAM', facebook: 'FACEBOOK' } as const;
 /** Like X: most emoji count double. */
 const xLength = (s: string) => [...s].reduce((n, ch) => n + ((ch.codePointAt(0) ?? 0) > 0x10ff ? 2 : 1), 0);
@@ -495,6 +496,8 @@ function SocialTab({ desktop }: { desktop: boolean }) {
         <Meta>{`${data.posted_24h} / ${s.daily_limit} POSTED IN 24 H · ${s.lang.toUpperCase()} · LAST RUN ${ago(s.last_run)}`}</Meta>
       </View>
 
+      <NewReel onDone={() => { setView('draft'); load(); }} />
+
       <View style={styles.periodRow}>
         <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
           {VIEWS.map((v) => (
@@ -514,13 +517,88 @@ function SocialTab({ desktop }: { desktop: boolean }) {
   );
 }
 
+/** Upload a finished reel and write its caption; it then waits under "to review". Upload works in the browser. */
+function NewReel({ onDone }: { onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [url, setUrl] = useState('');
+  const [caption, setCaption] = useState('');
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const pick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'video/mp4';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      setError(null);
+      setBusy(`UPLOADING ${(file.size / 1_048_576).toFixed(0)} MB…`);
+      try {
+        setUrl(await uploadReel(file));
+      } catch (e) {
+        setError(String((e as Error)?.message ?? e));
+      } finally {
+        setBusy(null);
+      }
+    };
+    input.click();
+  };
+  const create = async () => {
+    setBusy('SAVING…');
+    setError(null);
+    try {
+      await createReel(url.trim(), caption);
+      setUrl('');
+      setCaption('');
+      setOpen(false);
+      onDone();
+    } catch (e) {
+      setError(String((e as Error)?.message ?? e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  if (!open) {
+    return (
+      <Pressable onPress={() => setOpen(true)} style={[styles.chip, { alignSelf: 'flex-start' }]}>
+        <Text style={styles.chipText}>+ NEW REEL</Text>
+      </Pressable>
+    );
+  }
+  const blocked = !!busy || !url.trim() || !caption.trim() || caption.length > REEL_MAX;
+  return (
+    <View style={styles.card}>
+      <View style={styles.breakTop}>
+        <Text style={styles.cardTitle}>NEW REEL</Text>
+        <Pressable onPress={() => setOpen(false)}><Text style={styles.errorRetry}>CLOSE</Text></Pressable>
+      </View>
+      <Text style={styles.cell}>Goes out as a Reel on Instagram and as a video on Facebook once you approve it. MP4, 9:16, up to 100 MB.</Text>
+      {Platform.OS === 'web' && (
+        <Pressable disabled={!!busy} onPress={pick} style={[styles.chip, { alignSelf: 'flex-start' }]}>
+          <Text style={styles.chipText}>{busy?.startsWith('UPLOADING') ? busy : url ? 'VIDEO UPLOADED ✓ · CHOOSE ANOTHER' : 'UPLOAD VIDEO'}</Text>
+        </Pressable>
+      )}
+      <TextInput value={url} onChangeText={setUrl} placeholder="…or paste the video link (https://….mp4)" placeholderTextColor={Colors.textSecondary} autoCapitalize="none" style={styles.search} />
+      <TextInput multiline value={caption} onChangeText={setCaption} placeholder="Caption" placeholderTextColor={Colors.textSecondary} style={[styles.search, styles.postInput]} />
+      <Text style={[styles.userMeta, caption.length > REEL_MAX && { color: Colors.danger }]}>{`${caption.length}/${REEL_MAX}`}</Text>
+      {error && <Text style={styles.flagText}>{error}</Text>}
+      <Pressable disabled={blocked} onPress={create} style={[styles.approveBtn, blocked && { opacity: 0.5 }]}>
+        <Text style={styles.denyBtnText}>{busy === 'SAVING…' ? busy : 'SAVE AS DRAFT'}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function SocialCard({ post, onDone, style }: { post: SocialPost; onDone: () => void; style: object }) {
   const editable = post.status === 'draft' || post.status === 'approved' || post.status === 'failed';
   const [text, setText] = useState(post.text);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const len = xLength(text);
-  const blocked = busy || len > 280 || !text.trim();
+  const max = post.kind === 'reel' ? REEL_MAX : 280;
+  const len = post.kind === 'reel' ? text.length : xLength(text);
+  const blocked = busy || len > max || !text.trim();
 
   const decide = async (action: 'approve' | 'reject') => {
     setBusy(true);
@@ -553,6 +631,12 @@ function SocialCard({ post, onDone, style }: { post: SocialPost; onDone: () => v
       {editable
         ? <TextInput multiline value={text} onChangeText={setText} style={[styles.search, styles.postInput]} />
         : <Text style={styles.postText}>{post.text}</Text>}
+      {!!post.video_url && (
+        <Pressable onPress={() => Linking.openURL(post.video_url as string)}>
+          <Text style={styles.errorRetry}>WATCH THE VIDEO →</Text>
+        </Pressable>
+      )}
+      {post.status === 'posting' && <Text style={styles.userMeta}>INSTAGRAM IS PROCESSING THE VIDEO — THIS TAKES A FEW MINUTES</Text>}
       {post.has_card && (
         <Image source={{ uri: socialCardUrl(post.id) }} style={styles.cardImage} resizeMode="cover" accessibilityLabel="Image card for this post" />
       )}
@@ -563,7 +647,7 @@ function SocialCard({ post, onDone, style }: { post: SocialPost; onDone: () => v
       )}
       <View style={styles.breakTop}>
         <Text style={[styles.userMeta, { flex: 1 }]} numberOfLines={3}>{post.context ?? ''}</Text>
-        {editable && <Text style={[styles.userMeta, len > 280 && { color: Colors.danger }]}>{`${len}/280`}</Text>}
+        {editable && <Text style={[styles.userMeta, len > max && { color: Colors.danger }]}>{`${len}/${max}`}</Text>}
       </View>
       {post.flags.length > 0 && <Text style={styles.flagText}>{`HELD BACK: ${post.flags.join(', ').replace(/_/g, ' ').toUpperCase()}`}</Text>}
       {post.error && <Text style={styles.flagText}>{post.error}</Text>}

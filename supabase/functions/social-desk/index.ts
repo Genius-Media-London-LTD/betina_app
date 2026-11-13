@@ -588,7 +588,7 @@ async function publish(db: Db, s: Settings) {
   // The daily limit is for BETina's own posts. Replies are approved one by one
   // and never count against it (7 approved replies blocked all posts on 2026-11-09).
   const { count } = await db.from('social_posts').select('id', { count: 'exact', head: true })
-    .eq('status', 'posted').neq('kind', 'reply').gt('posted_at', new Date(Date.now() - 86_400_000).toISOString());
+    .eq('status', 'posted').eq('platform', 'x').neq('kind', 'reply').gt('posted_at', new Date(Date.now() - 86_400_000).toISOString());
   const room = Math.max(0, s.daily_limit - (count ?? 0));
 
   // Replies to Instagram/Facebook comments go out through metaReplies().
@@ -812,7 +812,8 @@ async function metaPublish(db: Db, s: MetaSettings, v: ReturnType<typeof vienna>
   if (s.meta_mode !== 'auto' || v.hour < 8 || v.hour >= 23) return 0;
   const dayStart = new Date(Date.parse(`${v.date}T00:00:00Z`) - v.offset * 60_000).toISOString();
   const { data: done } = await db.from('social_posts').select('meta_posted_at, kind, card')
-    .eq('meta_status', 'posted').gte('meta_posted_at', new Date(Date.now() - 86_400_000).toISOString())
+    .eq('meta_status', 'posted').neq('kind', 'reel') // reels are posted by hand and don't use up the daily photo posts
+    .gte('meta_posted_at', new Date(Date.now() - 86_400_000).toISOString())
     .order('meta_posted_at', { ascending: false });
   const today = (done ?? []).filter((d) => d.meta_posted_at >= dayStart).length;
   if (today >= s.meta_daily_limit) return 0;
@@ -1041,6 +1042,66 @@ async function metaReplies(db: Db, s: MetaSettings) {
   return sent;
 }
 
+// ── Reels (migration 030) ────────────────────────────────────────────────────
+// The team uploads a video and a caption in the dashboard and approves it.
+// Instagram processes a Reel for a minute or two, so it takes several runs:
+// run 1 hands the video to Instagram (ig_container), later runs wait until it
+// is ready, publish it and post the same video on Facebook.
+const REEL_TIMEOUT_MS = 20 * 60_000;
+
+async function metaReels(db: Db, s: MetaSettings) {
+  await db.from('social_posts').update({ status: 'posting' }).eq('kind', 'reel').eq('status', 'approved');
+  const { data: queue } = await db.from('social_posts').select('id, text, video_url, ig_container, decided_at')
+    .eq('kind', 'reel').eq('status', 'posting').order('created_at', { ascending: true }).limit(2);
+  if (!queue?.length) return 0;
+  const auth = await metaAuth(db, s);
+  let sent = 0;
+  for (const p of queue) {
+    const errors: string[] = [];
+    let igId: string | null = null;
+    if (!p.video_url) {
+      await db.from('social_posts').update({ status: 'failed', error: 'no video' }).eq('id', p.id);
+      continue;
+    }
+    if (auth.ig) {
+      try {
+        if (!p.ig_container) {
+          const box = await graph<{ id: string }>(auth.token, 'POST', `${auth.ig}/media`, {
+            media_type: 'REELS', video_url: p.video_url, caption: p.text, share_to_feed: 'true',
+          });
+          await db.from('social_posts').update({ ig_container: box.id }).eq('id', p.id);
+          continue; // Instagram fetches and processes the video now
+        }
+        const st = await graph<{ status_code?: string; status?: string }>(auth.token, 'GET', p.ig_container, { fields: 'status_code,status' });
+        if (st.status_code === 'IN_PROGRESS' && Date.now() - Date.parse(p.decided_at ?? '') < REEL_TIMEOUT_MS) continue;
+        if (st.status_code !== 'FINISHED') throw new Error(`video ${st.status_code ?? 'unknown'}: ${st.status ?? 'not ready in time'}`);
+        igId = (await graph<{ id: string }>(auth.token, 'POST', `${auth.ig}/media_publish`, { creation_id: p.ig_container })).id;
+      } catch (err) {
+        errors.push(`instagram: ${(err as Error).message}`);
+      }
+    } else {
+      errors.push('instagram: no Instagram business account linked to the page');
+    }
+    let fbId: string | null = null;
+    try {
+      fbId = (await graph<{ id: string }>(auth.token, 'POST', `${auth.page}/videos`, { file_url: p.video_url, description: p.text })).id;
+    } catch (err) {
+      errors.push(`facebook: ${(err as Error).message}`);
+    }
+    const ok = !!(igId || fbId);
+    const now = new Date().toISOString();
+    await db.from('social_posts').update({
+      status: ok ? 'posted' : 'failed', posted_at: ok ? now : null, error: ok ? null : errors.join(' | ').slice(0, 500),
+      meta_status: ok ? 'posted' : 'failed', meta_text: p.text, ig_id: igId, fb_id: fbId,
+      meta_error: errors.join(' | ').slice(0, 500) || null, meta_posted_at: ok ? now : null,
+      // A failed reel can be approved again: start over with a fresh upload.
+      ...(ok ? {} : { ig_container: null }),
+    }).eq('id', p.id);
+    if (ok) sent++;
+  }
+  return sent;
+}
+
 // ── Run ──────────────────────────────────────────────────────────────────────
 Deno.serve(async () => {
   const db: Db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
@@ -1082,6 +1143,7 @@ Deno.serve(async () => {
   if (metaReady() && s.fb_page_id) {
     await step('meta-comments', () => metaComments(db, s));
     await step('meta-replies', () => metaReplies(db, s));
+    await step('meta-reels', () => metaReels(db, s));
   }
   if (errors.length) console.error(errors.join(' | '));
   return json({ mode: s.mode, x_ready: ready, posted, meta_mode: s.meta_mode, meta, errors });
