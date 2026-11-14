@@ -22,3 +22,8 @@ verify_jwt = false
 # Cron-invoked BETina News desk (public; news_desk_claim() rate-limits it).
 [functions.news-desk]
 verify_jwt = false
+
+# Telegram webhook (BETina bot): Telegram sends no JWT; the function checks
+# the secret token Telegram returns with every update.
+[functions.telegram-bot]
+verify_jwt = false
