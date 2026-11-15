@@ -16,10 +16,19 @@
 // she may send depends on the level — the days someone chatted with her:
 //   level 1  day 1        the approved Instagram set (tier 0)
 //   level 2  3+ days      + selfies (tier 1)
-//   level 3  7+ days      + special photos (tier 2), once they also commented
-//                           on one of her Instagram/Facebook posts (check_comment)
+//   level 3  7+ days      + special photos (tier 2), once they also did a
+//                           comment task
 //   level 4  14+ days
 // Levels never depend on deposits, bets or being a customer.
+//
+// Two ways to a photo before the level allows it:
+//   tasks   give_task hands out a codeword; they leave a comment with it under
+//           one of her posts (Instagram, Facebook, X) and check_task looks for
+//           it in social_posts. First verified comment: a selfie, every later
+//           one: a special photo. One task a day.
+//   games   start_game / game_guess / finish_game: number, quiz, emoji, lie,
+//           charm. A win is one heart (HEARTS_PER_DAY); a selfie costs
+//           PHOTO_COST hearts. Special photos are never for hearts.
 //
 // She texts first (cron, every 10 min → ?cron=1), at most once in 20 hours and
 // only to people who chatted a bit (PROACTIVE_MIN_MESSAGES):
@@ -50,7 +59,12 @@ type Chat = {
   sent_photos: string[]; photo_day: string | null; photo_count: number;
   deeds: string[]; ig_name: string | null;
   proactive: boolean; utc_offset: number; last_proactive: string | null; nudged: boolean;
+  hearts: number; heart_day: string | null; heart_count: number;
+  game: Game | null; game_day: string | null; game_count: number;
+  task_code: string | null; task_at: string | null; task_day: string | null; comments: number; ticket: number;
 };
+/** A running game ({type, secret, tries, at}) or, once it is over, just {last}. */
+type Game = { type?: string; secret?: string; tries?: number; at?: string; last?: string };
 type Photo = { key: string; category: string; tier: number; note: string; path: string; file_id: string | null };
 
 const BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN') ?? '';
@@ -66,6 +80,14 @@ const MAX_INPUT = 1500;            // characters of one message we pass on
 const DAILY_LIMIT = 60;            // messages per person per day
 const PHOTOS_PER_DAY = 3;
 const LEVEL_DAYS = [0, 3, 7, 14];  // active days for level 1, 2, 3, 4
+const GAME_TYPES = ['number', 'quiz', 'emoji', 'lie', 'charm'];
+const GAMES_PER_DAY = 6;           // games started per person per day
+const HEARTS_PER_DAY = 3;          // hearts a person can win per day (one per won game)
+const PHOTO_COST: Record<number, number> = { 1: 2 }; // hearts for a selfie they have not unlocked; special photos are never for hearts
+const TASK_TTL_MS = 3 * 86_400_000; // a codeword stays valid this long
+// Codewords for the comment task: words nobody writes under a post by chance.
+const TASK_WORDS = ['flamingo', 'koala', 'papaya', 'mojito', 'pistachio', 'maracuja', 'ninja', 'zebra', 'panda', 'karaoke', 'safari', 'samba', 'tango', 'salsa', 'espresso', 'cappuccino', 'caramel', 'vanilla', 'mango', 'kiwi', 'chili', 'paprika', 'rocket', 'comet', 'galaxy', 'neon', 'turbo', 'yoyo', 'falcon', 'cobra', 'lagoon', 'pirate', 'tornado', 'disco', 'jazz', 'cookie', 'taxi', 'tiger', 'banana', 'coconut'];
+const GAME_TTL_MS = 3 * 3_600_000; // an unfinished game lapses
 const PROACTIVE_MIN_MESSAGES = 5;
 const PROACTIVE_GAP_MS = 20 * 3_600_000;
 const PROACTIVE_PER_RUN = 5;
@@ -206,13 +228,13 @@ function keyboard(chips: string[]) {
 }
 
 /**
- * Sends BETina's text: blank lines split it into up to three messages, like
+ * Sends BETina's text: a blank line splits it into two messages at most, like
  * someone typing one after the other. Returns false when Telegram refused
  * (the person blocked the bot).
  */
 async function send(chatId: number, text: string, chips: string[] = []): Promise<boolean> {
   const parts = text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
-  const bubbles = parts.length > 3 ? [parts[0], parts[1], parts.slice(2).join('\n\n')] : parts;
+  const bubbles = parts.length > 2 ? [parts[0], parts.slice(1).join('\n')] : parts;
   let ok = true;
   for (let i = 0; i < bubbles.length; i++) {
     const last = i === bubbles.length - 1;
@@ -240,29 +262,39 @@ function maxTier(chat: Chat): number {
 }
 const photosLeft = (chat: Chat) => Math.max(0, PHOTOS_PER_DAY - (chat.photo_day === today() ? chat.photo_count : 0));
 
-async function photoPool(db: Db, chat: Chat): Promise<Photo[]> {
-  const { data } = await db.from('telegram_photos').select('key, category, tier, note, path, file_id').eq('active', true).lte('tier', maxTier(chat));
-  return ((data ?? []) as Photo[]).filter((p) => !chat.sent_photos.includes(p.key));
+/** Hearts a photo of this tier costs them: nothing once the tier is unlocked. */
+const tierCost = (chat: Chat, tier: number) => (tier <= Math.max(maxTier(chat), chat.ticket) ? 0 : PHOTO_COST[tier] ?? Infinity);
+
+/** Photos they have not had yet — only those they can get right now, unless `all`. */
+async function photoPool(db: Db, chat: Chat, all = false): Promise<Photo[]> {
+  const { data } = await db.from('telegram_photos').select('key, category, tier, note, path, file_id').eq('active', true);
+  return ((data ?? []) as Photo[]).filter((p) => !chat.sent_photos.includes(p.key) && (all || tierCost(chat, p.tier) <= chat.hearts));
 }
 
 /** What BETina is told about her photos and what the person can still unlock. */
 async function photoState(db: Db, chat: Chat) {
-  const pool = await photoPool(db, chat);
-  const counts = new Map<string, number>();
-  for (const p of pool) counts.set(p.category, (counts.get(p.category) ?? 0) + 1);
-  const { data: locked } = await db.from('telegram_photos').select('tier').eq('active', true).gt('tier', maxTier(chat));
-  const tiers = new Set(((locked ?? []) as { tier: number }[]).map((p) => p.tier));
+  const all = await photoPool(db, chat, true);
+  const counts = new Map<string, { n: number; cost: number }>();
+  for (const p of all) {
+    const cost = tierCost(chat, p.tier);
+    if (cost > chat.hearts) continue;
+    counts.set(p.category, { n: (counts.get(p.category)?.n ?? 0) + 1, cost });
+  }
+  const tiers = new Set(all.filter((p) => tierCost(chat, p.tier) > 0).map((p) => p.tier));
   const level = levelOf(chat);
   const steps: string[] = [];
-  if (tiers.has(1) && level < 2) steps.push(`your selfies — once they have chatted with you on ${LEVEL_DAYS[1]} different days (so far ${chat.active_days}).`);
+  if (tiers.has(1)) steps.push(`your selfies — free once they have chatted with you on ${LEVEL_DAYS[1]} different days (so far ${chat.active_days}), right away for ${PHOTO_COST[1]} hearts each, or one as the reward for their first codeword comment.`);
   if (tiers.has(2)) {
     const need = [
       level < 3 ? `chatting with you on ${LEVEL_DAYS[2]} different days (so far ${chat.active_days})` : null,
       chat.deeds.includes('comment') ? null : 'leaving a nice comment on one of your Instagram posts (@geniusbet.betina) or Facebook posts and telling you their name there',
     ].filter(Boolean);
-    if (need.length) steps.push(`your special photos (beach, pool — the ones not everyone gets) — after ${need.join(' and ')}.`);
+    steps.push(`your special photos (beach, pool — the ones not everyone gets) — never for hearts: one as the reward for each codeword comment from their second on (verified so far: ${chat.comments})${need.length ? `, and all of them free after ${need.join(' and ')}` : ''}.`);
   }
-  return { photos: [...counts].map(([c, n]) => `${c} (${n} left)`), nextUnlock: steps.join(' And ') };
+  return {
+    photos: [...counts].map(([c, v]) => `${c} (${v.n} left${v.cost ? `, costs ${v.cost} hearts each` : ''})`),
+    nextUnlock: steps.join(' And '),
+  };
 }
 
 /** Sends one photo of the category; the answer tells BETina what it shows. */
@@ -292,11 +324,68 @@ async function sendPhoto(db: Db, chat: Chat, category: string): Promise<string> 
     if (sent?.ok && sizes?.length) await db.from('telegram_photos').update({ file_id: sizes[sizes.length - 1].file_id }).eq('key', photo.key);
   }
   if (!sent?.ok) return 'The photo would not send — say you will send one later.';
+  const cost = tierCost(chat, photo.tier);
+  // A reward photo: the ticket is used up by a photo they could not get otherwise.
+  if (photo.tier > maxTier(chat) && photo.tier <= chat.ticket) chat.ticket = 0;
+  chat.hearts = Math.max(0, chat.hearts - cost);
   chat.sent_photos = [...chat.sent_photos, photo.key];
   chat.photo_count = (chat.photo_day === today() ? chat.photo_count : 0) + 1;
   chat.photo_day = today();
-  await db.from('telegram_chats').update({ sent_photos: chat.sent_photos, photo_day: chat.photo_day, photo_count: chat.photo_count }).eq('chat_id', chat.chat_id);
-  return `Sent. The photo shows: ${photo.note}. Now write your short line about it.`;
+  await db.from('telegram_chats').update({ sent_photos: chat.sent_photos, photo_day: chat.photo_day, photo_count: chat.photo_count, hearts: chat.hearts, ticket: chat.ticket }).eq('chat_id', chat.chat_id);
+  return `Sent. The photo shows: ${photo.note}.${cost ? ` It cost them ${cost} hearts (${chat.hearts} left).` : ''} Now write your short line about it.`;
+}
+
+// ── Tasks: a comment with a codeword, checked for real ───────────────────────
+
+const openTask = (chat: Chat) =>
+  chat.task_code && chat.task_at && Date.now() - Date.parse(chat.task_at) < TASK_TTL_MS ? chat.task_code : null;
+
+/** What BETina is told about the comment task and an open reward. */
+function taskState(chat: Chat): string {
+  const code = openTask(chat);
+  const parts = [
+    code
+      ? `Open task: a comment with the codeword "${code}" in it. When they say it is done, call check_task.`
+      : chat.task_day === today()
+        ? 'They did their task for today — the next one tomorrow.'
+        : 'No task open. give_task gives you a codeword for them.',
+    `Verified comments so far: ${chat.comments}.`,
+  ];
+  if (chat.ticket > 0) parts.push(`They have a reward photo open: one ${chat.ticket >= 2 ? 'special photo' : 'selfie'} — send it with send_photo.`);
+  return parts.join(' ');
+}
+
+// ── Games: the way to win hearts ─────────────────────────────────────────────
+
+const activeGame = (chat: Chat): Game | null =>
+  chat.game?.type && chat.game.at && Date.now() - Date.parse(chat.game.at) < GAME_TTL_MS ? chat.game : null;
+const heartsToWin = (chat: Chat) => Math.max(0, HEARTS_PER_DAY - (chat.heart_day === today() ? chat.heart_count : 0));
+const gamesLeft = (chat: Chat) => Math.max(0, GAMES_PER_DAY - (chat.game_day === today() ? chat.game_count : 0));
+
+/** What BETina is told about the game that is running (or not). */
+function gameState(chat: Chat): string {
+  const g = activeGame(chat);
+  if (!g) return `No game running. Games they can still start today: ${gamesLeft(chat)}.${chat.game?.last ? ` The last game was "${chat.game.last}" — pick a different one next.` : ''}`;
+  if (g.type === 'number') return `Running: the number game (1–50), ${g.tries} guesses left. You do not know the number — pass every guess to game_guess and say what it answers.`;
+  return `Running: "${g.type}". The solution (never reveal it before the game is decided): ${g.secret}. When it is decided, call finish_game.`;
+}
+
+/** Ends the running game; a win is one heart, up to the daily cap. */
+async function endGame(db: Db, chat: Chat, won: boolean): Promise<string> {
+  const type = chat.game?.type ?? '';
+  chat.game = { last: type };
+  let got = 0;
+  if (won && heartsToWin(chat) > 0) {
+    chat.heart_count = (chat.heart_day === today() ? chat.heart_count : 0) + 1;
+    chat.heart_day = today();
+    chat.hearts += 1;
+    got = 1;
+  }
+  await db.from('telegram_chats').update({ game: chat.game, hearts: chat.hearts, heart_day: chat.heart_day, heart_count: chat.heart_count }).eq('chat_id', chat.chat_id);
+  if (!won) return `They lost. No heart. They have ${chat.hearts}. Tease them and offer a rematch or another game.`;
+  return got
+    ? `They won: +1 heart, now ${chat.hearts}. Still winnable today: ${heartsToWin(chat)}. Tell them, and what their hearts can get them.`
+    : `They won — but today's ${HEARTS_PER_DAY} hearts are already taken, so this one was for the honour. They have ${chat.hearts}. Hearts again tomorrow.`;
 }
 
 // ── Tools (the app chat's sports tools, without anything tied to an account) ──
@@ -310,7 +399,11 @@ const TOOLS = [
   { name: 'get_news', description: 'Latest sports headlines. Optional sport filter.', input_schema: { type: 'object', properties: { sport: { type: 'string' } }, required: [] } },
   { name: 'remember_fact', description: 'Save a lasting fact/preference the person shares so you recall it next time (also the pet name you gave them and running jokes). Never save contact details, passwords or anything about money.', input_schema: { type: 'object', properties: { fact: { type: 'string' } }, required: ['fact'] } },
   { name: 'send_photo', description: 'Send one photo of yourself into the chat. category must be one of the categories listed under "What you can send right now". The result tells you what the photo shows.', input_schema: { type: 'object', properties: { category: { type: 'string' } }, required: ['category'] } },
-  { name: 'check_comment', description: 'Check whether a comment from this Instagram or Facebook name arrived on one of your posts in the last 30 days. Use it when they say they commented.', input_schema: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
+  { name: 'give_task', description: 'Get a codeword just for this person. Their task: leave a nice comment with that word in it under one of your posts (Instagram, Facebook or X). One task per day.', input_schema: { type: 'object', properties: {}, required: [] } },
+  { name: 'check_task', description: 'Look whether their comment with the codeword has arrived. Call it when they say they commented. It finds the real comment or says it is not there yet.', input_schema: { type: 'object', properties: {}, required: [] } },
+  { name: 'start_game', description: 'Start one of your games before you pose it. type: number (they guess your number between 1 and 50 — the referee picks it, you leave secret empty), quiz (three questions, two right wins), emoji (something in emojis, three guesses), lie (three statements about you, one is a lie), charm (one message to charm you). For every type except number, put the solution in secret (the answers, the lie, what you are looking for) — it is kept for you and never shown to them.', input_schema: { type: 'object', properties: { type: { type: 'string', enum: GAME_TYPES }, secret: { type: 'string' } }, required: ['type'] } },
+  { name: 'game_guess', description: 'The number game only: pass the number they guessed. The answer says higher, lower or won, and how many guesses are left.', input_schema: { type: 'object', properties: { number: { type: 'number' } }, required: ['number'] } },
+  { name: 'finish_game', description: 'End the running quiz, emoji, lie or charm game once it is decided. won is true only if they really won by the rules.', input_schema: { type: 'object', properties: { won: { type: 'boolean' } }, required: ['won'] } },
   { name: 'set_utc_offset', description: "Save the person's time zone as hours from UTC (e.g. 1 for Vienna or Lagos in winter, 0 for Conakry, -6 for San Salvador) once you know where they live.", input_schema: { type: 'object', properties: { hours: { type: 'number' } }, required: ['hours'] } },
 ];
 
@@ -351,17 +444,75 @@ async function runTool(name: string, input: any, db: Db, chat: Chat): Promise<st
       return error ? 'Could not save.' : 'Saved.';
     }
     if (name === 'send_photo') return await sendPhoto(db, chat, String(input.category ?? '').trim().toLowerCase());
-    if (name === 'check_comment') {
-      const who = String(input.name ?? '').trim().replace(/^@/, '').replace(/[%_\\]/g, '').slice(0, 60);
-      if (who.length < 3) return 'Ask for their exact name on Instagram or Facebook.';
-      const { data } = await db.from('social_posts').select('id, reply_text, platform')
-        .in('platform', ['instagram', 'facebook']).ilike('reply_author', who)
-        .gt('created_at', new Date(Date.now() - 30 * 86_400_000).toISOString()).limit(1);
-      if (!data?.length) return `No comment from "${who}" found yet. New comments can take up to ten minutes to show up, and the name must match exactly.`;
+    if (name === 'give_task') {
+      const open = openTask(chat);
+      if (open) return `Their task is still open: the codeword is "${open}". They leave a nice comment with it under one of your posts.`;
+      if (chat.task_day === today()) return 'They already did a task today — the next one tomorrow. Tease them with it.';
+      let word = '';
+      for (let i = 0; i < 8; i++) {
+        word = TASK_WORDS[Math.floor(Math.random() * TASK_WORDS.length)];
+        const { count } = await db.from('telegram_chats').select('chat_id', { count: 'exact', head: true }).eq('task_code', word);
+        if (!count) break;
+      }
+      chat.task_code = word;
+      chat.task_at = new Date().toISOString();
+      await db.from('telegram_chats').update({ task_code: word, task_at: chat.task_at }).eq('chat_id', chat.chat_id);
+      const prize = chat.comments >= 1 ? 'a special photo' : 'a selfie (special photos come from their second comment on)';
+      return `Their codeword is "${word}". They leave a nice comment under one of your posts (Instagram @geniusbet.betina, Facebook or X) with that word in it, then tell you. The reward: ${prize}.`;
+    }
+    if (name === 'check_task') {
+      const code = openTask(chat);
+      if (!code || !chat.task_at) return 'No task is open. Give them one with give_task.';
+      const { data } = await db.from('social_posts').select('reply_author, reply_text, platform')
+        .in('platform', ['instagram', 'facebook', 'x']).not('reply_author', 'is', null)
+        .ilike('reply_text', `%${code}%`).gt('created_at', chat.task_at).order('created_at').limit(1);
+      if (!data?.length) return `No comment with "${code}" has arrived yet. New comments can take up to ten minutes — say you will look again in a moment, and check again when they ask. No reward before it is found.`;
+      chat.comments += 1;
+      chat.ticket = chat.comments >= 2 ? 2 : 1;
+      chat.task_code = null;
+      chat.task_day = today();
       if (!chat.deeds.includes('comment')) chat.deeds = [...chat.deeds, 'comment'];
-      chat.ig_name = who;
-      await db.from('telegram_chats').update({ deeds: chat.deeds, ig_name: who }).eq('chat_id', chat.chat_id);
-      return `Yes — "${who}" commented on ${data[0].platform}: "${String(data[0].reply_text ?? '').slice(0, 200)}". That counts; thank them your way.`;
+      await db.from('telegram_chats').update({ comments: chat.comments, ticket: chat.ticket, task_code: null, task_day: chat.task_day, deeds: chat.deeds }).eq('chat_id', chat.chat_id);
+      return `Found it: "${data[0].reply_author}" wrote on ${data[0].platform}: "${String(data[0].reply_text ?? '').slice(0, 200)}". That is their verified comment number ${chat.comments}. Tell them you looked, thank them for what they wrote, and send the reward now with send_photo — category ${chat.ticket >= 2 ? 'special' : 'selfie'}.`;
+    }
+    if (name === 'start_game') {
+      const type = String(input.type ?? '');
+      if (!GAME_TYPES.includes(type)) return `Unknown game. Your games: ${GAME_TYPES.join(', ')}.`;
+      const running = activeGame(chat);
+      if (running) return `"${running.type}" is still running — finish that first.`;
+      if (gamesLeft(chat) <= 0) return 'That was enough playing for today — tell them you play again tomorrow.';
+      const secret = type === 'number' ? String(1 + Math.floor(Math.random() * 50)) : String(input.secret ?? '').trim().slice(0, 600);
+      if (!secret) return 'Put the solution into "secret" first, then start again.';
+      chat.game = { type, secret, tries: type === 'number' ? 5 : type === 'emoji' ? 3 : 1, at: new Date().toISOString() };
+      chat.game_count = (chat.game_day === today() ? chat.game_count : 0) + 1;
+      chat.game_day = today();
+      await db.from('telegram_chats').update({ game: chat.game, game_day: chat.game_day, game_count: chat.game_count }).eq('chat_id', chat.chat_id);
+      const prize = heartsToWin(chat) > 0 ? 'A win is one heart.' : "They already won today's hearts — this one is just for fun, say so.";
+      return type === 'number'
+        ? `Started. The number is between 1 and 50 and only the referee knows it. They have 5 guesses; pass each one to game_guess. ${prize}`
+        : `Started. Pose it now, one step per message. When it is decided, call finish_game. ${prize}`;
+    }
+    if (name === 'game_guess') {
+      const g = activeGame(chat);
+      if (!g || g.type !== 'number') return 'No number game is running. Start one with start_game.';
+      const n = Math.round(Number(input.number));
+      if (!Number.isFinite(n) || n < 1 || n > 50) return 'That is not a number between 1 and 50 — ask again, it does not cost a guess.';
+      const secret = Number(g.secret);
+      if (n === secret) return await endGame(db, chat, true);
+      const tries = (g.tries ?? 1) - 1;
+      if (tries <= 0) {
+        const lost = await endGame(db, chat, false);
+        return `Wrong, and that was the last guess. The number was ${secret}. ${lost}`;
+      }
+      chat.game = { ...g, tries };
+      await db.from('telegram_chats').update({ game: chat.game }).eq('chat_id', chat.chat_id);
+      return `Wrong: your number is ${secret > n ? 'higher' : 'lower'} than ${n}. Guesses left: ${tries}.`;
+    }
+    if (name === 'finish_game') {
+      const g = activeGame(chat);
+      if (!g) return 'No game is running.';
+      if (g.type === 'number') return 'The number game is decided by game_guess only.';
+      return await endGame(db, chat, input.won === true);
     }
     if (name === 'set_utc_offset') {
       const h = Math.round(Number(input.hours));
@@ -399,7 +550,8 @@ async function answer(db: Db, chat: Chat, turns: Turn[]): Promise<{ text: string
     localTime: `${String(localHour(chat)).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`,
     level: levelOf(chat), activeDays: chat.active_days,
     photos: state.photos, photosLeftToday: photosLeft(chat), nextUnlock: state.nextUnlock,
-    commented: chat.deeds.includes('comment'),
+    task: taskState(chat),
+    hearts: chat.hearts, heartsToWinToday: heartsToWin(chat), game: gameState(chat),
   });
   // deno-lint-ignore no-explicit-any
   const messages: any[] = turns.map((m) => ({ role: m.role, content: m.content }));
@@ -480,6 +632,8 @@ async function handle(db: Db, update: any) {
     msg_day: day, msg_count: 0, msg_total: 0,
     adult: false, active_days: 0, last_active_day: null, sent_photos: [], photo_day: null, photo_count: 0,
     deeds: [], ig_name: null, proactive: true, utc_offset: 1, last_proactive: null, nudged: false,
+    hearts: 0, heart_day: null, heart_count: 0, game: null, game_day: null, game_count: 0,
+    task_code: null, task_at: null, task_day: null, comments: 0, ticket: 0,
   };
   chat.first_name = String(msg.from?.first_name ?? '').replace(/[\r\n]+/g, ' ').slice(0, 40) || chat.first_name;
   chat.last_seen = new Date().toISOString();
@@ -510,6 +664,7 @@ async function handle(db: Db, update: any) {
   if (command === '/reset') {
     chat.history = [];
     await saveChat(db, chat);
+    if (activeGame(chat)) await db.from('telegram_chats').update({ game: null }).eq('chat_id', chatId);
     await send(chatId, t('reset', chat.lang));
     return;
   }
