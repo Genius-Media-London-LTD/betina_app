@@ -30,12 +30,21 @@
 //           charm. A win is one heart (HEARTS_PER_DAY); a selfie costs
 //           PHOTO_COST hearts. Special photos are never for hearts.
 //
+// More than text:
+//   voice    send_voice: a short voice note in her voice (VOICES_PER_DAY). The
+//            audio comes from betina-server (/v1/tts), paid with a one-time
+//            ticket from tts_tickets.
+//   photos   she looks at photos people send her (SEEN_PER_DAY); the picture
+//            goes to the model for that one answer and is stored nowhere.
+//   goals    follow_team saves the club they love; live-alerts texts them its
+//            goals and final scores.
+//
 // She texts first (cron, every 10 min → ?cron=1), at most once in 20 hours and
 // only to people who chatted a bit (PROACTIVE_MIN_MESSAGES):
 //   morning  07–10 local time, to people active in the last 3 days, with a photo
 //   nudge    17–21 local time, once after 2 days of silence
 //
-// Limits: private chats only, text only, DAILY_LIMIT messages per person a day.
+// Limits: private chats only, text and photos, DAILY_LIMIT messages per person a day.
 //
 // Deploy: supabase functions deploy telegram-bot   (verify_jwt = false, config.toml)
 // Env:    TELEGRAM_BOT_TOKEN (from @BotFather), ANTHROPIC_API_KEY,
@@ -62,7 +71,13 @@ type Chat = {
   hearts: number; heart_day: string | null; heart_count: number;
   game: Game | null; game_day: string | null; game_count: number;
   task_code: string | null; task_at: string | null; task_day: string | null; comments: number; ticket: number;
+  team: string | null; team_id: number | null;
+  voice_day: string | null; voice_count: number; seen_day: string | null; seen_count: number;
+  /** Not stored: what she sent besides text while answering (voice notes), for the history. */
+  media?: string[];
 };
+/** A photo they sent, for the one answer it belongs to. */
+type Picture = { data: string; media_type: string };
 /** A running game ({type, secret, tries, at}) or, once it is over, just {last}. */
 type Game = { type?: string; secret?: string; tries?: number; at?: string; last?: string };
 type Photo = { key: string; category: string; tier: number; note: string; path: string; file_id: string | null };
@@ -79,6 +94,9 @@ const MAX_MEMORIES = 40;
 const MAX_INPUT = 1500;            // characters of one message we pass on
 const DAILY_LIMIT = 60;            // messages per person per day
 const PHOTOS_PER_DAY = 3;
+const VOICES_PER_DAY = 2;          // voice notes she sends per person per day
+const SEEN_PER_DAY = 8;            // photos of theirs she looks at per day
+const MAX_PICTURE_BYTES = 4_000_000;
 const LEVEL_DAYS = [0, 3, 7, 14];  // active days for level 1, 2, 3, 4
 const GAME_TYPES = ['number', 'quiz', 'emoji', 'lie', 'charm'];
 const GAMES_PER_DAY = 6;           // games started per person per day
@@ -121,15 +139,15 @@ const TEXT: Record<string, Record<string, string>> = {
     hr: 'danas smo se baš napričali 😄 sutra sam opet tu — ili nastavi u BETina aplikaciji: betina.geniusbet.com',
   },
   textOnly: {
-    en: 'here on Telegram I can only read text for now 🙈 write it to me!',
-    de: 'hier auf Telegram kann ich im Moment nur Text lesen 🙈 schreib es mir!',
-    es: 'aquí en Telegram por ahora solo leo texto 🙈 ¡escríbemelo!',
-    pt: 'aqui no Telegram, por agora, só leio texto 🙈 escreve-me!',
-    fr: 'ici sur Telegram, je ne lis que le texte pour le moment 🙈 écris-le-moi !',
-    it: 'qui su Telegram per ora leggo solo testo 🙈 scrivimelo!',
-    ro: 'aici pe Telegram pot citi deocamdată doar text 🙈 scrie-mi!',
-    tr: 'Telegram’da şimdilik sadece yazı okuyabiliyorum 🙈 bana yaz!',
-    hr: 'ovdje na Telegramu zasad čitam samo tekst 🙈 napiši mi!',
+    en: "voice messages, videos and stickers I can't open here yet 🙈 write it to me — or send a photo!",
+    de: "sprachnachrichten, videos und sticker kann ich hier noch nicht öffnen 🙈 schreib es mir — oder schick ein foto!",
+    es: "audios, vídeos y stickers aún no los puedo abrir aquí 🙈 escríbemelo — ¡o manda una foto!",
+    pt: "áudios, vídeos e stickers ainda não consigo abrir aqui 🙈 escreve-me — ou manda uma foto!",
+    fr: "les vocaux, vidéos et stickers, je ne peux pas encore les ouvrir ici 🙈 écris-le-moi — ou envoie une photo !",
+    it: "vocali, video e sticker qui non riesco ancora ad aprirli 🙈 scrivimelo — o manda una foto!",
+    ro: "mesajele vocale, clipurile și stickerele nu le pot deschide încă aici 🙈 scrie-mi — sau trimite o poză!",
+    tr: "sesli mesajları, videoları ve çıkartmaları burada henüz açamıyorum 🙈 bana yaz — ya da bir fotoğraf gönder!",
+    hr: "glasovne poruke, videe i naljepnice ovdje još ne mogu otvoriti 🙈 napiši mi — ili pošalji fotku!",
   },
   forgot: {
     en: "Done — I've deleted our chat and everything I remembered about you. Write me anytime to start fresh.",
@@ -335,6 +353,89 @@ async function sendPhoto(db: Db, chat: Chat, category: string): Promise<string> 
   return `Sent. The photo shows: ${photo.note}.${cost ? ` It cost them ${cost} hearts (${chat.hearts} left).` : ''} Now write your short line about it.`;
 }
 
+// ── Voice notes ──────────────────────────────────────────────────────────────
+
+const voicesLeft = (chat: Chat) => Math.max(0, VOICES_PER_DAY - (chat.voice_day === today() ? chat.voice_count : 0));
+
+/** Sends what she says as a voice message; the audio is made on betina-server. */
+async function sendVoice(db: Db, chat: Chat, text: string): Promise<string> {
+  const say = text.replace(/\[\[[^\]]*\]\]/g, ' ').replace(/https?:\/\/\S+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300);
+  if (!say) return 'Put what you want to say into "text".';
+  if (voicesLeft(chat) <= 0) return 'No more voice notes today — write it instead, and tease them: maybe tomorrow they hear you again.';
+  const { data: ticket } = await db.from('tts_tickets').insert({}).select('id').single();
+  if (!ticket?.id) return 'The voice note would not record — write it instead.';
+  await tg('sendChatAction', { chat_id: chat.chat_id, action: 'record_voice' });
+  const res = await fetch(`${API}/v1/tts`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ticket: ticket.id, text: say }),
+  }).catch(() => null);
+  if (!res?.ok) return 'The voice note would not record — write it instead.';
+  const form = new FormData();
+  form.append('chat_id', String(chat.chat_id));
+  form.append('voice', new Blob([await res.arrayBuffer()], { type: 'audio/ogg' }), 'betina.ogg');
+  const sent = await (await fetch(`${TG}/sendVoice`, { method: 'POST', body: form })).json().catch(() => ({ ok: false }));
+  if (!sent?.ok) return 'They cannot receive voice messages (their Telegram settings) — write it instead.';
+  chat.voice_count = (chat.voice_day === today() ? chat.voice_count : 0) + 1;
+  chat.voice_day = today();
+  chat.media = [...(chat.media ?? []), `(you sent a voice note and said: "${say}")`];
+  await db.from('telegram_chats').update({ voice_day: chat.voice_day, voice_count: chat.voice_count }).eq('chat_id', chat.chat_id);
+  return 'Sent — they are listening to you now. Write at most one short line after it, or nothing at all.';
+}
+
+// ── Photos they send ─────────────────────────────────────────────────────────
+
+/** Loads a photo they sent (a size that is big enough to see, small enough to pass on). */
+// deno-lint-ignore no-explicit-any
+async function loadPicture(sizes: any[]): Promise<Picture | null> {
+  const fits = sizes.filter((p) => (p.file_size ?? 0) <= MAX_PICTURE_BYTES && Math.max(p.width ?? 0, p.height ?? 0) <= 1600);
+  const pick = (fits.length ? fits : sizes.slice(0, 1)).sort((a, b) => (b.width ?? 0) - (a.width ?? 0))[0];
+  if (!pick?.file_id) return null;
+  const file = await tg('getFile', { file_id: pick.file_id });
+  const path = file?.result?.file_path;
+  if (!path) return null;
+  const res = await fetch(`https://api.telegram.org/file/bot${BOT_TOKEN}/${path}`).catch(() => null);
+  if (!res?.ok) return null;
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  if (!bytes.length || bytes.length > MAX_PICTURE_BYTES) return null;
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return { data: btoa(bin), media_type: /\.png$/i.test(path) ? 'image/png' : /\.webp$/i.test(path) ? 'image/webp' : 'image/jpeg' };
+}
+
+// ── Goal alerts: the club they love ──────────────────────────────────────────
+
+const plain = (v: unknown) => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+
+/** Saves (or clears) the football team whose goals she texts them. */
+async function followTeam(db: Db, chat: Chat, name: string, country: string): Promise<string> {
+  if (!name) {
+    if (!chat.team) return 'You are not sending them goal alerts at the moment.';
+    const old = chat.team;
+    chat.team = null; chat.team_id = null;
+    await db.from('telegram_chats').update({ team: null, team_id: null }).eq('chat_id', chat.chat_id);
+    return `Stopped: no more goal alerts for ${old}.`;
+  }
+  type Team = { id: number; name: string; country: string };
+  const search = async (q: string): Promise<Team[]> =>
+    (await (await fetch(`${API}/v1/live/teams?q=${encodeURIComponent(q)}`)).json().catch(() => ({}))).teams ?? [];
+  let list = await search(name);
+  // "Bayern Munich" finds nothing where "Bayern" does: try the longest word.
+  if (!list.length) {
+    const word = plain(name).split(' ').sort((a, b) => b.length - a.length)[0] ?? '';
+    if (word.length >= 4 && word !== plain(name)) list = await search(word);
+  }
+  if (!list.length) return `No football team found for "${name}". Ask them for the club's full name (goal alerts are for football only).`;
+  if (country) {
+    const inCountry = list.filter((x) => plain(x.country) === plain(country));
+    if (inCountry.length) list = inCountry;
+  }
+  const exact = list.filter((x) => plain(x.name) === plain(name));
+  const pick = exact.length === 1 ? exact[0] : list.length === 1 ? list[0] : null;
+  if (!pick) return `Several teams fit: ${list.slice(0, 8).map((x) => `${x.name} (${x.country})`).join(', ')}. Ask which one they mean, then call follow_team again with that exact name and country.`;
+  chat.team = pick.name; chat.team_id = pick.id;
+  await db.from('telegram_chats').update({ team: pick.name, team_id: pick.id }).eq('chat_id', chat.chat_id);
+  return `Done: from now on you text them every goal and the final score of ${pick.name} (${pick.country}) while it happens. Tell them in one line.`;
+}
+
 // ── Tasks: a comment with a codeword, checked for real ───────────────────────
 
 const openTask = (chat: Chat) =>
@@ -399,6 +500,8 @@ const TOOLS = [
   { name: 'get_news', description: 'Latest sports headlines. Optional sport filter.', input_schema: { type: 'object', properties: { sport: { type: 'string' } }, required: [] } },
   { name: 'remember_fact', description: 'Save a lasting fact/preference the person shares so you recall it next time (also the pet name you gave them and running jokes). Never save contact details, passwords or anything about money.', input_schema: { type: 'object', properties: { fact: { type: 'string' } }, required: ['fact'] } },
   { name: 'send_photo', description: 'Send one photo of yourself into the chat. category must be one of the categories listed under "What you can send right now". The result tells you what the photo shows.', input_schema: { type: 'object', properties: { category: { type: 'string' } }, required: ['category'] } },
+  { name: 'send_voice', description: 'Send a voice message in your own voice into the chat. text is exactly what you say: one or two spoken sentences (at most 30 words) in the language you chat in — no emojis, no links, no stage directions.', input_schema: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] } },
+  { name: 'follow_team', description: 'Goal alerts: save the football club (or national team) they love, so you text them its goals and final scores live. name is the full club name ("Manchester United", "Bayern München"), country optional (the club\'s country in English). An empty name stops the alerts.', input_schema: { type: 'object', properties: { name: { type: 'string' }, country: { type: 'string' } }, required: ['name'] } },
   { name: 'give_task', description: 'Get a codeword just for this person. Their task: leave a nice comment with that word in it under one of your posts (Instagram, Facebook or X). One task per day.', input_schema: { type: 'object', properties: {}, required: [] } },
   { name: 'check_task', description: 'Look whether their comment with the codeword has arrived. Call it when they say they commented. It finds the real comment or says it is not there yet.', input_schema: { type: 'object', properties: {}, required: [] } },
   { name: 'start_game', description: 'Start one of your games before you pose it. type: number (they guess your number between 1 and 50 — the referee picks it, you leave secret empty), quiz (three questions, two right wins), emoji (something in emojis, three guesses), lie (three statements about you, one is a lie), charm (one message to charm you). For every type except number, put the solution in secret (the answers, the lie, what you are looking for) — it is kept for you and never shown to them.', input_schema: { type: 'object', properties: { type: { type: 'string', enum: GAME_TYPES }, secret: { type: 'string' } }, required: ['type'] } },
@@ -444,6 +547,8 @@ async function runTool(name: string, input: any, db: Db, chat: Chat): Promise<st
       return error ? 'Could not save.' : 'Saved.';
     }
     if (name === 'send_photo') return await sendPhoto(db, chat, String(input.category ?? '').trim().toLowerCase());
+    if (name === 'send_voice') return await sendVoice(db, chat, String(input.text ?? ''));
+    if (name === 'follow_team') return await followTeam(db, chat, String(input.name ?? '').trim().slice(0, 60), String(input.country ?? '').trim().slice(0, 40));
     if (name === 'give_task') {
       const open = openTask(chat);
       if (open) return `Their task is still open: the codeword is "${open}". They leave a nice comment with it under one of your posts.`;
@@ -541,7 +646,8 @@ async function callClaude(system: string, messages: any[]) {
 const localHour = (chat: Chat) => (((new Date().getUTCHours() + chat.utc_offset) % 24) + 24) % 24;
 
 /** BETina's answer to the conversation so far: text + follow-up chips. */
-async function answer(db: Db, chat: Chat, turns: Turn[]): Promise<{ text: string; chips: string[] }> {
+async function answer(db: Db, chat: Chat, turns: Turn[], picture: Picture | null = null): Promise<{ text: string; chips: string[] }> {
+  chat.media = [];
   const state = await photoState(db, chat);
   const now = new Date();
   const system = telegramPrompt({
@@ -552,9 +658,14 @@ async function answer(db: Db, chat: Chat, turns: Turn[]): Promise<{ text: string
     photos: state.photos, photosLeftToday: photosLeft(chat), nextUnlock: state.nextUnlock,
     task: taskState(chat),
     hearts: chat.hearts, heartsToWinToday: heartsToWin(chat), game: gameState(chat),
+    voicesLeftToday: voicesLeft(chat), team: chat.team,
   });
   // deno-lint-ignore no-explicit-any
   const messages: any[] = turns.map((m) => ({ role: m.role, content: m.content }));
+  if (picture && messages.length) {
+    const last = messages[messages.length - 1];
+    last.content = [{ type: 'image', source: { type: 'base64', media_type: picture.media_type, data: picture.data } }, { type: 'text', text: last.content }];
+  }
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const response = await callClaude(system, messages);
     if (response.stop_reason === 'pause_turn') {
@@ -574,8 +685,11 @@ async function answer(db: Db, chat: Chat, turns: Turn[]): Promise<{ text: string
     // deno-lint-ignore no-explicit-any
     const raw = (response.content ?? []).filter((b: any) => b.type === 'text').map((b: any) => b.text).join('').trim();
     const parsed = parseMarkers(raw);
-    if (response.stop_reason === 'refusal' || !parsed.text) return { text: t('declined', chat.lang), chips: [] };
-    return { text: parsed.text, chips: parsed.chips };
+    if (response.stop_reason === 'refusal') return { text: t('declined', chat.lang), chips: [] };
+    // Notes in brackets are for her history only — never something she sends.
+    const text = parsed.text.replace(/\(you sent a voice note[^)]*\)/gi, '').trim();
+    if (!text) return chat.media.length ? { text: '', chips: [] } : { text: t('declined', chat.lang), chips: [] };
+    return { text, chips: parsed.chips };
   }
   return { text: t('error', chat.lang), chips: [] };
 }
@@ -591,16 +705,17 @@ function saveChat(db: Db, chat: Chat) {
 }
 
 /** Asks BETina for her next message and sends it. `turns` ends with what she answers to. */
-async function reply(db: Db, chat: Chat, turns: Turn[]): Promise<boolean> {
+async function reply(db: Db, chat: Chat, turns: Turn[], picture: Picture | null = null): Promise<boolean> {
   while (turns.length && turns[0].role !== 'user') turns.shift();
   await tg('sendChatAction', { chat_id: chat.chat_id, action: 'typing' });
   const typing = setInterval(() => { tg('sendChatAction', { chat_id: chat.chat_id, action: 'typing' }); }, 4500);
   try {
-    const out = await answer(db, chat, turns);
+    const out = await answer(db, chat, turns, picture);
     clearInterval(typing);
-    chat.history = [...turns, { role: 'assistant' as const, content: out.text }].slice(-HISTORY_TURNS);
+    const said = [...(chat.media ?? []), out.text].filter(Boolean).join(' ');
+    chat.history = [...turns, { role: 'assistant' as const, content: said }].slice(-HISTORY_TURNS);
     await saveChat(db, chat);
-    return await send(chat.chat_id, out.text, out.chips);
+    return out.text ? await send(chat.chat_id, out.text, out.chips) : true;
   } catch (e) {
     console.error('telegram-bot', String(e));
     return await send(chat.chat_id, t('error', chat.lang));
@@ -634,13 +749,16 @@ async function handle(db: Db, update: any) {
     deeds: [], ig_name: null, proactive: true, utc_offset: 1, last_proactive: null, nudged: false,
     hearts: 0, heart_day: null, heart_count: 0, game: null, game_day: null, game_count: 0,
     task_code: null, task_at: null, task_day: null, comments: 0, ticket: 0,
+    team: null, team_id: null, voice_day: null, voice_count: 0, seen_day: null, seen_count: 0,
   };
   chat.first_name = String(msg.from?.first_name ?? '').replace(/[\r\n]+/g, ' ').slice(0, 40) || chat.first_name;
   chat.last_seen = new Date().toISOString();
   chat.nudged = false;
   if (chat.msg_day !== day) { chat.msg_day = day; chat.msg_count = 0; }
 
-  const text = typeof msg.text === 'string' ? msg.text.trim() : '';
+  // deno-lint-ignore no-explicit-any
+  const sizes: any[] = Array.isArray(msg.photo) ? msg.photo : [];
+  const text = typeof msg.text === 'string' ? msg.text.trim() : sizes.length && typeof msg.caption === 'string' ? msg.caption.trim() : '';
   let command = text.startsWith('/') ? text.split(/[\s@]/)[0].toLowerCase() : '';
 
   if (command === '/forget') {
@@ -679,7 +797,7 @@ async function handle(db: Db, update: any) {
     await send(chatId, t('app', chat.lang));
     return;
   }
-  if (!text) {
+  if (!text && !sizes.length) {
     await saveChat(db, chat);
     await send(chatId, t('textOnly', chat.lang));
     return;
@@ -695,15 +813,33 @@ async function handle(db: Db, update: any) {
     ? '(They just opened the chat with you on Telegram and confirmed they are an adult. Say hello like you would text someone new you are curious about — one or two short messages, and ask them something. No list of features.)'
     : command === '/help'
       ? '(They ask what you can do here. Tell them briefly, in your own style: chatting about anything, live scores and results, news, fixtures of any team, football stories, photos of you now and then; /stop if you should not text first, /reset starts a new chat, /forget deletes what you know about them, /app shows the BETina app.)'
-      : text.slice(0, MAX_INPUT);
+      : sizes.length ? '' : text.slice(0, MAX_INPUT);
   if (command === '/start') chat.history = [];
+
+  // A photo from them: she looks at it for this one answer; it is not kept.
+  let picture: Picture | null = null;
+  let note = said;
+  if (sizes.length && !command) {
+    const wrote = text ? ` and wrote: "${text.slice(0, MAX_INPUT)}"` : '';
+    const seen = chat.seen_day === day ? chat.seen_count : 0;
+    picture = seen < SEEN_PER_DAY ? await loadPicture(sizes) : null;
+    if (picture) {
+      await db.from('telegram_chats').update({ seen_day: day, seen_count: seen + 1 }).eq('chat_id', chatId);
+      chat.seen_day = day; chat.seen_count = seen + 1;
+      note = `(They sent you a photo${wrote}. You can see it.)`;
+    } else {
+      note = seen >= SEEN_PER_DAY
+        ? `(They sent you another photo${wrote}. You have looked at enough photos for today — you did not open this one; say so playfully.)`
+        : `(They sent you a photo${wrote}, but it would not load. Ask them to send it again.)`;
+    }
+  }
 
   chat.msg_count += 1;
   chat.msg_total += 1;
   if (chat.last_active_day !== day) { chat.last_active_day = day; chat.active_days += 1; }
-  const turns: Turn[] = [...chat.history, { role: 'user' as const, content: said }].slice(-HISTORY_TURNS);
+  const turns: Turn[] = [...chat.history, { role: 'user' as const, content: note }].slice(-HISTORY_TURNS);
   await saveChat(db, chat); // count the message before the (slow) answer
-  await reply(db, chat, turns);
+  await reply(db, chat, turns, picture);
 }
 
 // ── She texts first ──────────────────────────────────────────────────────────
@@ -723,7 +859,7 @@ async function proactive(db: Db): Promise<{ sent: number }> {
     const silent = now - Date.parse(chat.last_seen ?? '');
     let note = '';
     if (hour >= 7 && hour < 10 && silent < 3 * 86_400_000) {
-      note = '(No message from them — it is morning for them and you decided to text first. Send a short good-morning in your style, personal to what you know about them or what is on in sport today. You may send one photo with send_photo first if you have one that fits. End with a little question.)';
+      note = '(No message from them — it is morning for them and you decided to text first. Send a short good-morning in your style, personal to what you know about them or what is on in sport today. You may send one photo with send_photo first if you have one that fits — or, now and then instead of a photo, say your good-morning as a voice note with send_voice. Never both. End with a little question.)';
     } else if (hour >= 17 && hour < 21 && silent > 2 * 86_400_000 && !chat.nudged) {
       note = '(No message from them — they have been quiet for a couple of days and you decided to text first. One short, playful message: you noticed they went missing. Pick up something you talked about or a match coming up. No photo, no guilt trip.)';
       chat.nudged = true;

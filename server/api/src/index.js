@@ -6,10 +6,11 @@ import { cors } from 'hono/cors';
 import { cardPng } from './card.js';
 import { G2PError } from './g2p.js';
 import {
-  liveDay, liveFind, liveH2H, liveIncidents, liveMatch, liveNext, liveNow, liveStatus, liveTable, liveTake,
+  liveDay, liveFind, liveH2H, liveIncidents, liveMatch, liveNext, liveNow, liveStatus, liveTable, liveTake, liveTeams,
 } from './livescore.js';
 import { newsArticle, newsList, newsPool } from './news.js';
 import { lookupEvent, lookupTeam, searchTeams, teamLast, teamNext } from './sportsdb.js';
+import { tts } from './tts.js';
 import { voiceBudget, voiceSearch, voiceSession, voiceUsage } from './voice.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
@@ -70,12 +71,15 @@ app.get('/v1/live/h2h/:home/:away', async (c) => send(c, await liveH2H(c.req.par
 app.get('/v1/live/find', async (c) => send(c, await liveFind(c.req.query('q')), 15));
 app.get('/v1/live/take/:id', async (c) => send(c, await liveTake(c.req.param('id'), c.req.query('lang')), 30));
 app.get('/v1/live/next', async (c) => send(c, await liveNext({ teams: c.req.query('teams'), matches: c.req.query('matches') }), 30));
+app.get('/v1/live/teams', async (c) => send(c, await liveTeams(c.req.query('q')), 3600));
 app.get('/v1/live/status', (c) => send(c, liveStatus(), 0));
 
 app.get('/v1/voice/budget', voiceBudget);
 app.post('/v1/voice/session', voiceSession);
 app.post('/v1/voice/usage', voiceUsage);
 app.post('/v1/voice/search', voiceSearch);
+// BETina's voice notes on Telegram (one-time ticket from our Telegram function).
+app.post('/v1/tts', tts);
 
 // --- Image cards for BETina's posts on X (social-desk) ---------------------
 app.get('/v1/social/card/:id', cardPng);

@@ -4,6 +4,10 @@
 // pushes them to players who follow the team or the match (live_follows), or
 // whose favourite team plays. Tapping opens the match page.
 //
+// BETina on Telegram: people who told her their club (telegram_chats.team_id,
+// set by the bot's follow_team) get its goals and final scores as a message
+// from her — unless they sent /stop.
+//
 // Deploy: supabase functions deploy live-alerts --no-verify-jwt
 // (it only sends what the public live feed already shows; the cursor in
 // live_alert_state makes repeated calls harmless).
@@ -47,6 +51,69 @@ function render(i: Incident, lang: string): { title: string; body: string } | nu
   return { title: fill(texts[0]), body: fill(texts[1]) };
 }
 
+// ── BETina on Telegram ───────────────────────────────────────────────────────
+// [their team scores, the other team scores, full time: won, lost, draw] — {team} {opp} {line}
+const TG_MSG: Record<string, [string, string, string, string, string]> = {
+  en: ['GOAL for {team}!! ⚽ {line}', 'ouch.. {opp} score 🙈 {line}', 'full time: {line} — your team did it 💚', 'full time: {line}. come here, that one hurts', 'full time: {line}. a point is a point, hm?'],
+  de: ['TOOOR für {team}!! ⚽ {line}', 'autsch.. {opp} trifft 🙈 {line}', 'abpfiff: {line} — dein team hat es gemacht 💚', 'abpfiff: {line}. komm her, das tut weh', 'abpfiff: {line}. ein punkt ist ein punkt, hm?'],
+  es: ['¡GOOOL de {team}! ⚽ {line}', 'uf.. marca {opp} 🙈 {line}', 'final: {line} — tu equipo lo hizo 💚', 'final: {line}. ven aquí, esta duele', 'final: {line}. un punto es un punto, ¿no?'],
+  pt: ['GOOOLO! marca {team} ⚽ {line}', 'ui.. marca {opp} 🙈 {line}', 'fim: {line} — a tua equipa conseguiu 💚', 'fim: {line}. anda cá, esta dói', 'fim: {line}. um ponto é um ponto, não?'],
+  fr: ['BUUUT pour {team} !! ⚽ {line}', 'aïe.. {opp} marque 🙈 {line}', "c'est fini : {line} — ton équipe l'a fait 💚", "c'est fini : {line}. viens là, celle-là fait mal", "c'est fini : {line}. un point c'est un point, non ?"],
+  it: ['GOOOL per {team}!! ⚽ {line}', 'ahi.. segna {opp} 🙈 {line}', "finita: {line} — la tua squadra ce l'ha fatta 💚", 'finita: {line}. vieni qui, questa fa male', 'finita: {line}. un punto è un punto, no?'],
+  ro: ['GOOOL pentru {team}!! ⚽ {line}', 'au.. marchează {opp} 🙈 {line}', 'final: {line} — echipa ta a reușit 💚', 'final: {line}. vino aici, asta doare', 'final: {line}. un punct e un punct, nu?'],
+  tr: ['GOOOL! {team} attı ⚽ {line}', 'of.. {opp} attı 🙈 {line}', 'maç bitti: {line} — takımın başardı 💚', 'maç bitti: {line}. gel buraya, bu acıttı', 'maç bitti: {line}. bir puan bir puandır, değil mi?'],
+  hr: ['GOOOL za {team}!! ⚽ {line}', 'au.. {opp} zabija 🙈 {line}', 'kraj: {line} — tvoja ekipa je uspjela 💚', 'kraj: {line}. dođi, ovo boli', 'kraj: {line}. bod je bod, ha?'],
+};
+
+/** What BETina texts someone whose team (side 0 home, 1 away) is in this incident. */
+function telegramLine(i: Incident, mine: 0 | 1, lang: string): string | null {
+  const texts = TG_MSG[lang] ?? TG_MSG.en;
+  const own = mine === 1 ? i.a : i.h;
+  const opp = mine === 1 ? i.h : i.a;
+  const score = `${i.h.n} ${i.g[0] ?? 0}:${i.g[1] ?? 0} ${i.a.n}`;
+  let text: string;
+  if (i.type === 'goal') {
+    if (i.side !== 0 && i.side !== 1) return null;
+    const who = [i.player, i.min ? `${i.min}'` : ''].filter(Boolean).join(' ');
+    text = texts[i.side === mine ? 0 : 1].replace('{line}', who ? `${score} · ${who}` : score);
+  } else if (i.type === 'ft') {
+    const [gm, go] = mine === 1 ? [i.g[1] ?? 0, i.g[0] ?? 0] : [i.g[0] ?? 0, i.g[1] ?? 0];
+    text = texts[gm > go ? 2 : gm < go ? 3 : 4].replace('{line}', score);
+  } else return null;
+  return text.replace('{team}', own.n).replace('{opp}', opp.n);
+}
+
+// deno-lint-ignore no-explicit-any
+async function telegramAlerts(supabase: any, list: Incident[]): Promise<number> {
+  const token = Deno.env.get('TELEGRAM_BOT_TOKEN');
+  const events = list.filter((i) => i.type === 'goal' || i.type === 'ft');
+  if (!token || !events.length) return 0;
+  const ids = [...new Set(events.flatMap((i) => [i.h.id, i.a.id]))];
+  const { data: chats } = await supabase.from('telegram_chats')
+    .select('chat_id, lang, team_id, history').in('team_id', ids).eq('adult', true).eq('proactive', true).limit(2000);
+  let sent = 0;
+  for (const chat of chats ?? []) {
+    const lines: string[] = [];
+    for (const i of events) {
+      if (i.h.id !== chat.team_id && i.a.id !== chat.team_id) continue;
+      const text = telegramLine(i, i.a.id === chat.team_id ? 1 : 0, chat.lang);
+      if (!text) continue;
+      const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chat.chat_id, text }),
+      }).then((x) => x.json()).catch(() => ({ ok: false }));
+      if (r.ok) { lines.push(text); sent += 1; }
+      // They blocked her: no more messages from her side.
+      else if (r.error_code === 403) { await supabase.from('telegram_chats').update({ proactive: false }).eq('chat_id', chat.chat_id); break; }
+    }
+    // She should know what she texted when they answer.
+    if (lines.length) {
+      const history = [...(Array.isArray(chat.history) ? chat.history : []), ...lines.map((content) => ({ role: 'assistant', content }))].slice(-30);
+      await supabase.from('telegram_chats').update({ history }).eq('chat_id', chat.chat_id);
+    }
+  }
+  return sent;
+}
+
 Deno.serve(async () => {
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   const { data: state } = await supabase.from('live_alert_state').select('seq').eq('id', 1).single();
@@ -59,6 +126,7 @@ Deno.serve(async () => {
   const list = res.incidents.filter((i) => now - i.at < FRESH_MS && ['goal', 'kickoff', 'ht', 'ft', 'red'].includes(i.type));
   await supabase.from('live_alert_state').update({ seq: res.seq, updated_at: new Date().toISOString() }).eq('id', 1);
   if (!list.length) return new Response(JSON.stringify({ sent: 0, seq: res.seq }), { headers: { 'Content-Type': 'application/json' } });
+  const telegram = await telegramAlerts(supabase, list).catch((err) => { console.error('telegram alerts:', err.message); return 0; });
 
   // Who follows which team / match.
   const teams = [...new Set(list.flatMap((i) => [i.h.id, i.a.id]))];
@@ -72,7 +140,7 @@ Deno.serve(async () => {
   const users = new Set<string>([
     ...(byTeam ?? []).map((f) => f.user_id), ...(byMatch ?? []).map((f) => f.user_id), ...(byFav ?? []).map((p) => p.id),
   ]);
-  if (!users.size) return new Response(JSON.stringify({ sent: 0, seq: res.seq }), { headers: { 'Content-Type': 'application/json' } });
+  if (!users.size) return new Response(JSON.stringify({ sent: 0, telegram, seq: res.seq }), { headers: { 'Content-Type': 'application/json' } });
 
   const { data: profiles } = await supabase
     .from('profiles').select('id, language, push_token, notify_events, favourite_team')
@@ -97,5 +165,5 @@ Deno.serve(async () => {
     await fetch(EXPO_PUSH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(messages.slice(k, k + 100)) })
       .catch((err) => console.error('expo push:', err.message));
   }
-  return new Response(JSON.stringify({ sent: messages.length, seq: res.seq }), { headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ sent: messages.length, telegram, seq: res.seq }), { headers: { 'Content-Type': 'application/json' } });
 });

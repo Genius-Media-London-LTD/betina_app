@@ -399,6 +399,19 @@ export async function liveH2H(home, away) {
 const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
   .replace(/\b(fc|cf|afc|sc|sv|ac|as|cd|ud|fk|nk|sk|bk|if|club|de|the)\b/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 
+/** GET /v1/live/teams?q= — football clubs and national teams by name, with the ids the live feed uses. */
+export async function liveTeams(q) {
+  const query = String(q ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, ' ').trim().slice(0, 40);
+  if (query.length < 3) return { status: 400, body: { error: 'query_too_short' } };
+  try {
+    const list = await cached(`teams:${query.toLowerCase()}`, 86_400_000, () => af('teams', { search: query }));
+    return { status: 200, body: { teams: list.slice(0, 15).map((t) => ({ id: t.team.id, name: t.team.name, country: t.team.country, national: t.team.national === true })) } };
+  } catch (err) {
+    console.error('live teams:', err.message);
+    return { status: 502, body: { error: 'upstream' } };
+  }
+}
+
 function line(r, lg) {
   const state = LIVE.has(r.st) ? `LIVE ${r.st === 'HT' ? 'half time' : `${r.min}'`}` : FINISHED.has(r.st) ? 'full time' : `kick-off ${new Date(r.ts * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC`;
   const score = r.g[0] != null ? `${r.g[0]}:${r.g[1]}` : 'vs';

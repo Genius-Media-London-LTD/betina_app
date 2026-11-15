@@ -117,7 +117,8 @@ function goalCard(i: Incident, min: number): { card: Card; diff: number } {
   const [hs, as] = [i.g[0] ?? 0, i.g[1] ?? 0];
   const diff = i.side === 1 ? as - hs : hs - as; // for the scoring team, after the goal
   const tag = min >= 85 ? 'Late drama' : diff === 0 ? 'All square' : 'In front';
-  const mood = min >= 85 ? pickOf(['schock', 'jubel'], i.seq) : pickOf(['jubel', 'strasse'], i.seq);
+  // Never a cheering photo on a match between two teams: it reads as if she took a side (Dejan, 2026-11-16).
+  const mood = min >= 85 ? pickOf(['schock', 'nervoes'], i.seq) : pickOf(['strasse', 'analyse'], i.seq);
   return {
     diff,
     card: { t: 'goal', mood, tag, league: i.league.name, home: i.h.n, away: i.a.n, hs, as, side: i.side ?? 0, min, scorer: i.player ?? null },
@@ -132,7 +133,7 @@ function resultCard(i: Incident): Card {
     : total === 0 ? ['Goalless', 'enttaeuscht']
     : diff === 0 ? ['All square', 'analyse']
     : diff >= 3 ? ['Statement win', 'zwinkern']
-    : diff === 1 ? ['Tight one', pickOf(['jubel', 'strasse', 'nervoes'], i.id)]
+    : diff === 1 ? ['Tight one', pickOf(['strasse', 'nervoes', 'analyse'], i.id)]
     : ['Job done', pickOf(['zwinkern', 'couch-abend', 'stadt-nacht', 'dachterrasse'], i.id)];
   return { t: 'result', mood, tag, league: i.league.name, home: i.h.n, away: i.a.n, hs, as };
 }
@@ -737,7 +738,7 @@ function withCta(caption: string, cta: string) {
 // Their own set (60, varied outfits, 2026-11-10), picked per post when it goes out.
 const IG_SETS: Record<string, number> = {
   'news-fussball': 8, 'news-f1': 5, 'news-tennis': 4, 'news-basketball': 4, 'news-kampfsport': 3, 'news-allgemein': 6,
-  'ergebnis-jubel': 4, 'ergebnis-schock': 3, 'ergebnis-knapp': 3, 'ergebnis-enttaeuscht': 2, 'ergebnis-abend': 2, lifestyle: 8,
+  'ergebnis-jubel': 4, 'ergebnis-schock': 3, 'ergebnis-knapp': 3, 'ergebnis-enttaeuscht': 2, 'ergebnis-abend': 2, 'ergebnis-neutral': 8, lifestyle: 8,
 };
 const ZEITREISE = [1930, 1950, 1960, 1970, 1980, 1990, 2000, 2010]; // zeitreise-<decade>
 const igSet = (...names: string[]) => names.flatMap((n) => Array.from({ length: IG_SETS[n] ?? 0 }, (_, i) => `${n}-${i + 1}`));
@@ -754,7 +755,8 @@ function newsSport(c: Card) {
 
 /** Photos that fit the post, best first (time travel: the closest decade first). */
 function igChoices(c: Card): string[] {
-  if (c.t === 'goal') return igSet(...(Number(c.min) >= 85 ? ['ergebnis-schock', 'ergebnis-jubel'] : ['ergebnis-jubel']));
+  // Goals and results: neutral looks only (tense, surprised, evening) — no cheering, no side taken.
+  if (c.t === 'goal') return igSet(...(Number(c.min) >= 85 ? ['ergebnis-schock', 'ergebnis-knapp', 'ergebnis-neutral'] : ['ergebnis-neutral', 'ergebnis-knapp', 'ergebnis-abend']));
   if (c.t === 'poll') return igSet('news-fussball', 'news-allgemein');
   if (c.t === 'history') {
     const y = Number(c.year) || 1986;
@@ -762,11 +764,11 @@ function igChoices(c: Card): string[] {
   }
   if (c.t === 'result') {
     const byTag: Record<string, string[]> = {
-      'Goal fest': ['ergebnis-schock', 'ergebnis-jubel'], Goalless: ['ergebnis-enttaeuscht', 'ergebnis-knapp'],
-      'All square': ['ergebnis-knapp', 'ergebnis-enttaeuscht'], 'Statement win': ['ergebnis-jubel', 'ergebnis-abend'],
-      'Tight one': ['ergebnis-knapp', 'ergebnis-jubel'], 'Job done': ['ergebnis-abend', 'ergebnis-jubel'],
+      'Goal fest': ['ergebnis-schock', 'ergebnis-abend', 'ergebnis-neutral'], Goalless: ['ergebnis-enttaeuscht', 'ergebnis-knapp', 'ergebnis-neutral'],
+      'All square': ['ergebnis-neutral', 'ergebnis-knapp', 'ergebnis-abend'], 'Statement win': ['ergebnis-neutral', 'ergebnis-abend', 'ergebnis-schock'],
+      'Tight one': ['ergebnis-knapp', 'ergebnis-neutral', 'ergebnis-abend'], 'Job done': ['ergebnis-neutral', 'ergebnis-abend', 'ergebnis-knapp'],
     };
-    return igSet(...(byTag[String(c.tag)] ?? ['ergebnis-jubel']));
+    return igSet(...(byTag[String(c.tag)] ?? ['ergebnis-neutral', 'ergebnis-knapp']));
   }
   const bySport: Record<string, string[]> = {
     football: ['news-fussball', 'news-allgemein'], tennis: ['news-tennis'], basketball: ['news-basketball'], nfl: ['news-basketball', 'news-allgemein'],
