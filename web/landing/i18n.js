@@ -1,6 +1,12 @@
 // Landing page translations. English lives in the HTML; every element with
-// data-i="key" gets swapped for the chosen language. Language pick order:
-// ?lang= → saved choice → browser language → country from /api/locale → English.
+// data-i="key" gets swapped for the chosen language. Language pick order on
+// the English page (/): ?lang= → saved choice → browser language → country
+// from /api/locale → English.
+//
+// Every other language also has its own page (/de, /es, …) so search engines
+// can index it: scripts/build-landing-langs.mjs writes those from index.html
+// and the texts below — run it after changing either. On those pages nothing
+// is swapped; the language menu always leads to the page of that language.
 (function () {
   'use strict';
 
@@ -579,6 +585,9 @@
     }
   };
 
+  // The build script reads the texts from here (Node); the browser goes on.
+  if (typeof module !== 'undefined' && module.exports) { module.exports = { T: T, SUPPORTED: SUPPORTED }; return; }
+
   var EN_TITLE = document.title;
   var originals = null;
 
@@ -613,7 +622,14 @@
 
   function start() {
     var select = document.getElementById('language-select');
-    if (select) select.addEventListener('change', function (e) { apply(e.target.value, true); });
+    if (select) select.addEventListener('change', function (e) {
+      var lang = SUPPORTED.indexOf(e.target.value) >= 0 ? e.target.value : 'en';
+      try { localStorage.setItem('betina_lang', lang); } catch (err) {}
+      location.href = lang === 'en' ? '/' : '/' + lang;
+    });
+    // A language page is already in its language.
+    var page = document.documentElement.lang;
+    if (page !== 'en' && SUPPORTED.indexOf(page) >= 0) { if (select) select.value = page; return; }
     var query = new URLSearchParams(location.search).get('lang');
     var saved = null;
     try { saved = localStorage.getItem('betina_lang'); } catch (e) {}
