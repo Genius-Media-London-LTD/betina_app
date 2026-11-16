@@ -371,7 +371,8 @@ async function sendVoice(db: Db, chat: Chat, text: string): Promise<string> {
   if (!res?.ok) return 'The voice note would not record — write it instead.';
   const form = new FormData();
   form.append('chat_id', String(chat.chat_id));
-  form.append('voice', new Blob([await res.arrayBuffer()], { type: 'audio/ogg' }), 'betina.ogg');
+  const mp3 = (res.headers.get('content-type') ?? '').includes('mpeg');
+  form.append('voice', new Blob([await res.arrayBuffer()], { type: mp3 ? 'audio/mpeg' : 'audio/ogg' }), mp3 ? 'betina.mp3' : 'betina.ogg');
   const sent = await (await fetch(`${TG}/sendVoice`, { method: 'POST', body: form })).json().catch(() => ({ ok: false }));
   if (!sent?.ok) return 'They cannot receive voice messages (their Telegram settings) — write it instead.';
   chat.voice_count = (chat.voice_day === today() ? chat.voice_count : 0) + 1;
@@ -643,6 +644,22 @@ async function callClaude(system: string, messages: any[]) {
   return await res.json();
 }
 
+/**
+ * What the referee asks of this one reply, so a chat with her is not an
+ * interview: sometimes no question, sometimes a subject of her own, and at
+ * fixed points of the day's conversation the invitation to GeniusBet / the app.
+ */
+function impulse(chat: Chat): string {
+  if (activeGame(chat)) return '';
+  const n = chat.msg_count; // their messages today, this one included
+  if (n === 5) return 'if you do not know it yet, find out in passing whether they play — which sport they follow, whether they tip or bet, whether they know GeniusBet. One light line, not a survey.';
+  if (n === 10 || n === 26) return 'this is the moment for your invitation — lead them to GeniusBet or the BETina app now, in one personal line with the link, tied to what you were just talking about. Skip it only if they are upset or in distress.';
+  const r = Math.random();
+  if (r < 0.4) return 'no question in this reply. React, tease or tell something — and leave it there.';
+  if (r < 0.6) return 'do not stay on their last sentence. One short reaction at most, then bring up something of your own that has nothing to do with it — your day, a thought, something you saw or plan.';
+  return '';
+}
+
 const localHour = (chat: Chat) => (((new Date().getUTCHours() + chat.utc_offset) % 24) + 24) % 24;
 
 /** BETina's answer to the conversation so far: text + follow-up chips. */
@@ -659,6 +676,8 @@ async function answer(db: Db, chat: Chat, turns: Turn[], picture: Picture | null
     task: taskState(chat),
     hearts: chat.hearts, heartsToWinToday: heartsToWin(chat), game: gameState(chat),
     voicesLeftToday: voicesLeft(chat), team: chat.team,
+    // Only when they wrote: her own first messages (morning, nudge) and commands have their own brief.
+    impulse: /^\(/.test(turns[turns.length - 1]?.content ?? '') ? '' : impulse(chat),
   });
   // deno-lint-ignore no-explicit-any
   const messages: any[] = turns.map((m) => ({ role: m.role, content: m.content }));
