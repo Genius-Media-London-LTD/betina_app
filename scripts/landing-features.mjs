@@ -33,6 +33,7 @@ const LOCAL = {
   en: { home: 'Home', more: 'More from BETina', faq: 'Questions & answers', now: 'now' },
   de: { home: 'Startseite', more: 'Mehr von BETina', faq: 'Fragen & Antworten', now: 'jetzt' },
 };
+const COMPS = [['bundesliga', 'Bundesliga'], ['premier-league', 'Premier League'], ['laliga', 'LaLiga'], ['serie-a', 'Serie A'], ['champions-league', 'Champions League']];
 const NAMES = { en: 'English', de: 'Deutsch', es: 'Español', fr: 'Français', pt: 'Português', it: 'Italiano', ro: 'Română', tr: 'Türkçe', hr: 'Hrvatski' };
 const ORDER = Object.keys(NAMES);
 const ui = (lang, key) => (lang === 'en' ? EN[key] : T[lang][key]) ?? EN[key];
@@ -455,6 +456,7 @@ ${body}
       <a class="brand" href="${home(lang)}" aria-label="BETina"><img src="/assets/v2/logo-mark.webp" alt="" width="114" height="128" loading="lazy"><b>BET<span>INA</span></b><small>by GeniusBet</small></a>
       <div class="links">
         ${all.filter((f) => f.pages[lang]).map((f) => `<a href="${f.pages[lang].path}">${f.pages[lang].nav}</a>`).join('\n        ')}
+        ${COMPS.map(([c, n]) => `<a href="${lang === 'en' ? '' : '/' + lang}/${c}">${n}</a>`).join('\n        ')}
         <a href="/privacy">${esc(ui(lang, 'fPrivacy'))}</a>
         <a href="/privacy#terms">${esc(ui(lang, 'fTerms'))}</a>
         <a href="/support">${esc(ui(lang, 'navSupport'))}</a>

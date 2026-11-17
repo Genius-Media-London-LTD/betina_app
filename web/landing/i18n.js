@@ -855,6 +855,9 @@
       el.style.display = href ? '' : 'none';
       if (href) el.setAttribute('href', href);
     });
+    document.querySelectorAll('[data-comp]').forEach(function (el) {
+      el.setAttribute('href', (lang === 'en' ? '' : '/' + lang) + '/' + el.getAttribute('data-comp'));
+    });
     document.documentElement.lang = lang;
     document.title = (lang !== 'en' && dict.title) || EN_TITLE;
     var select = document.getElementById('language-select');

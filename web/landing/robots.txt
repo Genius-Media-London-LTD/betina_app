@@ -3,3 +3,4 @@ Allow: /
 Disallow: /api/
 
 Sitemap: https://betina.geniusbet.com/sitemap.xml
+Sitemap: https://betina.geniusbet.com/sitemap-matchdays.xml

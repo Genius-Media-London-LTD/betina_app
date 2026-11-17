@@ -34,6 +34,9 @@ function page(lang) {
   html = html.replace(/\s*<a class="more" href="[^"]*" data-i="[^"]+" data-i-href="([^"]+)">[^<]*<\/a>/g, (all, key) =>
     (dict[key] ? all.replace(/href="[^"]*"/, `href="${dict[key]}"`) : ''));
 
+  // Competition links lead to this language's matchday pages.
+  html = html.replace(/href="\/([a-z-]+)" data-comp="\1"/g, (all, comp) => `href="/${lang}/${comp}" data-comp="${comp}"`);
+
   // Texts: every element with data-i holds plain text only.
   let missing = [];
   html = html.replace(/(<[a-z0-9]+\b[^>]*\bdata-i="([^"]+)"[^>]*>)([^<]*)(?=<)/g, (all, open, key) => {
