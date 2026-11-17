@@ -354,7 +354,9 @@ function render(feature, lang, all) {
 <meta name="theme-color" content="#0D0B11">
 <meta property="og:title" content="${attr(p.title)}">
 <meta property="og:description" content="${attr(p.desc)}">
-<meta property="og:image" content="${BASE}/assets/v2/betina-hero.jpg">
+<meta property="og:image" content="${BASE}/assets/v2/share-card.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:type" content="website">
 <meta property="og:url" content="${url}">
 <meta property="og:locale" content="${OG_LOCALE[lang]}">
