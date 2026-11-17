@@ -119,9 +119,14 @@ function table(matches, upTo) {
 
 // ---- page parts -------------------------------------------------------------
 const CSS = `
+@font-face{font-family:'Archivo Fallback';src:local('Arial');size-adjust:97.5%}
+@font-face{font-family:'Archivo';font-style:italic;font-weight:900;font-display:swap;src:url(/assets/fonts/archivo-italic-900-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Archivo';font-style:italic;font-weight:900;font-display:swap;src:url(/assets/fonts/archivo-italic-900-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Archivo';font-style:normal;font-weight:400 900;font-display:swap;src:url(/assets/fonts/archivo-variable-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Archivo';font-style:normal;font-weight:400 900;font-display:swap;src:url(/assets/fonts/archivo-variable-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
 :root{--lime:#B8E926;--lime-ink:#10120A;--violet:#8B5CF6;--bg:#0D0B11;--surface:#14111A;--raised:#1B1723;--line:rgba(242,240,245,.10);--text:#F2F0F5;--soft:#CFC9DA;--muted:#A29AAF;--gutter:28px;--max:1100px;--ease:cubic-bezier(.2,.8,.2,1)}
 *{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--text);font-family:'Archivo',system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Archivo','Archivo Fallback',system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 img{display:block;max-width:100%;height:auto}a{color:inherit;text-decoration:none}
 .wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gutter)}
 .display{font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:-.025em;line-height:.96;margin:0}
@@ -207,7 +212,6 @@ const PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#00D7F
 
 function shell({ lang, title, desc, url, alternates, index, ld, body, compSlug }) {
   const L = S[lang];
-  const FONT = 'https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,600;0,700;0,800;0,900;1,900&display=swap';
   return `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
@@ -231,11 +235,8 @@ ${index ? '' : '<meta name="robots" content="noindex, follow">\n'}<meta name="th
 ${alternates.map(([l, href]) => `<link rel="alternate" hreflang="${l}" href="${href}">`).join('\n')}
 <script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>
 <link rel="icon" type="image/png" href="/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="${FONT}">
-<link rel="stylesheet" href="${FONT}" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="${FONT}"></noscript>
+<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/archivo-variable-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/archivo-italic-900-latin.woff2" crossorigin>
 <style>${CSS}</style>
 </head>
 <body>
