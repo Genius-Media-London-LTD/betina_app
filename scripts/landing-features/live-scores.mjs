@@ -1,0 +1,211 @@
+// Feature page: BETina Live (live football scores and goal notifications).
+export default {
+  id: 'live',
+  order: 2,
+  shot: 'screen-live',
+  pages: {
+    en: {
+      path: '/live-scores',
+      nav: 'Live scores',
+      teaser: 'Live football scores for your teams and a push the moment a goal goes in.',
+      more: 'About BETina Live',
+      crumb: 'Live scores',
+      title: 'Live Football Scores App with Goal Alerts & AI | BETina',
+      desc: 'Live football scores for your teams and a push alert whenever a goal is scored. Ask the AI about the match. Free on iPhone, Android and the web.',
+      sticker: 'BETina Live · Football',
+      h1: 'Live football scores',
+      h1b: 'and goal alerts for your teams.',
+      lead: 'BETina Live shows the football scores that matter to you and sends a push to your phone the moment your team scores. And when you want to know what is going on in the match, you simply ask BETina.',
+      badge: '● Live',
+      push: 'GOAL! 1–0 in the 34th minute.',
+      shotAlt: 'BETina app: live football scores with goal alerts for followed teams',
+      facts: [
+        ['0 €', 'Free in the app, no subscription'],
+        ['5', 'Match moments you get a push for'],
+        ['9', 'Languages BETina talks football in'],
+        ['18+', 'For adults, no money involved'],
+      ],
+      sections: [
+        {
+          type: 'prose', kicker: 'The short version', h2: 'What is', h2b: 'BETina Live?',
+          paras: [
+            '<strong>BETina Live is the live football scores part of the BETina app.</strong> It lists the matches being played right now, keeps the score up to date while the ball is rolling and puts the teams you follow at the top. You do not have to keep the app open: when something happens in a match you care about, a notification tells you.',
+            'Most live score apps stop there. BETina Live sits inside an AI sports companion, so the score is the start of a conversation. You can ask BETina who scored, how the table looks now or what she makes of the first half, in the chat or on a voice call. Live scores are available for football; talking about other sports works in the <a href="/ai-sports-chat">AI sports chat</a>.',
+          ],
+        },
+        {
+          type: 'feed', kicker: 'Goal alerts', h2: 'A push the moment', h2b: 'your team scores.',
+          label: 'Example notifications from BETina Live',
+          paras: [
+            'Goal alerts are the reason most people install a football scores app, and they are the centre of BETina Live. Follow a team and you get a push notification when a goal is scored in its match, with the new score and the minute.',
+            'Alerts only arrive for <strong>the teams and matches you chose</strong>. Nobody needs fifty notifications from leagues they do not watch. Besides goals, BETina Live reports the other moments that change a match: kick-off, red cards, half-time and the final whistle.',
+            'Goal notifications reach you on iPhone and Android. You can switch them off again in the settings at any time.',
+          ],
+          items: [
+            ['19:30', 'Kick-off! Your team is on the pitch.'],
+            ['34′', 'GOAL! 1–0 in the 34th minute.'],
+            ['45′', 'Half-time: 1–0. Solid first half.'],
+            ['67′', 'Red card for the visitors.'],
+            ['90′', 'Full time: 2–0. Three points!'],
+          ],
+        },
+        {
+          type: 'steps', kicker: 'Set-up', h2: 'How to set up goal notifications', h2b: 'for your team.',
+          intro: 'It takes about a minute, and you only do it once.',
+          items: [
+            { t: 'Get BETina', p: 'Download the app for free from the App Store or Google Play and sign in with Apple, Google, email or your phone number.' },
+            { t: 'Pick your teams', p: 'Choose your favourite team when you start. You can follow more teams, or a single match, in the Live tab.' },
+            { t: 'Allow notifications', p: 'Say yes when your phone asks whether BETina may send notifications. Without that, no goal alert can reach you.' },
+            { t: 'Watch or do not', p: 'Put the phone away. The next time your team scores, you will know within the same match minute, wherever you are.' },
+          ],
+        },
+        {
+          type: 'chat', kicker: 'The difference', h2: 'Ask about the match:', h2b: 'live scores with an AI companion.',
+          label: 'Example conversation about a live match',
+          paras: [
+            'A score tells you what happened. It does not tell you why, and it does not care. BETina does both. She has the live data of the match in front of her, so you can ask the things you would ask a friend who is watching: who scored, whether the lead is deserved, what the result means for the table.',
+            'Every match page also carries <strong>BETina\'s take</strong>, a short read of the game in her own words, next to the table and the head-to-head record of the two teams. And because BETina speaks nine languages, a fan in Zagreb gets the same match in Croatian that a fan in Madrid gets in Spanish.',
+          ],
+          msgs: [
+            ['me', 'What\'s the score in our match?'],
+            ['b', '1–0 to you since the 34th minute. A header after a corner, and honestly it was coming.'],
+            ['me', 'Where does that put us in the table?'],
+            ['b', 'If it stays like this you climb to fourth. Two more matchdays like that and I\'ll start believing.'],
+          ],
+          note: 'Illustrative example. BETina is an AI and can make mistakes.',
+        },
+        {
+          type: 'cards', kicker: 'On every match page', h2: 'More than', h2b: 'a number.',
+          items: [
+            { t: 'Live score and timeline', p: 'The current score, the minute and the key events of the match in the order they happened.' },
+            { t: 'Table and head-to-head', p: 'The league table at a glance and how the two teams fared against each other in earlier meetings.' },
+            { t: 'Your prediction next to it', p: 'If you play the free <a href="/prediction-game" style="color:var(--lime);text-decoration:underline">prediction game</a>, your predicted result sits beside the live score.' },
+          ],
+        },
+        {
+          type: 'prose', kicker: 'Good to know', h2: 'Free on iPhone, Android', h2b: 'and the web.',
+          paras: [
+            'BETina Live is part of the free BETina app. There is no paid tier for scores and no subscription for goal alerts. You find the app in the App Store and on Google Play, and you can open the web app in your browser to check scores on a laptop.',
+            'BETina is an entertainment app for adults. <strong>No money is involved anywhere in the app</strong>: there is nothing to stake and nothing to pay out. It is made by GeniusBet and operated by Genius Media London Ltd.',
+          ],
+        },
+      ],
+      faqH2: 'BETina Live:', faqH2b: 'frequently asked questions.',
+      faq: [
+        ['Is BETina Live free?', 'Yes. Live scores and goal alerts are part of the free BETina app on iPhone, Android and the web. There is no subscription.'],
+        ['How do I get a notification when my team scores?', 'Install BETina, pick your team and allow notifications. From then on you get a push whenever a goal is scored in a match of a team you follow.'],
+        ['Can I get goal alerts for one team only?', 'Yes. Alerts are sent only for the teams and single matches you follow, so one team is enough. You can add or remove teams at any time.'],
+        ['Which sports have live scores?', 'Live scores and goal alerts are available for football. You can talk with BETina about many other sports, such as tennis, NFL, MMA or cricket.'],
+        ['What else do I get a push for besides goals?', 'For kick-off, red cards, half-time and the final result of the matches you follow.'],
+        ['What can I ask the AI about a match?', 'Anything you would ask a friend who is watching: the score, who scored, how the table looks or what she thinks of the game. BETina is an AI and can be wrong, so treat her view as an opinion.'],
+        ['Is real money involved?', 'No. BETina is an entertainment app. No money is staked or paid out anywhere in the app.'],
+      ],
+      alsoH2: 'There is more', alsoH2b: 'in the app.',
+      homeTeaser: 'Everything BETina can do, on one page.',
+      ctaH2: 'Never miss', ctaH2b: 'a goal again.',
+      ctaText: 'Download BETina, follow your team and let the goals come to you.',
+    },
+
+    de: {
+      path: '/de/live-ergebnisse',
+      nav: 'Live-Ergebnisse',
+      teaser: 'Fußball-Live-Ergebnisse deiner Teams und ein Push, sobald ein Tor fällt.',
+      more: 'Mehr zu BETina Live',
+      crumb: 'Live-Ergebnisse',
+      title: 'Live-Ergebnisse App mit Push bei Tor & KI-Chat | BETina',
+      desc: 'Fußball-Live-Ergebnisse deiner Lieblingsvereine und ein Push bei jedem Tor. Frag die KI zum Spiel. Kostenlos für iPhone, Android und im Browser.',
+      sticker: 'BETina Live · Fußball',
+      h1: 'Fußball-Live-Ergebnisse',
+      h1b: 'mit Push bei jedem Tor.',
+      lead: 'BETina Live zeigt dir die Fußball-Ergebnisse, die dich interessieren, und schickt dir einen Push aufs Handy, sobald dein Verein trifft. Und wenn du wissen willst, was im Spiel los ist, fragst du einfach BETina.',
+      badge: '● Live',
+      push: 'TOR! 1:0 in der 34. Minute.',
+      shotAlt: 'BETina-App: Fußball-Live-Ergebnisse mit Tor-Benachrichtigung für deine Vereine',
+      facts: [
+        ['0 €', 'Kostenlos in der App, ohne Abo'],
+        ['5', 'Spielmomente, für die du einen Push bekommst'],
+        ['9', 'Sprachen, in denen BETina über Fußball redet'],
+        ['18+', 'Für Erwachsene, ganz ohne Geld'],
+      ],
+      sections: [
+        {
+          type: 'prose', kicker: 'Kurz erklärt', h2: 'Was ist', h2b: 'BETina Live?',
+          paras: [
+            '<strong>BETina Live ist der Bereich für Fußball-Live-Ergebnisse in der BETina-App.</strong> Er zeigt die Spiele, die gerade laufen, hält den Spielstand aktuell und stellt die Vereine, denen du folgst, ganz nach oben. Die App muss dafür nicht offen sein: Passiert etwas in einem Spiel, das dir wichtig ist, meldet sich dein Handy.',
+            'Die meisten Ergebnis-Apps hören an dieser Stelle auf. BETina Live steckt in einer KI-Sportbegleiterin, und damit ist der Spielstand erst der Anfang. Du kannst BETina fragen, wer getroffen hat, wie die Tabelle jetzt aussieht oder was sie von der ersten Halbzeit hält, im Chat oder am Telefon. Live-Ergebnisse gibt es für Fußball; über alle anderen Sportarten redest du im <a href="/de/ki-sport-chat">KI-Sport-Chat</a>.',
+          ],
+        },
+        {
+          type: 'feed', kicker: 'Push bei Tor', h2: 'Ein Push, sobald', h2b: 'dein Verein trifft.',
+          label: 'Beispiel-Benachrichtigungen von BETina Live',
+          paras: [
+            'Die Tor-Benachrichtigung ist der Grund, warum sich die meisten eine Fußball-App aufs Handy laden, und sie ist das Herz von BETina Live. Folge einem Verein, und du bekommst eine Push-Nachricht, sobald in seinem Spiel ein Tor fällt, mit neuem Spielstand und Spielminute.',
+            'Benachrichtigungen kommen nur für <strong>die Vereine und Spiele, die du ausgewählt hast</strong>. Niemand braucht fünfzig Meldungen aus Ligen, die er nicht verfolgt. Neben Toren meldet BETina Live die anderen Momente, die ein Spiel verändern: Anpfiff, Rote Karten, Halbzeit und Abpfiff.',
+            'Die Tor-Benachrichtigungen kommen auf iPhone und Android an. In den Einstellungen kannst du sie jederzeit wieder ausschalten.',
+          ],
+          items: [
+            ['19:30', 'Anpfiff! Dein Verein ist auf dem Platz.'],
+            ['34′', 'TOR! 1:0 in der 34. Minute.'],
+            ['45′', 'Halbzeit: 1:0. Starke erste Hälfte.'],
+            ['67′', 'Rote Karte für die Gäste.'],
+            ['90′', 'Abpfiff: 2:0. Drei Punkte!'],
+          ],
+        },
+        {
+          type: 'steps', kicker: 'Einrichten', h2: 'So richtest du Tor-Benachrichtigungen', h2b: 'für deinen Lieblingsverein ein.',
+          intro: 'Das dauert etwa eine Minute, und du machst es nur einmal.',
+          items: [
+            { t: 'BETina laden', p: 'Lade die App kostenlos im App Store oder bei Google Play und melde dich mit Apple, Google, E-Mail oder Telefonnummer an.' },
+            { t: 'Vereine wählen', p: 'Wähle beim Start deinen Lieblingsverein. Weiteren Vereinen oder einem einzelnen Spiel folgst du im Live-Tab.' },
+            { t: 'Mitteilungen erlauben', p: 'Sag Ja, wenn dein Handy fragt, ob BETina dir Mitteilungen schicken darf. Ohne diese Erlaubnis kommt kein Push bei Tor an.' },
+            { t: 'Zuschauen oder nicht', p: 'Leg das Handy weg. Wenn dein Verein das nächste Mal trifft, weißt du es noch in derselben Spielminute, egal wo du gerade bist.' },
+          ],
+        },
+        {
+          type: 'chat', kicker: 'Der Unterschied', h2: 'Frag BETina zum Spiel:', h2b: 'Live-Ergebnisse mit KI-Begleiterin.',
+          label: 'Beispielgespräch zu einem laufenden Spiel',
+          paras: [
+            'Ein Spielstand sagt dir, was passiert ist. Warum, sagt er nicht, und mitfiebern kann er auch nicht. BETina kann beides. Sie hat die Live-Daten des Spiels vor sich, und du kannst sie fragen, was du eine Freundin fragen würdest, die gerade zuschaut: wer getroffen hat, ob die Führung verdient ist, was das Ergebnis für die Tabelle bedeutet.',
+            'Auf jeder Spielseite steht außerdem <strong>BETinas Einschätzung</strong>, ein kurzer Blick aufs Spiel in ihren eigenen Worten, neben der Tabelle und dem direkten Vergleich der beiden Mannschaften. Und weil BETina neun Sprachen spricht, bekommt ein Fan in Zagreb dasselbe Spiel auf Kroatisch, das ein Fan in Wien auf Deutsch bekommt.',
+          ],
+          msgs: [
+            ['me', 'Wie steht es bei uns?'],
+            ['b', '1:0 für euch seit der 34. Minute. Kopfball nach einer Ecke, und ganz ehrlich: Das hatte sich angekündigt.'],
+            ['me', 'Wo stehen wir damit in der Tabelle?'],
+            ['b', 'Bleibt es dabei, klettert ihr auf Platz vier. Noch zwei solche Spieltage, und ich fange an zu glauben.'],
+          ],
+          note: 'Beispiel zur Veranschaulichung. BETina ist eine KI und kann sich irren.',
+        },
+        {
+          type: 'cards', kicker: 'Auf jeder Spielseite', h2: 'Mehr als', h2b: 'eine Zahl.',
+          items: [
+            { t: 'Spielstand und Verlauf', p: 'Der aktuelle Spielstand, die Spielminute und die wichtigsten Ereignisse des Spiels in der Reihenfolge, in der sie passiert sind.' },
+            { t: 'Tabelle und direkter Vergleich', p: 'Die Tabelle der Liga auf einen Blick und die Bilanz der beiden Mannschaften aus früheren Duellen.' },
+            { t: 'Dein Tipp gleich daneben', p: 'Spielst du das kostenlose <a href="/de/tippspiel" style="color:var(--lime);text-decoration:underline">Tippspiel</a>, steht dein getipptes Ergebnis direkt neben dem Live-Spielstand.' },
+          ],
+        },
+        {
+          type: 'prose', kicker: 'Gut zu wissen', h2: 'Kostenlos auf iPhone, Android', h2b: 'und im Browser.',
+          paras: [
+            'BETina Live gehört zur kostenlosen BETina-App. Es gibt keine Bezahlstufe für Ergebnisse und kein Abo für Tor-Benachrichtigungen. Die App findest du im App Store und bei Google Play, und die Web-App öffnest du im Browser, wenn du Ergebnisse am Laptop nachsehen willst.',
+            'BETina ist eine Unterhaltungs-App für Erwachsene. <strong>In der App ist nirgends Geld im Spiel</strong>: Es gibt nichts einzusetzen und nichts auszuzahlen. Sie stammt von GeniusBet und wird von der Genius Media London Ltd betrieben.',
+          ],
+        },
+      ],
+      faqH2: 'Häufige Fragen', faqH2b: 'zu BETina Live.',
+      faq: [
+        ['Ist BETina Live kostenlos?', 'Ja. Live-Ergebnisse und Tor-Benachrichtigungen gehören zur kostenlosen BETina-App für iPhone, Android und Browser. Ein Abo gibt es nicht.'],
+        ['Wie bekomme ich eine Push-Nachricht, wenn mein Verein ein Tor schießt?', 'Installiere BETina, wähle deinen Verein und erlaube Mitteilungen. Ab dann bekommst du einen Push, sobald in einem Spiel eines Vereins, dem du folgst, ein Tor fällt.'],
+        ['Kann ich Tor-Benachrichtigungen nur für meinen Lieblingsverein einstellen?', 'Ja. Benachrichtigungen kommen nur für die Vereine und einzelnen Spiele, denen du folgst. Ein Verein reicht, und du kannst jederzeit welche hinzufügen oder entfernen.'],
+        ['Für welche Sportarten gibt es Live-Ergebnisse?', 'Live-Ergebnisse und Tor-Benachrichtigungen gibt es für Fußball. Reden kannst du mit BETina über viele weitere Sportarten wie Tennis, NFL, MMA oder Cricket.'],
+        ['Wofür bekomme ich außer Toren noch einen Push?', 'Für Anpfiff, Rote Karten, Halbzeit und das Endergebnis der Spiele, denen du folgst.'],
+        ['Was kann ich die KI zu einem Spiel fragen?', 'Alles, was du eine Freundin fragen würdest, die gerade zuschaut: den Spielstand, wer getroffen hat, wie die Tabelle aussieht oder was sie vom Spiel hält. BETina ist eine KI und kann sich irren, ihre Sicht ist eine Meinung.'],
+        ['Geht es bei BETina um echtes Geld?', 'Nein. BETina ist eine Unterhaltungs-App. In der App wird nirgends Geld eingesetzt oder ausgezahlt.'],
+      ],
+      alsoH2: 'In der App steckt', alsoH2b: 'noch mehr.',
+      homeTeaser: 'Alles, was BETina kann, auf einer Seite.',
+      ctaH2: 'Verpass nie wieder', ctaH2b: 'ein Tor.',
+      ctaText: 'Lade BETina, folge deinem Verein und lass die Tore zu dir kommen.',
+    },
+  },
+};

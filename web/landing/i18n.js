@@ -24,6 +24,12 @@
 
   var T = {
     de: {
+      moreChat: "Mehr zum KI-Sport-Chat →",
+      hrefChat: "/de/ki-sport-chat",
+      moreLive: "Mehr zu den Live-Ergebnissen →",
+      hrefLive: "/de/live-ergebnisse",
+      moreGame: "Mehr zum Tippspiel →",
+      hrefGame: "/de/tippspiel",
       title: "BETina – KI-Sport-Chat, Live-Ergebnisse & gratis Tippspiel",
       navFeatures: "Funktionen",
       navHow: "So geht’s",
@@ -42,7 +48,7 @@
       mq1: "Chat",
       mq2: "Sprachanrufe",
       mq3: "Live-Ergebnisse",
-      mq4: "Tor-Alarm",
+      mq4: "Tor-Benachrichtigungen",
       mq5: "Tippspiel",
       mq6: "BETina News",
       mq7: "9 Sprachen",
@@ -89,12 +95,12 @@
       kSportsT: "Sportarten",
       kSports: "Fußball, Tennis, NFL, MMA, Cricket und mehr.",
       kAlwaysT: "Immer da",
-      kAlways: "Erinnerungen, Tor-Alarm und ein Chat, der nie schläft.",
+      kAlways: "Erinnerungen, Tor-Benachrichtigungen und ein Chat, der nie schläft.",
       kXpT: "Level-up",
       kXp: "Sammle XP für Chats, tägliche Serien und richtige Tipps.",
-      desc: "BETina ist deine kostenlose KI-Sportbegleiterin: Chat und Sprachanrufe, Fußball-Live-Ergebnisse mit Tor-Alarm, Tippspiel um Punkte und Sport-News.",
+      desc: "BETina ist deine kostenlose KI-Sportbegleiterin: Chat und Sprachanrufe, Fußball-Live-Ergebnisse mit Tor-Benachrichtigung, Tippspiel um Punkte und Sport-News.",
       h1k: "BETina · KI-Sport-Chat, Live-Ergebnisse & Tippspiel",
-      about: "BETina ist eine kostenlose KI-Sportbegleiterin als App für iPhone, Android und im Browser, entwickelt von GeniusBet (Genius Media London Ltd). Du chattest und telefonierst mit BETina über Sport, verfolgst Fußball-Live-Ergebnisse mit Tor-Alarm, spielst ein Tippspiel um Punkte und liest ihre Sport-News — in 9 Sprachen. In der App ist nirgends Geld im Spiel. Für Erwachsene ab 18.",
+      about: "BETina ist eine kostenlose KI-Sportbegleiterin als App für iPhone, Android und im Browser, entwickelt von GeniusBet (Genius Media London Ltd). Du chattest und telefonierst mit BETina über Sport, verfolgst Fußball-Live-Ergebnisse mit Tor-Benachrichtigung, spielst ein Tippspiel um Punkte und liest ihre Sport-News — in 9 Sprachen. In der App ist nirgends Geld im Spiel. Für Erwachsene ab 18.",
       faqKicker: "Gut zu wissen",
       faqA: "Fragen,",
       faqB: "beantwortet.",
@@ -103,7 +109,7 @@
       q2: "Geht es um echtes Geld?",
       a2: "Nein. BETina ist eine Unterhaltungs-App. Im Tippspiel geht es um Punkte, XP und einen Platz in der Rangliste — es gibt keine Einsätze und keine Auszahlungen.",
       q3: "Welche Sportarten kennt BETina?",
-      a3: "Mit BETina kannst du über Fußball, Tennis, NFL, MMA, Cricket und viele weitere Sportarten sprechen. Live-Ergebnisse und Tor-Alarm gibt es für Fußball.",
+      a3: "Mit BETina kannst du über Fußball, Tennis, NFL, MMA, Cricket und viele weitere Sportarten sprechen. Live-Ergebnisse und Tor-Benachrichtigungen gibt es für Fußball.",
       q4: "Welche Sprachen spricht BETina?",
       a4: "Neun: Englisch, Deutsch, Spanisch, Französisch, Portugiesisch, Italienisch, Rumänisch, Türkisch und Kroatisch. Sie antwortet in der Sprache, in der du schreibst oder sprichst.",
       q5: "Wie funktioniert das Tippspiel?",
@@ -113,7 +119,7 @@
       altHero: "BETina, die KI-Sportbegleiterin",
       altChat: "BETina-App: Chat mit BETina über Sport",
       altCall: "BETina-App: Sprachanruf mit BETina",
-      altLive: "BETina-App: Fußball-Live-Ergebnisse und Tor-Alarm",
+      altLive: "BETina-App: Fußball-Live-Ergebnisse und Tor-Benachrichtigungen",
       altGame: "BETina-App: Tippspiel mit Rangliste",
       altNews: "BETina-App: Sport-News in deiner Sprache"
     },
@@ -799,6 +805,13 @@
     });
     document.querySelectorAll('[data-i-alt]').forEach(function (el) {
       el.alt = (lang !== 'en' && dict[el.getAttribute('data-i-alt')]) || originals.get(el);
+    });
+    // Links to feature pages exist only in some languages.
+    document.querySelectorAll('[data-i-href]').forEach(function (el) {
+      if (!el.hasAttribute('data-en-href')) el.setAttribute('data-en-href', el.getAttribute('href'));
+      var href = lang === 'en' ? el.getAttribute('data-en-href') : dict[el.getAttribute('data-i-href')];
+      el.style.display = href ? '' : 'none';
+      if (href) el.setAttribute('href', href);
     });
     document.documentElement.lang = lang;
     document.title = (lang !== 'en' && dict.title) || EN_TITLE;

@@ -2,11 +2,14 @@
 // and its sitemap from index.html and the texts in i18n.js, so that search
 // engines can index every language under its own address (/de, /es, …).
 //
-// Run it after changing web/landing/index.html or i18n.js:
+// It also writes the feature pages (see landing-features.mjs).
+//
+// Run it after changing web/landing/index.html, i18n.js or a feature page:
 //   node scripts/build-landing-langs.mjs
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+import { buildFeatures } from './landing-features.mjs';
 
 const dir = fileURLToPath(new URL('../web/landing/', import.meta.url));
 const { T, SUPPORTED } = createRequire(import.meta.url)(dir + 'i18n.js');
@@ -26,6 +29,10 @@ function page(lang) {
     if (hits.length !== 1) throw new Error(`${lang}: expected one match for ${pattern}, found ${hits.length}`);
     html = html.replace(pattern, replacement);
   };
+
+  // Links to feature pages: only languages that have the page keep the link.
+  html = html.replace(/\s*<a class="more" href="[^"]*" data-i="[^"]+" data-i-href="([^"]+)">[^<]*<\/a>/g, (all, key) =>
+    (dict[key] ? all.replace(/href="[^"]*"/, `href="${dict[key]}"`) : ''));
 
   // Texts: every element with data-i holds plain text only.
   let missing = [];
@@ -64,6 +71,9 @@ function page(lang) {
   return html;
 }
 
+console.log('feature pages:');
+const { entries: featureEntries } = await buildFeatures();
+
 const others = SUPPORTED.filter((lang) => lang !== 'en');
 for (const lang of others) writeFileSync(`${dir}${lang}.html`, page(lang));
 
@@ -79,6 +89,7 @@ writeFileSync(`${dir}sitemap.xml`, [
   '<?xml version="1.0" encoding="UTF-8"?>',
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
   ...home.map((loc) => entry(loc, alternates + '\n')),
+  ...featureEntries.map((e) => entry(e.loc, e.alternates.map(([l, href]) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${href}"/>`).join('\n') + '\n')),
   entry(`${BASE}/support`),
   entry(`${BASE}/privacy`),
   entry(`${BASE}/delete-account`),

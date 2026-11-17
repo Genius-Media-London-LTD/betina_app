@@ -127,6 +127,48 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://betina.geniusbet.com/"/>
   </url>
   <url>
+    <loc>https://betina.geniusbet.com/prediction-game</loc>
+    <lastmod>2026-11-17</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/prediction-game"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de/tippspiel"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betina.geniusbet.com/prediction-game"/>
+  </url>
+  <url>
+    <loc>https://betina.geniusbet.com/de/tippspiel</loc>
+    <lastmod>2026-11-17</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/prediction-game"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de/tippspiel"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betina.geniusbet.com/prediction-game"/>
+  </url>
+  <url>
+    <loc>https://betina.geniusbet.com/live-scores</loc>
+    <lastmod>2026-11-17</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/live-scores"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de/live-ergebnisse"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betina.geniusbet.com/live-scores"/>
+  </url>
+  <url>
+    <loc>https://betina.geniusbet.com/de/live-ergebnisse</loc>
+    <lastmod>2026-11-17</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/live-scores"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de/live-ergebnisse"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betina.geniusbet.com/live-scores"/>
+  </url>
+  <url>
+    <loc>https://betina.geniusbet.com/ai-sports-chat</loc>
+    <lastmod>2026-11-17</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/ai-sports-chat"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de/ki-sport-chat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betina.geniusbet.com/ai-sports-chat"/>
+  </url>
+  <url>
+    <loc>https://betina.geniusbet.com/de/ki-sport-chat</loc>
+    <lastmod>2026-11-17</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/ai-sports-chat"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de/ki-sport-chat"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://betina.geniusbet.com/ai-sports-chat"/>
+  </url>
+  <url>
     <loc>https://betina.geniusbet.com/support</loc>
     <lastmod>2026-11-17</lastmod>
   </url>
