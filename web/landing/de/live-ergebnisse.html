@@ -19,6 +19,13 @@
 <link rel="canonical" href="https://betina.geniusbet.com/de/live-ergebnisse">
 <link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/live-scores">
 <link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de/live-ergebnisse">
+<link rel="alternate" hreflang="es" href="https://betina.geniusbet.com/es/resultados-en-vivo">
+<link rel="alternate" hreflang="fr" href="https://betina.geniusbet.com/fr/scores-foot-en-direct">
+<link rel="alternate" hreflang="pt" href="https://betina.geniusbet.com/pt/resultados-ao-vivo">
+<link rel="alternate" hreflang="it" href="https://betina.geniusbet.com/it/risultati-calcio-in-diretta">
+<link rel="alternate" hreflang="ro" href="https://betina.geniusbet.com/ro/scoruri-live-fotbal">
+<link rel="alternate" hreflang="tr" href="https://betina.geniusbet.com/tr/canli-skor">
+<link rel="alternate" hreflang="hr" href="https://betina.geniusbet.com/hr/rezultati-uzivo">
 <link rel="alternate" hreflang="x-default" href="https://betina.geniusbet.com/live-scores">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://betina.geniusbet.com/de/live-ergebnisse#webpage","url":"https://betina.geniusbet.com/de/live-ergebnisse","name":"Live-Ergebnisse App mit Push bei Tor & KI-Chat | BETina","description":"Fußball-Live-Ergebnisse deiner Lieblingsvereine und ein Push bei jedem Tor. Frag die KI zum Spiel. Kostenlos für iPhone, Android und im Browser.","inLanguage":"de","isPartOf":{"@id":"https://betina.geniusbet.com/#website"},"about":{"@id":"https://betina.geniusbet.com/#app"},"publisher":{"@id":"https://betina.geniusbet.com/#org"},"primaryImageOfPage":"https://betina.geniusbet.com/assets/v2/screen-live.jpg","dateModified":"2026-11-17"},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"BETina","item":"https://betina.geniusbet.com/de"},{"@type":"ListItem","position":2,"name":"Live-Ergebnisse","item":"https://betina.geniusbet.com/de/live-ergebnisse"}]}]}</script>
 <link rel="icon" type="image/png" href="/favicon.png">
@@ -56,8 +63,14 @@ nav .wrap { display: flex; align-items: center; gap: 22px; height: 68px; }
 .brand small { font-size: 10px; font-weight: 700; letter-spacing: .16em; color: var(--muted); text-transform: uppercase; }
 .navlinks { display: flex; gap: 26px; margin-left: auto; font-size: 14px; font-weight: 600; color: var(--soft); }
 .navlinks a:hover, .navlinks a[aria-current] { color: var(--lime); }
-.langlink { font: 700 13px 'Archivo', sans-serif; border: 1px solid var(--line); padding: 8px 12px; background: rgba(255, 255, 255, .04); }
-.langlink:hover { border-color: var(--lime); }
+.langmenu { position: relative; font: 700 13px 'Archivo', sans-serif; }
+.langmenu summary { list-style: none; cursor: pointer; white-space: nowrap; border: 1px solid var(--line); padding: 8px 12px; background: rgba(255, 255, 255, .04); }
+.langmenu summary::-webkit-details-marker { display: none; }
+.langmenu summary::after { content: ' ▾'; color: var(--muted); }
+.langmenu[open] summary, .langmenu summary:hover { border-color: var(--lime); }
+.langmenu div { position: absolute; right: 0; top: calc(100% + 6px); min-width: 150px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 20px 44px rgba(0, 0, 0, .5); padding: 6px 0; }
+.langmenu a { display: block; padding: 8px 14px; color: var(--soft); }
+.langmenu a:hover { color: var(--lime); background: rgba(255, 255, 255, .04); }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-weight: 900; font-style: italic; text-transform: uppercase; letter-spacing: .02em;
   font-size: 14px; padding: 12px 18px; background: var(--lime); color: var(--lime-ink); transition: transform .2s var(--ease), box-shadow .2s var(--ease); }
 .btn:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 rgba(184, 233, 38, .35); }
@@ -205,7 +218,7 @@ footer .fine { font-size: 13px; line-height: 1.6; max-width: 820px; margin: 0; }
 @media (max-width: 900px) {
   :root { --gutter: 20px; }
   .navlinks { display: none; }
-  .langlink { margin-left: auto; }
+  .langmenu { margin-left: auto; }
   .fhero { padding: 104px 0 60px; }
   .fhero .wrap { grid-template-columns: 1fr; gap: 56px; }
   .fhero .art .phone { width: 250px; transform: rotate(3deg); }
@@ -232,7 +245,12 @@ footer .fine { font-size: 13px; line-height: 1.6; max-width: 820px; margin: 0; }
 }
 @media (max-width: 520px) {
   .brand small { display: none; }
-  nav .btn { padding: 9px 12px; font-size: 12px; }
+  nav .wrap { gap: 10px; }
+  .brand b { font-size: 19px; }
+  nav .btn { padding: 9px 10px; font-size: 11px; white-space: nowrap; }
+  .fhero h1 { font-size: 35px; }
+  .sec > .wrap > h2, .sec .col h2 { font-size: 30px; }
+  .cta h2 { font-size: 38px; }
   .store { flex: 1 1 100%; }
   .push { display: none; }
 }
@@ -249,7 +267,10 @@ footer .fine { font-size: 13px; line-height: 1.6; max-width: 820px; margin: 0; }
       <a href="/de/ki-sport-chat">KI-Sport-Chat</a>
       <a href="/support">Support</a>
     </div>
-    <a class="langlink" href="/live-scores" hreflang="en" lang="en">EN</a>
+    <details class="langmenu">
+      <summary aria-label="Language">DE</summary>
+      <div><a href="/live-scores" hreflang="en" lang="en">English</a><a href="/es/resultados-en-vivo" hreflang="es" lang="es">Español</a><a href="/fr/scores-foot-en-direct" hreflang="fr" lang="fr">Français</a><a href="/pt/resultados-ao-vivo" hreflang="pt" lang="pt">Português</a><a href="/it/risultati-calcio-in-diretta" hreflang="it" lang="it">Italiano</a><a href="/ro/scoruri-live-fotbal" hreflang="ro" lang="ro">Română</a><a href="/tr/canli-skor" hreflang="tr" lang="tr">Türkçe</a><a href="/hr/rezultati-uzivo" hreflang="hr" lang="hr">Hrvatski</a></div>
+    </details>
     <a class="btn" href="https://app.betina.geniusbet.com">Web-App →</a>
   </div>
 </nav>

@@ -3,8 +3,9 @@
 // something to rank for besides the brand name. The features themselves stay
 // in the app; these pages lead there.
 //
-// Content lives in scripts/landing-features/<feature>.mjs, one object per
-// language. build-landing-langs.mjs calls buildFeatures() and puts the pages
+// Content lives in scripts/landing-features/<feature>.mjs (English and German)
+// and in scripts/landing-features/lang/<lang>.mjs (all three pages of one
+// further language). build-landing-langs.mjs calls buildFeatures() and puts the pages
 // into the sitemap — run that script after changing content or this template.
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -32,6 +33,8 @@ const LOCAL = {
   en: { home: 'Home', more: 'More from BETina', faq: 'Questions & answers', now: 'now' },
   de: { home: 'Startseite', more: 'Mehr von BETina', faq: 'Fragen & Antworten', now: 'jetzt' },
 };
+const NAMES = { en: 'English', de: 'Deutsch', es: 'Español', fr: 'Français', pt: 'Português', it: 'Italiano', ro: 'Română', tr: 'Türkçe', hr: 'Hrvatski' };
+const ORDER = Object.keys(NAMES);
 const ui = (lang, key) => (lang === 'en' ? EN[key] : T[lang][key]) ?? EN[key];
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const attr = (s) => esc(s).replace(/"/g, '&quot;');
@@ -66,8 +69,14 @@ nav .wrap { display: flex; align-items: center; gap: 22px; height: 68px; }
 .brand small { font-size: 10px; font-weight: 700; letter-spacing: .16em; color: var(--muted); text-transform: uppercase; }
 .navlinks { display: flex; gap: 26px; margin-left: auto; font-size: 14px; font-weight: 600; color: var(--soft); }
 .navlinks a:hover, .navlinks a[aria-current] { color: var(--lime); }
-.langlink { font: 700 13px 'Archivo', sans-serif; border: 1px solid var(--line); padding: 8px 12px; background: rgba(255, 255, 255, .04); }
-.langlink:hover { border-color: var(--lime); }
+.langmenu { position: relative; font: 700 13px 'Archivo', sans-serif; }
+.langmenu summary { list-style: none; cursor: pointer; white-space: nowrap; border: 1px solid var(--line); padding: 8px 12px; background: rgba(255, 255, 255, .04); }
+.langmenu summary::-webkit-details-marker { display: none; }
+.langmenu summary::after { content: ' ▾'; color: var(--muted); }
+.langmenu[open] summary, .langmenu summary:hover { border-color: var(--lime); }
+.langmenu div { position: absolute; right: 0; top: calc(100% + 6px); min-width: 150px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 20px 44px rgba(0, 0, 0, .5); padding: 6px 0; }
+.langmenu a { display: block; padding: 8px 14px; color: var(--soft); }
+.langmenu a:hover { color: var(--lime); background: rgba(255, 255, 255, .04); }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-weight: 900; font-style: italic; text-transform: uppercase; letter-spacing: .02em;
   font-size: 14px; padding: 12px 18px; background: var(--lime); color: var(--lime-ink); transition: transform .2s var(--ease), box-shadow .2s var(--ease); }
 .btn:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 rgba(184, 233, 38, .35); }
@@ -215,7 +224,7 @@ footer .fine { font-size: 13px; line-height: 1.6; max-width: 820px; margin: 0; }
 @media (max-width: 900px) {
   :root { --gutter: 20px; }
   .navlinks { display: none; }
-  .langlink { margin-left: auto; }
+  .langmenu { margin-left: auto; }
   .fhero { padding: 104px 0 60px; }
   .fhero .wrap { grid-template-columns: 1fr; gap: 56px; }
   .fhero .art .phone { width: 250px; transform: rotate(3deg); }
@@ -242,7 +251,12 @@ footer .fine { font-size: 13px; line-height: 1.6; max-width: 820px; margin: 0; }
 }
 @media (max-width: 520px) {
   .brand small { display: none; }
-  nav .btn { padding: 9px 12px; font-size: 12px; }
+  nav .wrap { gap: 10px; }
+  .brand b { font-size: 19px; }
+  nav .btn { padding: 9px 10px; font-size: 11px; white-space: nowrap; }
+  .fhero h1 { font-size: 35px; }
+  .sec > .wrap > h2, .sec .col h2 { font-size: 30px; }
+  .cta h2 { font-size: 38px; }
   .store { flex: 1 1 100%; }
   .push { display: none; }
 }
@@ -305,7 +319,7 @@ function render(feature, lang, all) {
   const p = feature.pages[lang];
   const L = LOCAL[lang];
   const url = BASE + p.path;
-  const langs = Object.keys(feature.pages);
+  const langs = ORDER.filter((l) => feature.pages[l]);
   const other = langs.filter((l) => l !== lang);
   const alternates = [
     ...langs.map((l) => `<link rel="alternate" hreflang="${l}" href="${BASE}${feature.pages[l].path}">`),
@@ -369,7 +383,10 @@ ${alternates}
       ${all.filter((f) => f.pages[lang]).map((f) => `<a href="${f.pages[lang].path}"${f.id === feature.id ? ' aria-current="page"' : ''}>${f.pages[lang].nav}</a>`).join('\n      ')}
       <a href="/support">${esc(ui(lang, 'navSupport'))}</a>
     </div>
-    ${other.map((l) => `<a class="langlink" href="${feature.pages[l].path}" hreflang="${l}" lang="${l}">${l.toUpperCase()}</a>`).join('')}
+    <details class="langmenu">
+      <summary aria-label="Language">${lang.toUpperCase()}</summary>
+      <div>${other.map((l) => `<a href="${feature.pages[l].path}" hreflang="${l}" lang="${l}">${NAMES[l]}</a>`).join('')}</div>
+    </details>
     <a class="btn" href="${WEB}">${esc(ui(lang, 'navWeb'))}</a>
   </div>
 </nav>
@@ -490,9 +507,22 @@ export async function buildFeatures() {
   const all = [];
   for (const f of files) all.push((await import(pathToFileURL(src + f).href)).default);
   all.sort((a, b) => a.order - b.order);
+  let extra = [];
+  try { extra = readdirSync(src + 'lang').filter((f) => f.endsWith('.mjs')).sort(); } catch { /* no further languages yet */ }
+  const homeLinks = {};
+  for (const f of extra) {
+    const lang = f.replace('.mjs', '');
+    const mod = (await import(pathToFileURL(src + 'lang/' + f).href)).default;
+    LOCAL[lang] = mod.local;
+    homeLinks[lang] = mod.home;
+    for (const feature of all) {
+      if (!mod[feature.id]) throw new Error(`${f}: no page for ${feature.id}`);
+      feature.pages[lang] = mod[feature.id];
+    }
+  }
   const entries = [];
   for (const feature of all) {
-    for (const lang of Object.keys(feature.pages)) {
+    for (const lang of ORDER.filter((l) => feature.pages[l])) {
       const page = feature.pages[lang];
       const html = render(feature, lang, all);
       const file = out + page.path.slice(1) + '.html';
@@ -502,11 +532,11 @@ export async function buildFeatures() {
       entries.push({
         loc: BASE + page.path,
         alternates: [
-          ...Object.keys(feature.pages).map((l) => [l, BASE + feature.pages[l].path]),
+          ...ORDER.filter((l) => feature.pages[l]).map((l) => [l, BASE + feature.pages[l].path]),
           ['x-default', BASE + feature.pages.en.path],
         ],
       });
     }
   }
-  return { entries, features: all };
+  return { entries, features: all, homeLinks };
 }

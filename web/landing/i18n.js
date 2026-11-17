@@ -124,6 +124,12 @@
       altNews: "BETina-App: Sport-News in deiner Sprache"
     },
     es: {
+      moreChat: "Más sobre el chat deportivo con IA →",
+      hrefChat: "/es/chat-deportivo-ia",
+      moreLive: "Más sobre los resultados en vivo →",
+      hrefLive: "/es/resultados-en-vivo",
+      moreGame: "Más sobre el juego de pronósticos →",
+      hrefGame: "/es/juego-de-pronosticos",
       title: "BETina – Chat deportivo con IA, resultados en vivo y pronósticos",
       navFeatures: "Funciones",
       navHow: "Cómo funciona",
@@ -218,6 +224,12 @@
       altNews: "App BETina: noticias deportivas en tu idioma"
     },
     fr: {
+      moreChat: "En savoir plus sur le chat sport IA →",
+      hrefChat: "/fr/chat-sport-ia",
+      moreLive: "En savoir plus sur les scores en direct →",
+      hrefLive: "/fr/scores-foot-en-direct",
+      moreGame: "En savoir plus sur le jeu de pronostics →",
+      hrefGame: "/fr/jeu-de-pronostics-foot",
       title: "BETina – Chat sport IA, scores en direct et jeu de pronostics",
       navFeatures: "Fonctionnalités",
       navHow: "Comment ça marche",
@@ -312,6 +324,12 @@
       altNews: "Appli BETina : actus sport dans ta langue"
     },
     pt: {
+      moreChat: "Mais sobre o chat de desporto com IA →",
+      hrefChat: "/pt/chat-de-desporto-com-ia",
+      moreLive: "Mais sobre os resultados ao vivo →",
+      hrefLive: "/pt/resultados-ao-vivo",
+      moreGame: "Mais sobre o jogo de palpites →",
+      hrefGame: "/pt/jogo-de-palpites",
       title: "BETina – Chat de desporto com IA, resultados ao vivo e palpites",
       navFeatures: "Funcionalidades",
       navHow: "Como funciona",
@@ -406,6 +424,12 @@
       altNews: "App BETina: notícias desportivas na tua língua"
     },
     it: {
+      moreChat: "Scopri la chat sportiva IA →",
+      hrefChat: "/it/chat-sportiva-ia",
+      moreLive: "Scopri i risultati in diretta →",
+      hrefLive: "/it/risultati-calcio-in-diretta",
+      moreGame: "Scopri il gioco di pronostici →",
+      hrefGame: "/it/gioco-pronostici-calcio",
       title: "BETina – Chat sportiva IA, risultati live e gioco di pronostici",
       navFeatures: "Funzioni",
       navHow: "Come funziona",
@@ -500,6 +524,12 @@
       altNews: "App BETina: notizie sportive nella tua lingua"
     },
     ro: {
+      moreChat: "Mai multe despre chatul sportiv AI →",
+      hrefChat: "/ro/chat-sportiv-ai",
+      moreLive: "Mai multe despre scorurile live →",
+      hrefLive: "/ro/scoruri-live-fotbal",
+      moreGame: "Mai multe despre jocul de pronosticuri →",
+      hrefGame: "/ro/joc-pronosticuri-fotbal",
       title: "BETina – Chat sportiv AI, scoruri live și joc de pronosticuri",
       navFeatures: "Funcții",
       navHow: "Cum funcționează",
@@ -594,6 +624,12 @@
       altNews: "Aplicația BETina: știri sportive în limba ta"
     },
     tr: {
+      moreChat: "Yapay zekâ spor sohbeti hakkında daha fazlası →",
+      hrefChat: "/tr/yapay-zeka-spor-sohbeti",
+      moreLive: "Canlı skorlar hakkında daha fazlası →",
+      hrefLive: "/tr/canli-skor",
+      moreGame: "Tahmin oyunu hakkında daha fazlası →",
+      hrefGame: "/tr/skor-tahmin-oyunu",
       title: "BETina – Yapay zekâ spor sohbeti, canlı skor ve tahmin oyunu",
       navFeatures: "Özellikler",
       navHow: "Nasıl çalışır",
@@ -688,6 +724,12 @@
       altNews: "BETina uygulaması: kendi dilinde spor haberleri"
     },
     hr: {
+      moreChat: "Više o AI sportskom chatu →",
+      hrefChat: "/hr/ai-sportski-chat",
+      moreLive: "Više o rezultatima uživo →",
+      hrefLive: "/hr/rezultati-uzivo",
+      moreGame: "Više o igri prognoza →",
+      hrefGame: "/hr/igra-prognoza",
       title: "BETina – AI sportski chat, rezultati uživo i igra prognoza",
       navFeatures: "Značajke",
       navHow: "Kako radi",
