@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://betina.geniusbet.com/</loc>
-    <lastmod>2026-11-16</lastmod>
+    <lastmod>2026-11-17</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/"/>
     <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://betina.geniusbet.com/es"/>
@@ -16,7 +16,7 @@
   </url>
   <url>
     <loc>https://betina.geniusbet.com/de</loc>
-    <lastmod>2026-11-16</lastmod>
+    <lastmod>2026-11-17</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/"/>
     <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://betina.geniusbet.com/es"/>
@@ -30,7 +30,7 @@
   </url>
   <url>
     <loc>https://betina.geniusbet.com/es</loc>
-    <lastmod>2026-11-16</lastmod>
+    <lastmod>2026-11-17</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/"/>
     <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://betina.geniusbet.com/es"/>
@@ -44,7 +44,7 @@
   </url>
   <url>
     <loc>https://betina.geniusbet.com/fr</loc>
-    <lastmod>2026-11-16</lastmod>
+    <lastmod>2026-11-17</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/"/>
     <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://betina.geniusbet.com/es"/>
@@ -58,7 +58,7 @@
   </url>
   <url>
     <loc>https://betina.geniusbet.com/pt</loc>
-    <lastmod>2026-11-16</lastmod>
+    <lastmod>2026-11-17</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/"/>
     <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://betina.geniusbet.com/es"/>
@@ -72,7 +72,7 @@
   </url>
   <url>
     <loc>https://betina.geniusbet.com/it</loc>
-    <lastmod>2026-11-16</lastmod>
+    <lastmod>2026-11-17</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/"/>
     <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://betina.geniusbet.com/es"/>
@@ -86,7 +86,7 @@
   </url>
   <url>
     <loc>https://betina.geniusbet.com/ro</loc>
-    <lastmod>2026-11-16</lastmod>
+    <lastmod>2026-11-17</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/"/>
     <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://betina.geniusbet.com/es"/>
@@ -100,7 +100,7 @@
   </url>
   <url>
     <loc>https://betina.geniusbet.com/tr</loc>
-    <lastmod>2026-11-16</lastmod>
+    <lastmod>2026-11-17</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/"/>
     <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://betina.geniusbet.com/es"/>
@@ -114,7 +114,7 @@
   </url>
   <url>
     <loc>https://betina.geniusbet.com/hr</loc>
-    <lastmod>2026-11-16</lastmod>
+    <lastmod>2026-11-17</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://betina.geniusbet.com/"/>
     <xhtml:link rel="alternate" hreflang="de" href="https://betina.geniusbet.com/de"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://betina.geniusbet.com/es"/>
@@ -128,10 +128,14 @@
   </url>
   <url>
     <loc>https://betina.geniusbet.com/support</loc>
-    <lastmod>2026-11-16</lastmod>
+    <lastmod>2026-11-17</lastmod>
   </url>
   <url>
     <loc>https://betina.geniusbet.com/privacy</loc>
-    <lastmod>2026-11-16</lastmod>
+    <lastmod>2026-11-17</lastmod>
+  </url>
+  <url>
+    <loc>https://betina.geniusbet.com/delete-account</loc>
+    <lastmod>2026-11-17</lastmod>
   </url>
 </urlset>

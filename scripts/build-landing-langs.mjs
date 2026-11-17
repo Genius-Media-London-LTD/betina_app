@@ -33,22 +33,32 @@ function page(lang) {
     if (!dict[key]) { missing.push(key); return all; }
     return open + esc(dict[key]);
   });
+  // Image descriptions: <img … alt="…" data-i-alt="key">.
+  html = html.replace(/\balt="[^"]*" data-i-alt="([^"]+)"/g, (all, key) => {
+    if (!dict[key]) { missing.push(key); return all; }
+    return `alt="${attr(dict[key])}" data-i-alt="${key}"`;
+  });
   if (missing.length) console.warn(`${lang}: no text for ${[...new Set(missing)].join(', ')} — left in English`);
 
   const url = `${BASE}/${lang}`;
-  const description = dict.heroLead;
+  const description = dict.desc;
+  if (!description) throw new Error(`${lang}: no desc`);
   swap(/<html lang="en">/, `<html lang="${lang}">`);
   swap(/<title>[^<]*<\/title>/, `<title>${esc(dict.title)}</title>`);
   swap(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${attr(description)}">`);
   swap(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${attr(dict.title)}">`);
   swap(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${attr(description)}">`);
-  swap(/<meta property="og:url" content="[^"]*">/, `<meta property="og:url" content="${url}">\n<meta property="og:locale" content="${OG_LOCALE[lang]}">`);
+  swap(/<meta property="og:url" content="[^"]*">/, `<meta property="og:url" content="${url}">`);
+  swap(/<meta property="og:locale" content="[^"]*">/, `<meta property="og:locale" content="${OG_LOCALE[lang]}">`);
   swap(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${url}">`);
   swap(new RegExp(`<option value="${lang}">`), `<option value="${lang}" selected>`);
   swap(/(<script type="application\/ld\+json" id="ld">)([^<]*)(<\/script>)/, (all, open, json, close) => {
     const data = JSON.parse(json);
     const app = data['@graph'].find((node) => node['@type'] === 'MobileApplication');
     app.description = description;
+    // The page node describes this language's page, not the English one.
+    const node = data['@graph'].find((n) => n['@type'] === 'WebPage');
+    Object.assign(node, { '@id': `${url}#webpage`, url, name: dict.title, description, inLanguage: lang });
     return open + JSON.stringify(data).replace(/</g, '\\u003c') + close;
   });
   return html;
@@ -71,6 +81,7 @@ writeFileSync(`${dir}sitemap.xml`, [
   ...home.map((loc) => entry(loc, alternates + '\n')),
   entry(`${BASE}/support`),
   entry(`${BASE}/privacy`),
+  entry(`${BASE}/delete-account`),
   '</urlset>',
   '',
 ].join('\n'));
