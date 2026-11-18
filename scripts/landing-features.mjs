@@ -15,7 +15,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const out = fileURLToPath(new URL('../web/landing/', import.meta.url));
 const src = fileURLToPath(new URL('./landing-features/', import.meta.url));
 const { T } = createRequire(import.meta.url)(out + 'i18n.js');
-const { menu, BURGER, MENU_CSS } = createRequire(import.meta.url)(out + 'api/_md/menu.js');
+const { menu, tgCard, BURGER, MENU_CSS } = createRequire(import.meta.url)(out + 'api/_md/menu.js');
 const BASE = 'https://betina.geniusbet.com';
 const APPLE = 'https://apps.apple.com/app/betina-ai/id6796780870';
 const PLAY = 'https://play.google.com/store/apps/details?id=com.geniusbet.betina&pcampaignid=web_share&referrer=utm_source%3Dbetina_web%26utm_medium%3Dfeature';
@@ -464,6 +464,7 @@ ${body}
         <a href="/support">${esc(ui(lang, 'navSupport'))}</a>
         <a href="/delete-account">${esc(ui(lang, 'fDelete'))}</a>
         <a href="mailto:marketing@geniusbet.com">${esc(ui(lang, 'fContact'))}</a>
+        <a href="https://t.me/GeniusBETina_bot" target="_blank" rel="me noopener">Telegram</a>
         <a href="https://x.com/betina_sports" target="_blank" rel="me noopener">X</a>
         <a href="https://www.instagram.com/geniusbet.betina/" target="_blank" rel="me noopener">Instagram</a>
         <a href="https://www.facebook.com/profile.php?id=61593822575539" target="_blank" rel="me noopener">Facebook</a>
@@ -502,6 +503,7 @@ ${body}
   }
 })();
 </script>
+${tgCard(lang)}
 </body>
 </html>
 `;

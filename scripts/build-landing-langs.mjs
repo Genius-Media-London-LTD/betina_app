@@ -16,11 +16,12 @@ const { T, SUPPORTED } = createRequire(import.meta.url)(dir + 'i18n.js');
 const BASE = 'https://betina.geniusbet.com';
 const OG_LOCALE = { de: 'de_DE', es: 'es_ES', fr: 'fr_FR', pt: 'pt_PT', it: 'it_IT', ro: 'ro_RO', tr: 'tr_TR', hr: 'hr_HR' };
 
-const { menu, BURGER, MENU_CSS } = createRequire(import.meta.url)(dir + 'api/_md/menu.js');
+const { menu, tgCard, BURGER, MENU_CSS } = createRequire(import.meta.url)(dir + 'api/_md/menu.js');
 // The menu comes from the module the feature and matchday pages use, so all pages show the same one.
 const fillMenu = (html) => {
   const put = (re, text) => { if (!re.test(html)) throw new Error('index.html: marker missing for ' + re); html = html.replace(re, () => text); };
   put(/<!--menu-->[\s\S]*?<!--\/menu-->/, '<!--menu-->' + menu('en', '', true) + '<!--/menu-->');
+  put(/<!--tg-->[\s\S]*?<!--\/tg-->/, '<!--tg-->' + tgCard('en', true) + '<!--/tg-->');
   put(/<!--burger-->[\s\S]*?<!--\/burger-->/, '<!--burger-->' + BURGER + '<!--/burger-->');
   put(/\/\*menu\*\/[\s\S]*?\/\*\/menu\*\//, '/*menu*/\n' + MENU_CSS + '\n/*/menu*/');
   return html;

@@ -9,7 +9,7 @@
 // lists the pages search engines should index (the current matchday and its
 // neighbours per competition — older and later ones are reachable but noindex).
 const S = require('./_md/strings.js');
-const { menu, BURGER, MENU_CSS } = require('./_md/menu.js');
+const { menu, tgCard, BURGER, MENU_CSS } = require('./_md/menu.js');
 const { T } = require('../i18n.js');
 
 const BASE = 'https://betina.geniusbet.com';
@@ -304,6 +304,7 @@ ${body}
   }
 })();
 </script>
+${tgCard(lang)}
 </body>
 </html>
 `;
