@@ -10,6 +10,7 @@
 // neighbours per competition, older and later ones are reachable but noindex).
 const S = require('./_md/strings.js');
 const TB = require('./_md/table-strings.js');
+const MS = require('./_md/more-strings.js');
 const { menu, tgCard, BURGER, MENU_CSS } = require('./_md/menu.js');
 const { T } = require('../i18n.js');
 
@@ -495,7 +496,8 @@ function hubPage(lang, compSlug, d) {
   <section class="sec"><div class="wrap">
     <span class="kicker">${comp} ${season}</span><h2 class="display">${L.tableH2} <span class="accent">${L.tableNow}</span></h2>
     ${tableHtml(L, rows)}
-    <p class="note">${L.tableNote} <a href="${tablePath(lang, compSlug)}">${fill(TB[lang].link, { comp })} →</a></p>
+    <p class="note">${L.tableNote}</p>
+    ${leagueLinks(lang, compSlug, comp, 'hub')}
   </div></section>
 
   <section class="sec"><div class="wrap">
@@ -517,6 +519,235 @@ function hubPage(lang, compSlug, d) {
   </div></section>
 `;
   return shell({ lang, title, desc, url, alternates, index: true, ld, body, compSlug });
+}
+
+/** A plain list of matches: time, teams, score. `label` gives the heading above a group of matches. */
+function matchList(L, list, label) {
+  const timeFmt = new Intl.DateTimeFormat(L.locale, { hour: '2-digit', minute: '2-digit', timeZone: L.tz });
+  let last = '';
+  return list.map((m) => {
+    const name = label(m);
+    const head = name !== last ? `<p class="day">${name}</p>\n` : '';
+    last = name;
+    const running = RUNNING.has(m.status);
+    const score = OFF.has(m.status) ? `<div class="score wait">${m.status === 'CANCELLED' ? L.cancelled : L.postponed}</div>`
+      : (m.done || (running && m.home_score != null)) ? `<div class="score${running ? ' on' : ''}">${running ? `<small>${L.live}</small>` : ''}${m.home_score}${L.sep}${m.away_score}</div>`
+      : '<div class="score wait">–</div>';
+    return `${head}<div class="match"><time datetime="${m.kickoff}">${timeFmt.format(new Date(m.kickoff))}</time>
+  <div class="team h"><span>${esc(m.home)}</span>${m.home_tla ? `<i class="tla" aria-hidden="true">${esc(m.home_tla)}</i>` : ''}</div>${score}
+  <div class="team">${m.away_tla ? `<i class="tla" aria-hidden="true">${esc(m.away_tla)}</i>` : ''}<span>${esc(m.away)}</span></div></div>`;
+  }).join('\n');
+}
+const subPath = (lang, comp, kind) => `${lang === 'en' ? '' : `/${lang}`}/${comp}/${MS[lang][kind].slug}`;
+const todayPath = (lang) => `${lang === 'en' ? '' : `/${lang}`}/${MS[lang].td.slug}`;
+const faqLd = (faq) => ({ '@type': 'FAQPage', mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: String(a).replace(/<[^>]+>/g, '') } })) });
+const faqHtml = (faq) => `<div class="faq">${faq.map(([q, a]) => `<div class="qa"><h3>${q}</h3><p>${a}</p></div>`).join('')}</div>`;
+const longDay = (L) => new Intl.DateTimeFormat(L.locale, { weekday: 'long', day: 'numeric', month: 'long', timeZone: L.tz });
+const clock = (L) => new Intl.DateTimeFormat(L.locale, { hour: '2-digit', minute: '2-digit', timeZone: L.tz });
+/** The other pages of a league, as link tiles. */
+const leagueLinks = (lang, compSlug, comp, skip) => `<div class="grid">${[
+  ['hub', path(lang, compSlug), S[lang].allMd],
+  ['table', tablePath(lang, compSlug), fill(TB[lang].link, { comp })],
+  ['fx', subPath(lang, compSlug, 'fx'), fill(MS[lang].fx.link, { comp })],
+  ['gm', subPath(lang, compSlug, 'gm'), fill(MS[lang].gm.link, { comp })],
+].filter(([k]) => k !== skip).map(([, href, text]) => `<a href="${href}">${text}</a>`).join('')}</div>`;
+
+/** Fixtures of a league: what is coming up and the latest results. */
+function fixturesPage(lang, compSlug, d) {
+  const L = S[lang], M = MS[lang].fx;
+  const comp = COMPS[compSlug].name, season = seasonLabel(d.season);
+  const now = Date.now();
+  const coming = d.matches.filter((m) => !m.done && !OFF.has(m.status) && Date.parse(m.kickoff) > now - 3 * 3600000).slice(0, 40);
+  const next = coming.find((m) => Date.parse(m.kickoff) > now) || coming[0];
+  const lastDone = [...d.numbers].reverse().find((n) => d.state(n) === 'finished');
+  const day = longDay(L), time = clock(L);
+  const when = next ? dates(L, d.days.get(next.matchday)) : null;
+  const doneCount = d.matches.filter((m) => m.done).length;
+  const vars = { comp, season, tz: L.tzLabel, n: d.numbers.length, done: doneCount, total: d.matches.length,
+    md: next ? mdl(L, next.matchday) : '', from: when ? when.from : '', to: when ? when.to : '',
+    home: next ? esc(next.home) : '', away: next ? esc(next.away) : '', day: next ? day.format(new Date(next.kickoff)) : '', time: next ? time.format(new Date(next.kickoff)) : '' };
+  const url = BASE + subPath(lang, compSlug, 'fx');
+  const alternates = [...LANGS.map((l) => [l, BASE + subPath(l, compSlug, 'fx')]), ['x-default', BASE + subPath('en', compSlug, 'fx')]];
+  const title = fill(M.title, vars), desc = fill(M.desc, vars);
+  const faq = [[fill(M.q1, vars), next ? fill(M.a1, vars) : fill(M.end, vars)], [fill(M.q2, vars), fill(M.a2, vars)]];
+  const ld = { '@context': 'https://schema.org', '@graph': [
+    { '@type': 'WebPage', '@id': `${url}#webpage`, url, name: title, description: desc, inLanguage: lang, isPartOf: { '@id': `${BASE}/#website` }, publisher: { '@id': `${BASE}/#org` } },
+    { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'BETina', item: BASE + home(lang) },
+      { '@type': 'ListItem', position: 2, name: comp, item: BASE + path(lang, compSlug) },
+      { '@type': 'ListItem', position: 3, name: fill(M.link, vars), item: url } ] },
+    faqLd(faq),
+  ] };
+  const label = (m) => `${esc(day.format(new Date(m.kickoff)))} · <a href="${path(lang, compSlug, m.matchday)}">${mdl(L, m.matchday)}</a>`;
+  const body = `  <header class="hero"><div class="wrap">
+    <p class="crumbs"><a href="${home(lang)}">${L.crumbHome}</a><span>/</span><a href="${path(lang, compSlug)}">${comp}</a><span>/</span>${fill(M.link, vars)}</p>
+    <span class="state">${season}</span>
+    <h1 class="display"><span>${fill(M.h1a, vars)}</span><span class="accent">${M.h1b}</span></h1>
+    ${next ? `<p class="lead">${fill(when.oneDay ? M.leadOne : M.lead, vars)}</p>\n    <p class="lead">${fill(M.first, vars)}</p>` : `<p class="lead">${fill(M.end, vars)}</p>`}
+  </div></header>
+${coming.length ? `
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${comp} ${season}</span><h2 class="display">${M.upA} <span class="accent">${M.upB}</span></h2>
+${matchList(L, coming, label)}
+    <p class="note">${fill(L.times, vars)}</p>
+  </div></section>` : ''}
+${lastDone ? `
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${comp} · ${mdl(L, lastDone)}</span><h2 class="display">${M.lastA} <span class="accent">${M.lastB}</span></h2>
+${matchList(L, d.days.get(lastDone), label)}
+  </div></section>` : ''}
+
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${comp}</span><h2 class="display">${L.faqH2} <span class="accent">${fill(M.link, vars)}.</span></h2>
+    ${faqHtml(faq)}
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${comp} ${season}</span><h2 class="display">${L.other}</h2>
+    ${leagueLinks(lang, compSlug, comp, 'fx')}
+  </div></section>
+`;
+  return shell({ lang, title, desc, url, alternates, index: true, ld, body, compSlug });
+}
+
+/** The prediction game of one league: what can be predicted now, the rules, how to start. */
+function gamePage(lang, compSlug, d) {
+  const L = S[lang], M = MS[lang].gm;
+  const comp = COMPS[compSlug].name, season = seasonLabel(d.season);
+  const now = Date.now();
+  const open = (n) => d.days.get(n).filter((m) => !m.done && !OFF.has(m.status) && Date.parse(m.kickoff) > now);
+  const n = d.numbers.find((k) => k >= d.focus && open(k).length) || null;
+  const list = n ? open(n) : [];
+  const all = betinaRecord(d.matches);
+  const day = longDay(L);
+  const vars = { comp, season, md: n ? mdl(L, n) : '', gameName: L.gameName, tz: L.tzLabel };
+  const url = BASE + subPath(lang, compSlug, 'gm');
+  const alternates = [...LANGS.map((l) => [l, BASE + subPath(l, compSlug, 'gm')]), ['x-default', BASE + subPath('en', compSlug, 'gm')]];
+  const title = fill(M.title, vars), desc = fill(M.desc, vars);
+  const faq = [[fill(M.q1, vars), M.a1], [M.q2, M.a2], [M.q3, M.a3], [M.q4, M.a4]];
+  const ld = { '@context': 'https://schema.org', '@graph': [
+    { '@type': 'WebPage', '@id': `${url}#webpage`, url, name: title, description: desc, inLanguage: lang, isPartOf: { '@id': `${BASE}/#website` }, publisher: { '@id': `${BASE}/#org` }, about: { '@id': `${BASE}/#app` } },
+    { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'BETina', item: BASE + home(lang) },
+      { '@type': 'ListItem', position: 2, name: comp, item: BASE + path(lang, compSlug) },
+      { '@type': 'ListItem', position: 3, name: fill(M.link, vars), item: url } ] },
+    faqLd(faq),
+  ] };
+  const body = `  <header class="hero"><div class="wrap">
+    <p class="crumbs"><a href="${home(lang)}">${L.crumbHome}</a><span>/</span><a href="${path(lang, compSlug)}">${comp}</a><span>/</span>${fill(M.link, vars)}</p>
+    <span class="state">${season}</span>
+    <h1 class="display"><span>${fill(M.h1a, vars)}</span><span class="accent">${M.h1b}</span></h1>
+    <p class="lead">${fill(M.lead, vars)}</p>
+    <div class="pager"><a href="${L.gamePath}">${L.ctaLink}</a></div>
+  </div></header>
+${list.length ? `
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${comp} · ${vars.md}</span><h2 class="display">${M.nowA} <span class="accent">${M.nowB}</span></h2>
+    <p class="lead">${fill(M.nowText, vars)}</p>
+${matchList(L, list, (m) => esc(day.format(new Date(m.kickoff))))}
+    <p class="note">${fill(L.times, vars)}</p>
+  </div></section>` : ''}
+
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${L.gameName}</span><h2 class="display">${M.rulesA} <span class="accent">${M.rulesB}</span></h2>
+    <div class="prose">
+      <p>${M.r3}</p>
+      <p>${M.r2}</p>
+      <p>${M.r1}</p>
+      <p>${M.rulesNote}</p>
+    </div>
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${L.gameName}</span><h2 class="display">${L.betinaH2} <span class="accent">${L.betinaH2b}</span></h2>
+    <div class="prose">
+      <p>${fill(L.betinaText, vars)}</p>
+      ${all.n ? `<p><strong>${fill(L.betinaSeason, { ...all, comp })}</strong></p>` : ''}
+    </div>
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${L.gameName}</span><h2 class="display">${M.howA} <span class="accent">${M.howB}</span></h2>
+    <div class="prose">
+      <p><strong>1.</strong> ${M.s1}</p>
+      <p><strong>2.</strong> ${fill(M.s2, vars)}</p>
+      <p><strong>3.</strong> ${M.s3}</p>
+    </div>
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${comp}</span><h2 class="display">${L.faqH2} <span class="accent">${fill(M.link, vars)}.</span></h2>
+    ${faqHtml(faq)}
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${comp} ${season}</span><h2 class="display">${L.other}</h2>
+    ${leagueLinks(lang, compSlug, comp, 'gm')}
+    <div class="grid">${Object.keys(COMPS).filter((c) => c !== compSlug).map((c) => `<a href="${subPath(lang, c, 'gm')}">${fill(M.link, { comp: COMPS[c].name })}</a>`).join('')}</div>
+  </div></section>
+`;
+  return shell({ lang, title, desc, url, alternates, index: true, ld, body, compSlug });
+}
+
+/** Today's matches of all five competitions, with yesterday's results and tomorrow's matches. */
+async function todayPage(lang) {
+  const L = S[lang], M = MS[lang].td;
+  const all = [];
+  for (const slug of Object.keys(COMPS)) {
+    const d = await load(COMPS[slug].code);
+    if (d) for (const m of d.matches) all.push({ ...m, slug, comp: COMPS[slug].name });
+  }
+  all.sort((a, b) => Date.parse(a.kickoff) - Date.parse(b.kickoff));
+  const key = new Intl.DateTimeFormat('en-CA', { timeZone: L.tz });
+  const dayOf = (t) => key.format(new Date(t));
+  const now = Date.now();
+  const today = dayOf(now), yesterday = dayOf(now - 86400000), tomorrow = dayOf(now + 86400000);
+  const on = (k) => all.filter((m) => dayOf(m.kickoff) === k && !OFF.has(m.status));
+  const tList = on(today), yList = on(yesterday).filter((m) => m.done), mList = on(tomorrow);
+  const upcoming = all.filter((m) => Date.parse(m.kickoff) > now && !OFF.has(m.status) && dayOf(m.kickoff) > tomorrow);
+  const nextDay = upcoming.length ? dayOf(upcoming[0].kickoff) : null;
+  const nList = nextDay ? upcoming.filter((m) => dayOf(m.kickoff) === nextDay) : [];
+  const full = new Intl.DateTimeFormat(L.locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: L.tz });
+  const day = longDay(L);
+  const firstNext = (mList[0] || nList[0]);
+  const vars = { date: full.format(new Date(now)), n: tList.length, next: firstNext ? day.format(new Date(firstNext.kickoff)) : '', tz: L.tzLabel };
+  const url = BASE + todayPath(lang);
+  const alternates = [...LANGS.map((l) => [l, BASE + todayPath(l)]), ['x-default', BASE + todayPath('en')]];
+  const faq = [[M.q1, fill(tList.length ? M.a1 : M.a1None, vars)], [M.q2, M.a2]];
+  const ld = { '@context': 'https://schema.org', '@graph': [
+    { '@type': 'WebPage', '@id': `${url}#webpage`, url, name: M.title, description: M.desc, inLanguage: lang, isPartOf: { '@id': `${BASE}/#website` }, publisher: { '@id': `${BASE}/#org` } },
+    { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'BETina', item: BASE + home(lang) },
+      { '@type': 'ListItem', position: 2, name: M.link, item: url } ] },
+    faqLd(faq),
+  ] };
+  const label = (m) => `<a href="${path(lang, m.slug, m.matchday)}">${m.comp} · ${mdl(L, m.matchday)}</a>`;
+  const byComp = (list) => [...list].sort((a, b) => Object.keys(COMPS).indexOf(a.slug) - Object.keys(COMPS).indexOf(b.slug) || Date.parse(a.kickoff) - Date.parse(b.kickoff));
+  const block = (a, b, list, kicker) => (list.length ? `
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${kicker}</span><h2 class="display">${a} <span class="accent">${b}</span></h2>
+${matchList(L, byComp(list), label)}
+    <p class="note">${fill(L.times, vars)}</p>
+  </div></section>` : '');
+  const body = `  <header class="hero"><div class="wrap">
+    <p class="crumbs"><a href="${home(lang)}">${L.crumbHome}</a><span>/</span>${M.link}</p>
+    <span class="state${tList.some((m) => RUNNING.has(m.status)) ? ' live' : ''}">${esc(day.format(new Date(now)))}</span>
+    <h1 class="display"><span>${M.h1a}</span><span class="accent">${M.h1b}</span></h1>
+    <p class="lead">${fill(tList.length > 1 ? M.lead : tList.length === 1 ? M.leadOne : M.leadNone, vars)}</p>
+  </div></header>
+${block(M.todayA, M.todayB, tList, esc(day.format(new Date(now))))}${block(M.yestA, M.yestB, yList, esc(day.format(new Date(now - 86400000))))}${block(M.tomoA, M.tomoB, mList, esc(day.format(new Date(now + 86400000))))}${!tList.length && !mList.length && nList.length ? block(M.nextA, M.nextB, nList, esc(day.format(new Date(nList[0].kickoff)))) : ''}
+
+  <section class="sec"><div class="wrap">
+    <span class="kicker">BETina</span><h2 class="display">${L.faqH2} <span class="accent">${M.link}.</span></h2>
+    ${faqHtml(faq)}
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    <span class="kicker">BETina</span><h2 class="display">${L.other}</h2>
+    <div class="grid">${Object.keys(COMPS).map((c) => `<a href="${subPath(lang, c, 'fx')}">${fill(MS[lang].fx.link, { comp: COMPS[c].name })}</a><a href="${tablePath(lang, c)}">${fill(TB[lang].link, { comp: COMPS[c].name })}</a>`).join('')}</div>
+  </div></section>
+`;
+  return shell({ lang, title: M.title, desc: M.desc, url, alternates, index: true, ld, body, compSlug: '' });
 }
 
 /** Number and its word, for languages where the word changes with the number. */
@@ -609,11 +840,11 @@ async function sitemap() {
     const d = await load(COMPS[slug].code);
     if (!d) continue;
     const pages = [null, ...d.numbers.filter((n) => Math.abs(n - d.focus) <= 1)];
-    {
+    for (const to of [(l) => tablePath(l, slug), (l) => subPath(l, slug, 'fx'), (l) => subPath(l, slug, 'gm')]) {
       const mod = d.matches.map((m) => m.updated_at).filter(Boolean).sort().pop();
-      const alt = [...LANGS.map((l) => [l, BASE + tablePath(l, slug)]), ['x-default', BASE + tablePath('en', slug)]]
+      const alt = [...LANGS.map((l) => [l, BASE + to(l)]), ['x-default', BASE + to('en')]]
         .map(([l, href]) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${href}"/>`).join('\n');
-      for (const l of LANGS) out.push(`  <url>\n    <loc>${BASE}${tablePath(l, slug)}</loc>\n${mod ? `    <lastmod>${mod.slice(0, 10)}</lastmod>\n` : ''}${alt}\n  </url>`);
+      for (const l of LANGS) out.push(`  <url>\n    <loc>${BASE}${to(l)}</loc>\n${mod ? `    <lastmod>${mod.slice(0, 10)}</lastmod>\n` : ''}${alt}\n  </url>`);
     }
     for (const n of pages) {
       const mod = (n ? d.days.get(n) : d.matches).map((m) => m.updated_at).filter(Boolean).sort().pop();
@@ -621,6 +852,11 @@ async function sitemap() {
         .map(([l, href]) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${href}"/>`).join('\n');
       for (const l of LANGS) out.push(`  <url>\n    <loc>${BASE}${path(l, slug, n)}</loc>\n${mod ? `    <lastmod>${mod.slice(0, 10)}</lastmod>\n` : ''}${alt}\n  </url>`);
     }
+  }
+  {
+    const alt = [...LANGS.map((l) => [l, BASE + todayPath(l)]), ['x-default', BASE + todayPath('en')]]
+      .map(([l, href]) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${href}"/>`).join('\n');
+    for (const l of LANGS) out.push(`  <url>\n    <loc>${BASE}${todayPath(l)}</loc>\n    <lastmod>${new Date().toISOString().slice(0, 10)}</lastmod>\n${alt}\n  </url>`);
   }
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${out.join('\n')}\n</urlset>\n`;
 }
@@ -641,11 +877,19 @@ module.exports = async function matchday(req, res) {
       return res.end(await sitemap());
     }
     const lang = q.get('lang') || 'en', compSlug = q.get('comp'), md = q.get('md');
+    if (q.get('page') === 'today') {
+      if (!S[lang] || q.get('slug') !== MS[lang].td.slug) return notFound(res);
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+      return res.end(await todayPage(lang));
+    }
     if (!S[lang] || !COMPS[compSlug]) return notFound(res);
     const d = await load(COMPS[compSlug].code);
     if (!d || !d.numbers.length) return notFound(res);
     let html;
     if (md && md === TB[lang].slug) html = tablePage(lang, compSlug, d);
+    else if (md && md === MS[lang].fx.slug) html = fixturesPage(lang, compSlug, d);
+    else if (md && md === MS[lang].gm.slug) html = gamePage(lang, compSlug, d);
     else if (md) {
       const m = new RegExp(`^${S[lang].slug}-(\\d{1,2})$`).exec(md);
       const n = m ? Number(m[1]) : NaN;

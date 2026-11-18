@@ -1,6 +1,7 @@
 // The site menu, shared by the home pages, the feature pages and the matchday pages.
 // Desktop: a bar with a drop-down for the leagues. Phones: a button that opens the full list.
 const { T } = require('../../i18n.js');
+const MS = require('./more-strings.js');
 
 const EN = {
   mGame: 'Prediction game', mLive: 'Live scores', mChat: 'AI chat', mLeagues: 'Leagues', mVideos: 'Videos', mMenu: 'Menu',
@@ -31,7 +32,7 @@ function menu(lang, current = '', attrs = false) {
       ${feature('game', 'mGame', 'hrefGame')}
       ${feature('live', 'mLive', 'hrefLive')}
       ${feature('chat', 'mChat', 'hrefChat')}
-      <div class="sub"><span tabindex="0"${text('mLeagues')}>${esc(t(lang, 'mLeagues'))}</span><div class="drop"><div>${COMPS.map(comp).join('')}</div></div></div>
+      <div class="sub"><span tabindex="0"${text('mLeagues')}>${esc(t(lang, 'mLeagues'))}</span><div class="drop"><div><a href="${lang === 'en' ? '' : '/' + lang}/${MS[lang].td.slug}"${attrs ? ' data-i="mToday" data-i-href="hrefToday"' : ''}${here('today')}>${esc(MS[lang].td.link)}</a>${COMPS.map(comp).join('')}</div></div></div>
       ${feature('videos', 'mVideos', 'hrefVideos')}
       <a class="gap" href="/support"${text('navSupport')}>${esc(t(lang, 'navSupport'))}</a>
       <a href="${TG}" target="_blank" rel="me noopener">Telegram</a>

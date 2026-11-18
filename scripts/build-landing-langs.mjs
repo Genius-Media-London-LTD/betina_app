@@ -22,11 +22,14 @@ const { menu, tgCard, BURGER, MENU_CSS } = createRequire(import.meta.url)(dir + 
 const videoTexts = await loadVideoTexts();
 const HOME_VIDEO_CSS = VIDEO_CSS + '#videos .wrap{padding-bottom:120px}#videos .more{display:inline-block;margin-top:34px;font-weight:800;font-size:15px;color:var(--lime)}#videos .more:hover{text-decoration:underline;text-underline-offset:4px}\n';
 // Home-page texts of the video section: into the dictionaries used here and into i18n.js for the language swap in the browser.
-for (const lang of Object.keys(videoTexts)) if (lang !== 'en' && T[lang]) Object.assign(T[lang], homeKeys(lang, videoTexts[lang]));
+const MORE = createRequire(import.meta.url)(dir + 'api/_md/more-strings.js');
+// Generated keys per language: the video section and the menu link to today's matches.
+const genKeys = (l) => ({ ...homeKeys(l, videoTexts[l]), mToday: MORE[l].td.link, hrefToday: `/${l}/${MORE[l].td.slug}` });
+for (const lang of Object.keys(videoTexts)) if (lang !== 'en' && T[lang]) Object.assign(T[lang], genKeys(lang));
 {
   const file = dir + 'i18n.js';
   const js = readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
-  const block = Object.keys(videoTexts).filter((l) => l !== 'en' && T[l]).map((l) => `\n  Object.assign(T.${l}, ${JSON.stringify(homeKeys(l, videoTexts[l]))});`).join('');
+  const block = Object.keys(videoTexts).filter((l) => l !== 'en' && T[l]).map((l) => `\n  Object.assign(T.${l}, ${JSON.stringify(genKeys(l))});`).join('');
   if (!/\/\*videos\*\/[\s\S]*?\/\*\/videos\*\//.test(js)) throw new Error('i18n.js: videos block missing');
   writeFileSync(file, js.replace(/\/\*videos\*\/[\s\S]*?\/\*\/videos\*\//, () => '/*videos*/' + block + '\n  /*/videos*/'));
 }

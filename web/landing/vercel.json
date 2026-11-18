@@ -60,6 +60,14 @@
   ],
   "rewrites": [
     {
+      "source": "/:slug(football-today)",
+      "destination": "/api/matchday?lang=en&page=today&slug=:slug"
+    },
+    {
+      "source": "/:lang(de|es|fr|pt|it|ro|tr|hr)/:slug(fussball-heute|partidos-de-hoy|matchs-du-jour|jogos-de-hoje|partite-di-oggi|meciuri-azi|bugunku-maclar|utakmice-danas)",
+      "destination": "/api/matchday?lang=:lang&page=today&slug=:slug"
+    },
+    {
       "source": "/sitemap-matchdays.xml",
       "destination": "/api/matchday?sitemap=1"
     },
