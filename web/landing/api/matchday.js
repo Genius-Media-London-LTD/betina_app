@@ -29,7 +29,7 @@ const ORDER = ['en', 'de', 'es', 'fr', 'pt', 'it', 'ro', 'tr', 'hr'];
 const LANGS = ORDER.filter((l) => S[l]);
 const NAMES = { en: 'English', de: 'Deutsch', es: 'Español', fr: 'Français', pt: 'Português', it: 'Italiano', ro: 'Română', tr: 'Türkçe', hr: 'Hrvatski' };
 const OG_LOCALE = { en: 'en_US', de: 'de_DE', es: 'es_ES', fr: 'fr_FR', pt: 'pt_PT', it: 'it_IT', ro: 'ro_RO', tr: 'tr_TR', hr: 'hr_HR' };
-const EN_UI = { navSupport: 'Support', navWeb: 'Web app →', storeApple: 'Download on the', storeGoogle: 'Get it on', fPrivacy: 'Privacy', fTerms: 'Terms', fDelete: 'Delete account', fContact: 'Contact',
+const EN_UI = { ckText: "We'd like to use cookies for anonymous usage statistics.", ckNo: 'Essential only', ckYes: 'Accept all', navSupport: 'Support', navWeb: 'Web app →', storeApple: 'Download on the', storeGoogle: 'Get it on', fPrivacy: 'Privacy', fTerms: 'Terms', fDelete: 'Delete account', fContact: 'Contact',
   fFine: '18+ only. BETina is an AI companion for sports fans and entertainment — no real money is wagered or moved in the app.' };
 const ui = (lang, key) => (lang !== 'en' && T[lang] && T[lang][key]) || EN_UI[key];
 
@@ -202,6 +202,9 @@ footer{border-top:1px solid var(--line);margin-top:80px;padding:44px 0 56px;colo
 footer .top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:22px;align-items:center;margin-bottom:22px}
 footer .links{display:flex;flex-wrap:wrap;gap:12px 22px;font-weight:600;color:var(--soft)}footer .links a:hover{color:var(--lime)}
 footer .fine{font-size:13px;max-width:820px;margin:0}
+#ck{position:fixed;left:16px;right:16px;bottom:16px;z-index:100;max-width:640px;margin:0 auto;display:none;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;background:rgba(20,17,26,.96);backdrop-filter:blur(12px);border:1px solid rgba(184,233,38,.35);padding:14px 16px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+#ck.show{display:flex}#ck span{font-size:13px;color:var(--soft)}#ck a{color:var(--lime);text-decoration:underline}#ck .row{display:flex;gap:8px}
+#ck button{font:800 13px 'Archivo',sans-serif;padding:9px 14px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--text)}#ck button.yes{background:var(--lime);color:var(--lime-ink);border-color:var(--lime)}
 @media (max-width:900px){:root{--gutter:20px}.navlinks{display:none}.langmenu{margin-left:auto}.hero{padding-top:100px}.faq{grid-template-columns:1fr}.cta{padding:30px 22px}}
 @media (max-width:620px){.brand small{display:none}nav .wrap{gap:10px}.brand b{font-size:19px}nav .btn{padding:9px 10px;font-size:11px}
 .match{grid-template-columns:minmax(0,1fr) 70px minmax(0,1fr);padding:12px}.match time{grid-column:1/-1;font-size:12px;color:var(--muted)}
@@ -273,6 +276,33 @@ ${body}
   </div>
   <p class="fine">${esc(ui(lang, 'fFine'))}<br>© 2026 Genius Media London Ltd · Company No. 11133948</p>
 </div></footer>
+<div id="ck" role="dialog" aria-label="Cookies">
+  <span>${esc(ui(lang, 'ckText'))} <a href="/privacy">${esc(ui(lang, 'fPrivacy'))}</a></span>
+  <div class="row"><button id="ck-e">${esc(ui(lang, 'ckNo'))}</button><button id="ck-a" class="yes">${esc(ui(lang, 'ckYes'))}</button></div>
+</div>
+<script>
+(function () {
+  var KEY = 'betina_ck';
+  function store(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+  function read() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+  function loadGA() {
+    var s = document.createElement('script');
+    s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=G-LRFD2P7EPN';
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { dataLayer.push(arguments); };
+    gtag('js', new Date()); gtag('config', 'G-LRFD2P7EPN', { anonymize_ip: true });
+  }
+  var choice = read();
+  if (choice === 'all') loadGA();
+  else if (choice !== 'essential') {
+    var bar = document.getElementById('ck');
+    bar.classList.add('show');
+    document.getElementById('ck-a').onclick = function () { store('all'); bar.remove(); loadGA(); };
+    document.getElementById('ck-e').onclick = function () { store('essential'); bar.remove(); };
+  }
+})();
+</script>
 </body>
 </html>
 `;
