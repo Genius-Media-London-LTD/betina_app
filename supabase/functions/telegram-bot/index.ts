@@ -39,10 +39,24 @@
 //   goals    follow_team saves the club they love; live-alerts texts them its
 //            goals and final scores.
 //
-// She texts first (cron, every 10 min → ?cron=1), at most once in 20 hours and
-// only to people who chatted a bit (PROACTIVE_MIN_MESSAGES):
-//   morning  07–10 local time, to people active in the last 3 days, with a photo
-//   nudge    17–21 local time, once after 2 days of silence
+// Matchdays (matchday.ts, migration 038):
+//   duel     get_tip_matches / place_tip / tip_score: they predict the score of
+//            a match before kick-off, she has her own prediction (betina_tips,
+//            hidden until kick-off), and after the final whistle both are
+//            scored 3 / 2 / 1 like in the app. Points only, never money.
+//   support  set_country saves their GeniusBet market (support.ts: the live
+//            markets and their sites); support_info gives her first-level
+//            answers about the platform and where a human takes over.
+//
+// She texts first (cron, every 10 min → ?cron=1):
+//   morning  07–10 local time, to people active in the last 3 days, with a
+//            photo and what is on today. At most once in 20 hours, like the
+//   nudge    17–21 local time, once after 2 days of silence. Both only to
+//            people who chatted a bit (PROACTIVE_MIN_MESSAGES).
+//   kick-off about half an hour before a match they predicted, their club's
+//            match or the day's big match: one a day.
+//   result   after the final whistle of what they predicted: the score, their
+//            points and hers.
 //
 // Limits: private chats only, text and photos, DAILY_LIMIT messages per person a day.
 //
@@ -57,6 +71,8 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { MatchEvent, NewsItem, telegramPrompt } from '../_shared/betina-persona.ts';
 import { parseMarkers } from '../chat/cards.ts';
+import { kickoffNotes, openMatches, placeTip, settle, tipScore, todaysMatches } from './matchday.ts';
+import { findMarket, marketLine, MARKETS, supportInfo } from './support.ts';
 
 // deno-lint-ignore no-explicit-any
 type Db = SupabaseClient<any, 'public', any>;
@@ -73,6 +89,8 @@ type Chat = {
   task_code: string | null; task_at: string | null; task_day: string | null; comments: number; ticket: number;
   team: string | null; team_id: number | null;
   voice_day: string | null; voice_count: number; seen_day: string | null; seen_count: number;
+  /** Their GeniusBet market (gn, cd, sl, ng, sv; 'other' when it is not live there), their points in the prediction duel and how many predictions were scored. */
+  country: string | null; tip_points: number; tip_settled: number;
   /** Not stored: what she sent besides text while answering (voice notes), for the history. */
   media?: string[];
 };
@@ -109,6 +127,7 @@ const GAME_TTL_MS = 3 * 3_600_000; // an unfinished game lapses
 const PROACTIVE_MIN_MESSAGES = 5;
 const PROACTIVE_GAP_MS = 20 * 3_600_000;
 const PROACTIVE_PER_RUN = 5;
+const MATCHDAY_PER_RUN = 6;        // kick-off lines and result messages per cron run, each
 const LANGS = ['en', 'de', 'es', 'pt', 'fr', 'it', 'ro', 'tr', 'hr'];
 
 const TEXT: Record<string, Record<string, string>> = {
@@ -128,37 +147,37 @@ const TEXT: Record<string, Record<string, string>> = {
     it: '✅ Sì, ho 18+', ro: '✅ Da, am 18+', tr: '✅ Evet, 18+ yaşındayım', hr: '✅ Da, imam 18+',
   },
   limit: {
-    en: "that's a lot of chatting for one day 😄 i'm back tomorrow — or keep going in the BETina app: betina.geniusbet.com",
-    de: 'das war heute ganz schön viel gequatsche 😄 morgen bin ich wieder da — oder mach in der BETina App weiter: betina.geniusbet.com',
-    es: 'hoy hemos hablado un montón 😄 mañana vuelvo — o sigue en la app de BETina: betina.geniusbet.com',
-    pt: 'hoje já falámos imenso 😄 amanhã estou de volta — ou continua na app da BETina: betina.geniusbet.com',
-    fr: "on a beaucoup papoté aujourd'hui 😄 je reviens demain — ou continue dans l'app BETina : betina.geniusbet.com",
-    it: "oggi abbiamo chiacchierato tantissimo 😄 torno domani — oppure continua nell'app BETina: betina.geniusbet.com",
-    ro: 'azi am vorbit o grămadă 😄 revin mâine — sau continuă în aplicația BETina: betina.geniusbet.com',
-    tr: 'bugün epey sohbet ettik 😄 yarın yine buradayım — ya da BETina uygulamasında devam et: betina.geniusbet.com',
-    hr: 'danas smo se baš napričali 😄 sutra sam opet tu — ili nastavi u BETina aplikaciji: betina.geniusbet.com',
+    en: "that's a lot of chatting for one day 😄 i'm back tomorrow, or keep going in the BETina app: betina.geniusbet.com",
+    de: 'das war heute ganz schön viel gequatsche 😄 morgen bin ich wieder da, oder mach in der BETina App weiter: betina.geniusbet.com',
+    es: 'hoy hemos hablado un montón 😄 mañana vuelvo, o sigue en la app de BETina: betina.geniusbet.com',
+    pt: 'hoje já falámos imenso 😄 amanhã estou de volta, ou continua na app da BETina: betina.geniusbet.com',
+    fr: "on a beaucoup papoté aujourd'hui 😄 je reviens demain, ou continue dans l'app BETina : betina.geniusbet.com",
+    it: "oggi abbiamo chiacchierato tantissimo 😄 torno domani, oppure continua nell'app BETina: betina.geniusbet.com",
+    ro: 'azi am vorbit o grămadă 😄 revin mâine, sau continuă în aplicația BETina: betina.geniusbet.com',
+    tr: 'bugün epey sohbet ettik 😄 yarın yine buradayım, ya da BETina uygulamasında devam et: betina.geniusbet.com',
+    hr: 'danas smo se baš napričali 😄 sutra sam opet tu, ili nastavi u BETina aplikaciji: betina.geniusbet.com',
   },
   textOnly: {
-    en: "voice messages, videos and stickers I can't open here yet 🙈 write it to me — or send a photo!",
-    de: "sprachnachrichten, videos und sticker kann ich hier noch nicht öffnen 🙈 schreib es mir — oder schick ein foto!",
-    es: "audios, vídeos y stickers aún no los puedo abrir aquí 🙈 escríbemelo — ¡o manda una foto!",
-    pt: "áudios, vídeos e stickers ainda não consigo abrir aqui 🙈 escreve-me — ou manda uma foto!",
-    fr: "les vocaux, vidéos et stickers, je ne peux pas encore les ouvrir ici 🙈 écris-le-moi — ou envoie une photo !",
-    it: "vocali, video e sticker qui non riesco ancora ad aprirli 🙈 scrivimelo — o manda una foto!",
-    ro: "mesajele vocale, clipurile și stickerele nu le pot deschide încă aici 🙈 scrie-mi — sau trimite o poză!",
-    tr: "sesli mesajları, videoları ve çıkartmaları burada henüz açamıyorum 🙈 bana yaz — ya da bir fotoğraf gönder!",
-    hr: "glasovne poruke, videe i naljepnice ovdje još ne mogu otvoriti 🙈 napiši mi — ili pošalji fotku!",
+    en: "voice messages, videos and stickers I can't open here yet 🙈 write it to me, or send a photo!",
+    de: "sprachnachrichten, videos und sticker kann ich hier noch nicht öffnen 🙈 schreib es mir, oder schick ein foto!",
+    es: "audios, vídeos y stickers aún no los puedo abrir aquí 🙈 escríbemelo, ¡o manda una foto!",
+    pt: "áudios, vídeos e stickers ainda não consigo abrir aqui 🙈 escreve-me, ou manda uma foto!",
+    fr: "les vocaux, vidéos et stickers, je ne peux pas encore les ouvrir ici 🙈 écris-le-moi, ou envoie une photo !",
+    it: "vocali, video e sticker qui non riesco ancora ad aprirli 🙈 scrivimelo, o manda una foto!",
+    ro: "mesajele vocale, clipurile și stickerele nu le pot deschide încă aici 🙈 scrie-mi, sau trimite o poză!",
+    tr: "sesli mesajları, videoları ve çıkartmaları burada henüz açamıyorum 🙈 bana yaz, ya da bir fotoğraf gönder!",
+    hr: "glasovne poruke, videe i naljepnice ovdje još ne mogu otvoriti 🙈 napiši mi, ili pošalji fotku!",
   },
   forgot: {
-    en: "Done — I've deleted our chat and everything I remembered about you. Write me anytime to start fresh.",
-    de: 'Erledigt — ich habe unseren Chat und alles, was ich mir über dich gemerkt habe, gelöscht. Schreib mir jederzeit, dann fangen wir neu an.',
-    es: 'Hecho — he borrado nuestro chat y todo lo que recordaba de ti. Escríbeme cuando quieras para empezar de cero.',
-    pt: 'Feito — apaguei a nossa conversa e tudo o que me lembrava de ti. Escreve-me quando quiseres para recomeçar.',
-    fr: "C'est fait — j'ai supprimé notre conversation et tout ce que je retenais sur toi. Écris-moi quand tu veux pour repartir de zéro.",
-    it: 'Fatto — ho cancellato la nostra chat e tutto ciò che ricordavo di te. Scrivimi quando vuoi per ricominciare.',
-    ro: 'Gata — am șters conversația noastră și tot ce țineam minte despre tine. Scrie-mi oricând ca să o luăm de la capăt.',
-    tr: 'Tamam — sohbetimizi ve senin hakkında hatırladığım her şeyi sildim. Baştan başlamak için istediğin zaman yaz.',
-    hr: 'Gotovo — izbrisala sam naš razgovor i sve što sam zapamtila o tebi. Piši mi kad god želiš pa krećemo ispočetka.',
+    en: "Done, I've deleted our chat and everything I remembered about you. Write me anytime to start fresh.",
+    de: 'Erledigt, ich habe unseren Chat und alles, was ich mir über dich gemerkt habe, gelöscht. Schreib mir jederzeit, dann fangen wir neu an.',
+    es: 'Hecho, he borrado nuestro chat y todo lo que recordaba de ti. Escríbeme cuando quieras para empezar de cero.',
+    pt: 'Feito, apaguei a nossa conversa e tudo o que me lembrava de ti. Escreve-me quando quiseres para recomeçar.',
+    fr: "C'est fait, j'ai supprimé notre conversation et tout ce que je retenais sur toi. Écris-moi quand tu veux pour repartir de zéro.",
+    it: 'Fatto, ho cancellato la nostra chat e tutto ciò che ricordavo di te. Scrivimi quando vuoi per ricominciare.',
+    ro: 'Gata, am șters conversația noastră și tot ce țineam minte despre tine. Scrie-mi oricând ca să o luăm de la capăt.',
+    tr: 'Tamam, sohbetimizi ve senin hakkında hatırladığım her şeyi sildim. Baştan başlamak için istediğin zaman yaz.',
+    hr: 'Gotovo, izbrisala sam naš razgovor i sve što sam zapamtila o tebi. Piši mi kad god želiš pa krećemo ispočetka.',
   },
   reset: {
     en: 'fresh start ✨ what’s on your mind?', de: 'neuer anfang ✨ was gibt’s?', es: 'empezamos de nuevo ✨ ¿qué me cuentas?',
@@ -166,15 +185,15 @@ const TEXT: Record<string, Record<string, string>> = {
     ro: 'o luăm de la capăt ✨ ce mai e nou?', tr: 'yeni bir başlangıç ✨ aklında ne var?', hr: 'krećemo ispočetka ✨ što ima?',
   },
   stop: {
-    en: "okay, I won't text first anymore 🤐 you know where to find me — /wake if you miss me",
-    de: 'okay, ich schreib dir nicht mehr von mir aus 🤐 du weißt, wo du mich findest — /wake, falls du mich vermisst',
-    es: 'vale, ya no te escribo yo primero 🤐 ya sabes dónde estoy — /wake si me echas de menos',
-    pt: 'ok, já não te escrevo primeiro 🤐 sabes onde me encontrar — /wake se tiveres saudades',
-    fr: "d'accord, je ne t'écris plus en premier 🤐 tu sais où me trouver — /wake si je te manque",
-    it: 'okay, non ti scrivo più per prima 🤐 sai dove trovarmi — /wake se ti manco',
-    ro: 'bine, nu-ți mai scriu eu prima 🤐 știi unde mă găsești — /wake dacă ți-e dor',
-    tr: 'tamam, artık ilk ben yazmam 🤐 beni nerede bulacağını biliyorsun — özlersen /wake',
-    hr: 'okej, neću ti više prva pisati 🤐 znaš gdje sam — /wake ako ti nedostajem',
+    en: "okay, I won't text first anymore 🤐 you know where to find me, /wake if you miss me",
+    de: 'okay, ich schreib dir nicht mehr von mir aus 🤐 du weißt, wo du mich findest, /wake, falls du mich vermisst',
+    es: 'vale, ya no te escribo yo primero 🤐 ya sabes dónde estoy, /wake si me echas de menos',
+    pt: 'ok, já não te escrevo primeiro 🤐 sabes onde me encontrar, /wake se tiveres saudades',
+    fr: "d'accord, je ne t'écris plus en premier 🤐 tu sais où me trouver, /wake si je te manque",
+    it: 'okay, non ti scrivo più per prima 🤐 sai dove trovarmi, /wake se ti manco',
+    ro: 'bine, nu-ți mai scriu eu prima 🤐 știi unde mă găsești, /wake dacă ți-e dor',
+    tr: 'tamam, artık ilk ben yazmam 🤐 beni nerede bulacağını biliyorsun, özlersen /wake',
+    hr: 'okej, neću ti više prva pisati 🤐 znaš gdje sam, /wake ako ti nedostajem',
   },
   wake: {
     en: 'yay, then you’ll hear from me again 😏', de: 'yay, dann hörst du wieder von mir 😏', es: 'bien, entonces volverás a saber de mí 😏',
@@ -182,15 +201,15 @@ const TEXT: Record<string, Record<string, string>> = {
     ro: 'super, atunci o să mai auzi de mine 😏', tr: 'yaşasın, o zaman benden yine haber alırsın 😏', hr: 'super, onda ćeš me opet čuti 😏',
   },
   app: {
-    en: 'The BETina app is free — voice calls with me, live match alerts, news and a prediction game where you can beat me:\nbetina.geniusbet.com',
-    de: 'Die BETina App ist gratis — mit mir telefonieren, Live-Alarme zu Spielen, News und ein Tippspiel, in dem du mich schlagen kannst:\nbetina.geniusbet.com',
-    es: 'La app de BETina es gratis — llamadas de voz conmigo, alertas de partidos en vivo, noticias y un juego de pronósticos donde puedes ganarme:\nbetina.geniusbet.com',
-    pt: 'A app da BETina é grátis — chamadas de voz comigo, alertas de jogos ao vivo, notícias e um jogo de palpites onde me podes vencer:\nbetina.geniusbet.com',
-    fr: "L'app BETina est gratuite — appels vocaux avec moi, alertes de matchs en direct, actus et un jeu de pronostics où tu peux me battre :\nbetina.geniusbet.com",
-    it: "L'app BETina è gratis — chiamate vocali con me, avvisi live sulle partite, news e un gioco di pronostici in cui puoi battermi:\nbetina.geniusbet.com",
-    ro: 'Aplicația BETina e gratuită — apeluri vocale cu mine, alerte live de la meciuri, știri și un joc de pronosticuri în care mă poți bate:\nbetina.geniusbet.com',
-    tr: 'BETina uygulaması ücretsiz — benimle sesli sohbet, canlı maç bildirimleri, haberler ve beni yenebileceğin bir tahmin oyunu:\nbetina.geniusbet.com',
-    hr: 'BETina aplikacija je besplatna — glasovni pozivi sa mnom, live obavijesti s utakmica, vijesti i igra prognoza u kojoj me možeš pobijediti:\nbetina.geniusbet.com',
+    en: 'The BETina app is free, voice calls with me, live match alerts, news and a prediction game where you can beat me:\nbetina.geniusbet.com',
+    de: 'Die BETina App ist gratis, mit mir telefonieren, Live-Alarme zu Spielen, News und ein Tippspiel, in dem du mich schlagen kannst:\nbetina.geniusbet.com',
+    es: 'La app de BETina es gratis, llamadas de voz conmigo, alertas de partidos en vivo, noticias y un juego de pronósticos donde puedes ganarme:\nbetina.geniusbet.com',
+    pt: 'A app da BETina é grátis, chamadas de voz comigo, alertas de jogos ao vivo, notícias e um jogo de palpites onde me podes vencer:\nbetina.geniusbet.com',
+    fr: "L'app BETina est gratuite, appels vocaux avec moi, alertes de matchs en direct, actus et un jeu de pronostics où tu peux me battre :\nbetina.geniusbet.com",
+    it: "L'app BETina è gratis, chiamate vocali con me, avvisi live sulle partite, news e un gioco di pronostici in cui puoi battermi:\nbetina.geniusbet.com",
+    ro: 'Aplicația BETina e gratuită, apeluri vocale cu mine, alerte live de la meciuri, știri și un joc de pronosticuri în care mă poți bate:\nbetina.geniusbet.com',
+    tr: 'BETina uygulaması ücretsiz, benimle sesli sohbet, canlı maç bildirimleri, haberler ve beni yenebileceğin bir tahmin oyunu:\nbetina.geniusbet.com',
+    hr: 'BETina aplikacija je besplatna, glasovni pozivi sa mnom, live obavijesti s utakmica, vijesti i igra prognoza u kojoj me možeš pobijediti:\nbetina.geniusbet.com',
   },
   declined: {
     en: "ha, that one's not for me 🙈 ask me something else!", de: 'haha, da bin ich raus 🙈 frag mich was anderes!',
@@ -508,6 +527,11 @@ const TOOLS = [
   { name: 'start_game', description: 'Start one of your games before you pose it. type: number (they guess your number between 1 and 50 — the referee picks it, you leave secret empty), quiz (three questions, two right wins), emoji (something in emojis, three guesses), lie (three statements about you, one is a lie), charm (one message to charm you). For every type except number, put the solution in secret (the answers, the lie, what you are looking for) — it is kept for you and never shown to them.', input_schema: { type: 'object', properties: { type: { type: 'string', enum: GAME_TYPES }, secret: { type: 'string' } }, required: ['type'] } },
   { name: 'game_guess', description: 'The number game only: pass the number they guessed. The answer says higher, lower or won, and how many guesses are left.', input_schema: { type: 'object', properties: { number: { type: 'number' } }, required: ['number'] } },
   { name: 'finish_game', description: 'End the running quiz, emoji, lie or charm game once it is decided. won is true only if they really won by the rules.', input_schema: { type: 'object', properties: { won: { type: 'boolean' } }, required: ['won'] } },
+  { name: 'get_tip_matches', description: 'Your prediction duel: the matches they can still predict (Bundesliga, Premier League, LaLiga, Serie A, Champions League, next 4 days), their own club first, with match_id, kick-off in their time and the score they already predicted. Optional query: a team or league.', input_schema: { type: 'object', properties: { query: { type: 'string' } }, required: [] } },
+  { name: 'place_tip', description: 'Save (or change) the score they predict for a match, before kick-off only. match_id from get_tip_matches; home and away are the goals of the home and the away team.', input_schema: { type: 'object', properties: { match_id: { type: 'number' }, home: { type: 'number' }, away: { type: 'number' } }, required: ['match_id', 'home', 'away'] } },
+  { name: 'tip_score', description: 'Your prediction duel: their points, their place among the players on Telegram and the last matches with their prediction, yours (from kick-off on) and the points of both.', input_schema: { type: 'object', properties: {}, required: [] } },
+  { name: 'set_country', description: 'Save the country they live in once they tell you, so you know whether GeniusBet is live there and which site is theirs. country: the country as they said it (e.g. "Nigeria", "RDC", "El Salvador"). An empty country clears it.', input_schema: { type: 'object', properties: { country: { type: 'string' } }, required: ['country'] } },
+  { name: 'support_info', description: 'Help with the GeniusBet platform: call it before you answer any question or problem about their GeniusBet account or the site (login, password, registration, deposit, withdrawal, cashout, a ticket or bet, a bonus or free bet, a technical error). query: the problem in a few English words. The result has the steps and where a person from support takes over.', input_schema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
   { name: 'set_utc_offset', description: "Save the person's time zone as hours from UTC (e.g. 1 for Vienna or Lagos in winter, 0 for Conakry, -6 for San Salvador) once you know where they live.", input_schema: { type: 'object', properties: { hours: { type: 'number' } }, required: ['hours'] } },
 ];
 
@@ -620,6 +644,20 @@ async function runTool(name: string, input: any, db: Db, chat: Chat): Promise<st
       if (g.type === 'number') return 'The number game is decided by game_guess only.';
       return await endGame(db, chat, input.won === true);
     }
+    if (name === 'get_tip_matches') return await openMatches(db, chat, String(input.query ?? '').slice(0, 60));
+    if (name === 'place_tip') return await placeTip(db, chat, Math.round(Number(input.match_id)), Number(input.home), Number(input.away));
+    if (name === 'tip_score') return await tipScore(db, chat);
+    if (name === 'set_country') {
+      const said = String(input.country ?? '').trim().slice(0, 60);
+      const code = said ? findMarket(said) : null;
+      chat.country = said ? code ?? 'other' : null;
+      await db.from('telegram_chats').update({ country: chat.country }).eq('chat_id', chat.chat_id);
+      if (!said) return 'Cleared.';
+      return code
+        ? `Saved. GeniusBet is live in ${MARKETS[code].country}: their site is ${MARKETS[code].site}. That is the address you give them from now on.`
+        : `Saved. GeniusBet is not live online in "${said}" yet (live: ${marketLine()}). Do not send them to a GeniusBet site. The BETina app works everywhere: invite them there.`;
+    }
+    if (name === 'support_info') return supportInfo(String(input.query ?? '').slice(0, 200), chat.country && MARKETS[chat.country] ? MARKETS[chat.country].site : null);
     if (name === 'set_utc_offset') {
       const h = Math.round(Number(input.hours));
       if (!Number.isFinite(h) || h < -12 || h > 14) return 'That offset is not valid.';
@@ -676,6 +714,8 @@ async function answer(db: Db, chat: Chat, turns: Turn[], picture: Picture | null
     task: taskState(chat),
     hearts: chat.hearts, heartsToWinToday: heartsToWin(chat), game: gameState(chat),
     voicesLeftToday: voicesLeft(chat), team: chat.team,
+    market: chat.country && MARKETS[chat.country] ? `${MARKETS[chat.country].country}, their site is ${MARKETS[chat.country].site}` : chat.country === 'other' ? 'other' : '',
+    markets: marketLine(), tipPoints: chat.tip_points ?? 0, tipsScored: chat.tip_settled ?? 0,
     // Only when they wrote: her own first messages (morning, nudge) and commands have their own brief.
     impulse: /^\(/.test(turns[turns.length - 1]?.content ?? '') ? '' : impulse(chat),
   });
@@ -769,6 +809,7 @@ async function handle(db: Db, update: any) {
     hearts: 0, heart_day: null, heart_count: 0, game: null, game_day: null, game_count: 0,
     task_code: null, task_at: null, task_day: null, comments: 0, ticket: 0,
     team: null, team_id: null, voice_day: null, voice_count: 0, seen_day: null, seen_count: 0,
+    country: null, tip_points: 0, tip_settled: 0,
   };
   chat.first_name = String(msg.from?.first_name ?? '').replace(/[\r\n]+/g, ' ').slice(0, 40) || chat.first_name;
   chat.last_seen = new Date().toISOString();
@@ -831,7 +872,7 @@ async function handle(db: Db, update: any) {
   const said = command === '/start'
     ? '(They just opened the chat with you on Telegram and confirmed they are an adult. Say hello like you would text someone new you are curious about — one or two short messages, and ask them something. No list of features.)'
     : command === '/help'
-      ? '(They ask what you can do here. Tell them briefly, in your own style: chatting about anything, live scores and results, news, fixtures of any team, football stories, photos of you now and then; /stop if you should not text first, /reset starts a new chat, /forget deletes what you know about them, /app shows the BETina app.)'
+      ? '(They ask what you can do here. Tell them briefly, in your own style: chatting about anything, live scores and results, news, fixtures of any team, football stories, the prediction duel against you (they predict a score, you predict yours, points after the final whistle), goal alerts for their club, a hand with questions about GeniusBet, photos of you now and then; /stop if you should not text first, /reset starts a new chat, /forget deletes what you know about them, /app shows the BETina app.)'
       : sizes.length ? '' : text.slice(0, MAX_INPUT);
   if (command === '/start') chat.history = [];
 
@@ -863,8 +904,21 @@ async function handle(db: Db, update: any) {
 
 // ── She texts first ──────────────────────────────────────────────────────────
 
-async function proactive(db: Db): Promise<{ sent: number }> {
+/** Sends her message for a note (a result, a kick-off) to the chat it belongs to. */
+async function matchdayMessage(db: Db, chatId: number, note: string): Promise<boolean> {
+  const { data: row } = await db.from('telegram_chats').select('*').eq('chat_id', chatId).maybeSingle();
+  const chat = row as Chat | null;
+  if (!chat || !chat.adult || !chat.proactive) return false;
+  const ok = await reply(db, chat, [...chat.history, { role: 'user' as const, content: note }].slice(-HISTORY_TURNS));
+  if (!ok) await db.from('telegram_chats').update({ proactive: false }).eq('chat_id', chatId); // blocked the bot
+  return ok;
+}
+
+async function proactive(db: Db): Promise<{ sent: number; results: number; kickoffs: number }> {
   const now = Date.now();
+  // Results first (the points are booked even for people she may not text), then kick-offs.
+  const results = (await Promise.all((await settle(db, MATCHDAY_PER_RUN)).map((n) => matchdayMessage(db, n.chat_id, n.note)))).filter(Boolean).length;
+  const kickoffs = (await Promise.all((await kickoffNotes(db, MATCHDAY_PER_RUN)).map((n) => matchdayMessage(db, n.chat_id, n.note)))).filter(Boolean).length;
   const { data } = await db.from('telegram_chats').select('*')
     .eq('proactive', true).eq('adult', true).gte('msg_total', PROACTIVE_MIN_MESSAGES)
     .gt('last_seen', new Date(now - 14 * 86_400_000).toISOString())
@@ -878,7 +932,8 @@ async function proactive(db: Db): Promise<{ sent: number }> {
     const silent = now - Date.parse(chat.last_seen ?? '');
     let note = '';
     if (hour >= 7 && hour < 10 && silent < 3 * 86_400_000) {
-      note = '(No message from them — it is morning for them and you decided to text first. Send a short good-morning in your style, personal to what you know about them or what is on in sport today. You may send one photo with send_photo first if you have one that fits — or, now and then instead of a photo, say your good-morning as a voice note with send_voice. Never both. End with a little question.)';
+      const on = await todaysMatches(db, chat);
+      note = `(No message from them — it is morning for them and you decided to text first. Send a short good-morning in your style, personal to what you know about them or what is on in sport today.${on ? ` On today: ${on}. If one of them fits them, mention it in passing and ask what score they say: that is your prediction duel.` : ''} You may send one photo with send_photo first if you have one that fits — or, now and then instead of a photo, say your good-morning as a voice note with send_voice. Never both. End with a little question.)`;
     } else if (hour >= 17 && hour < 21 && silent > 2 * 86_400_000 && !chat.nudged) {
       note = '(No message from them — they have been quiet for a couple of days and you decided to text first. One short, playful message: you noticed they went missing. Pick up something you talked about or a match coming up. No photo, no guilt trip.)';
       chat.nudged = true;
@@ -894,7 +949,7 @@ async function proactive(db: Db): Promise<{ sent: number }> {
     if (ok) sent += 1;
     else await db.from('telegram_chats').update({ proactive: false }).eq('chat_id', chat.chat_id); // blocked the bot
   }
-  return { sent };
+  return { sent, results, kickoffs };
 }
 
 Deno.serve(async (req) => {
