@@ -9,6 +9,7 @@
 // lists the pages search engines should index (the current matchday and its
 // neighbours per competition, older and later ones are reachable but noindex).
 const S = require('./_md/strings.js');
+const TB = require('./_md/table-strings.js');
 const { menu, tgCard, BURGER, MENU_CSS } = require('./_md/menu.js');
 const { T } = require('../i18n.js');
 
@@ -39,6 +40,7 @@ const fill = (tpl, vars) => String(tpl).replace(/\{(\w+)\}/g, (all, k) => (vars[
 const mdl = (L, n) => (n === 1 && L.md1) || fill(L.md, { n });
 const home = (lang) => (lang === 'en' ? '/' : `/${lang}`);
 const path = (lang, comp, n) => `${lang === 'en' ? '' : `/${lang}`}/${comp}${n ? `/${S[lang].slug}-${n}` : ''}`;
+const tablePath = (lang, comp) => `${lang === 'en' ? '' : `/${lang}`}/${comp}/${TB[lang].slug}`;
 const DONE = new Set(['FINISHED', 'AWARDED']);
 const OFF = new Set(['POSTPONED', 'CANCELLED', 'SUSPENDED']);
 const RUNNING = new Set(['IN_PLAY', 'PAUSED']);
@@ -99,7 +101,7 @@ async function trend(code, season, n) {
   return data;
 }
 
-function table(matches, upTo) {
+function table(matches, upTo, side) {
   const teams = new Map();
   const row = (id, name, tla) => {
     if (!teams.has(id)) teams.set(id, { id, name, tla, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0, form: [] });
@@ -107,7 +109,9 @@ function table(matches, upTo) {
   };
   for (const m of matches) { row(m.home_team_id, m.home, m.home_tla); row(m.away_team_id, m.away, m.away_tla); }
   for (const m of matches.filter((x) => x.done && x.matchday <= upTo)) {
-    const h = teams.get(m.home_team_id), a = teams.get(m.away_team_id);
+    // `side` counts a match only for the home team ('home') or only for the away team ('away').
+    const blank = () => ({ p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0, form: [] });
+    const h = side === 'away' ? blank() : teams.get(m.home_team_id), a = side === 'home' ? blank() : teams.get(m.away_team_id);
     h.p++; a.p++; h.gf += m.home_score; h.ga += m.away_score; a.gf += m.away_score; a.ga += m.home_score;
     if (m.home_score > m.away_score) { h.w++; a.l++; h.pts += 3; h.form.push('W'); a.form.push('L'); }
     else if (m.home_score < m.away_score) { a.w++; h.l++; a.pts += 3; a.form.push('W'); h.form.push('L'); }
@@ -485,13 +489,13 @@ function hubPage(lang, compSlug, d) {
     <h1 class="display"><span>${comp} ${season}:</span><span class="accent">${L.hubH1b}</span></h1>
     <p class="lead">${fill(L.hubIntro, vars)}</p>
     ${rows.some((t) => t.p > 0) ? `<p class="lead">${fill(L.introLeaderNow, { leader: esc(rows[0].name), pts: rows[0].pts })}</p>` : ''}
-    <div class="pager"><a href="${path(lang, compSlug, d.focus)}">${fill(L.next, { md: focusMd })}</a></div>
+    <div class="pager"><a href="${path(lang, compSlug, d.focus)}">${fill(L.next, { md: focusMd })}</a><a href="${tablePath(lang, compSlug)}">${fill(TB[lang].link, { comp })} →</a></div>
   </div></header>
 
   <section class="sec"><div class="wrap">
     <span class="kicker">${comp} ${season}</span><h2 class="display">${L.tableH2} <span class="accent">${L.tableNow}</span></h2>
     ${tableHtml(L, rows)}
-    <p class="note">${L.tableNote}</p>
+    <p class="note">${L.tableNote} <a href="${tablePath(lang, compSlug)}">${fill(TB[lang].link, { comp })} →</a></p>
   </div></section>
 
   <section class="sec"><div class="wrap">
@@ -515,12 +519,102 @@ function hubPage(lang, compSlug, d) {
   return shell({ lang, title, desc, url, alternates, index: true, ld, body, compSlug });
 }
 
+/** Number and its word, for languages where the word changes with the number. */
+function count(T, n) {
+  if (n === 1) return `1 ${T.point}`;
+  if (T.few && n % 10 >= 2 && n % 10 <= 4 && !(n % 100 >= 12 && n % 100 <= 14)) return `${n} ${T.few}`;
+  if (T.many && (n % 100 >= 20 || n % 100 === 0)) return `${n} ${T.many}`;
+  return `${n} ${T.points}`;
+}
+
+/** The league table as a page of its own: overall, home and away, with what stands out. */
+function tablePage(lang, compSlug, d) {
+  const L = S[lang], T = TB[lang];
+  const comp = COMPS[compSlug].name, season = seasonLabel(d.season);
+  const rows = table(d.matches, Infinity);
+  const homeRows = table(d.matches, Infinity, 'home'), awayRows = table(d.matches, Infinity, 'away');
+  const started = rows.some((t) => t.p > 0);
+  const done = d.matches.filter((m) => m.done).length;
+  const date = new Intl.DateTimeFormat(L.locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: L.tz }).format(new Date());
+  const first = rows[0], second = rows[1];
+  const gap = started && second ? first.pts - second.pts : 0;
+  const vars = { comp, season, leader: started ? esc(first.name) : '', second: second ? esc(second.name) : '', pts: started ? first.pts : 0,
+    ptsW: started ? count(T, first.pts) : '', played: started ? first.p : 0, gap: count(T, gap), date, done, total: d.matches.length };
+  const url = BASE + tablePath(lang, compSlug);
+  const alternates = [...LANGS.map((l) => [l, BASE + tablePath(l, compSlug)]), ['x-default', BASE + tablePath('en', compSlug)]];
+  const title = fill(T.title, vars), desc = fill(T.desc, vars);
+  const faq = [[fill(T.q1, vars), started ? fill(T.a1, vars) : fill(T.leadPre, vars)], [fill(T.q2, vars), T.a2], [T.q3, T.a3]];
+  const ld = { '@context': 'https://schema.org', '@graph': [
+    { '@type': 'WebPage', '@id': `${url}#webpage`, url, name: title, description: desc, inLanguage: lang, isPartOf: { '@id': `${BASE}/#website` }, publisher: { '@id': `${BASE}/#org` } },
+    { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'BETina', item: BASE + home(lang) },
+      { '@type': 'ListItem', position: 2, name: comp, item: BASE + path(lang, compSlug) },
+      { '@type': 'ListItem', position: 3, name: fill(T.link, vars), item: url } ] },
+    { '@type': 'FAQPage', mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: String(a).replace(/<[^>]+>/g, '') } })) },
+  ] };
+  const best = (list, by) => list.filter((t) => t.p > 0).sort(by)[0];
+  const attack = best(rows, (a, b) => b.gf - a.gf), defence = best(rows, (a, b) => a.ga - b.ga || b.p - a.p);
+  const formPts = (t) => t.form.reduce((n, f) => n + (f === 'W' ? 3 : f === 'D' ? 1 : 0), 0);
+  const form = best(rows, (a, b) => formPts(b) - formPts(a) || a.pos - b.pos);
+  const body = `  <header class="hero"><div class="wrap">
+    <p class="crumbs"><a href="${home(lang)}">${L.crumbHome}</a><span>/</span><a href="${path(lang, compSlug)}">${comp}</a><span>/</span>${fill(T.link, vars)}</p>
+    <span class="state">${season}</span>
+    <h1 class="display"><span>${fill(T.h1a, vars)}</span><span class="accent">${T.h1b}</span></h1>
+    <p class="lead">${started ? fill(gap > 0 ? T.lead : T.leadLevel, vars) : fill(T.leadPre, vars)}</p>
+    <div class="pager"><a href="${path(lang, compSlug, d.focus)}">${fill(L.next, { md: mdl(L, d.focus) })}</a><a href="${path(lang, compSlug)}">${T.toHub}</a></div>
+  </div></header>
+
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${comp} ${season}</span><h2 class="display">${L.tableH2} <span class="accent">${L.tableNow}</span></h2>
+    ${tableHtml(L, rows)}
+    <p class="note">${fill(T.stand, vars)}</p>
+  </div></section>
+${started ? `
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${comp} ${season}</span><h2 class="display">${T.factsH2} <span class="accent">${T.factsH2b}</span></h2>
+    <div class="prose">
+      <p>${fill(T.attack, { team: esc(attack.name), n: attack.gf })}</p>
+      <p>${fill(T.defence, { team: esc(defence.name), n: defence.ga })}</p>
+      <p>${fill(T.form, { team: esc(form.name), n: formPts(form) })}</p>
+      <p>${T.how}</p>
+    </div>
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${comp} ${season}</span><h2 class="display">${T.homeH2} <span class="accent">${T.homeH2b}</span></h2>
+    ${tableHtml(L, homeRows)}
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${comp} ${season}</span><h2 class="display">${T.awayH2} <span class="accent">${T.awayH2b}</span></h2>
+    ${tableHtml(L, awayRows)}
+  </div></section>
+` : ''}
+  <section class="sec"><div class="wrap">
+    <span class="kicker">${comp}</span><h2 class="display">${T.faqH2} <span class="accent">${T.faqH2b}</span></h2>
+    <div class="faq">${faq.map(([q, a]) => `<div class="qa"><h3>${q}</h3><p>${a}</p></div>`).join('')}</div>
+  </div></section>
+
+  <section class="sec"><div class="wrap">
+    <span class="kicker">BETina</span><h2 class="display">${T.otherH2} <span class="accent">${T.otherH2b}</span></h2>
+    <div class="grid">${Object.keys(COMPS).filter((c) => c !== compSlug).map((c) => `<a href="${tablePath(lang, c)}">${fill(T.link, { comp: COMPS[c].name })}</a>`).join('')}</div>
+  </div></section>
+`;
+  return shell({ lang, title, desc, url, alternates, index: true, ld, body, compSlug });
+}
+
 async function sitemap() {
   const out = [];
   for (const slug of Object.keys(COMPS)) {
     const d = await load(COMPS[slug].code);
     if (!d) continue;
     const pages = [null, ...d.numbers.filter((n) => Math.abs(n - d.focus) <= 1)];
+    {
+      const mod = d.matches.map((m) => m.updated_at).filter(Boolean).sort().pop();
+      const alt = [...LANGS.map((l) => [l, BASE + tablePath(l, slug)]), ['x-default', BASE + tablePath('en', slug)]]
+        .map(([l, href]) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${href}"/>`).join('\n');
+      for (const l of LANGS) out.push(`  <url>\n    <loc>${BASE}${tablePath(l, slug)}</loc>\n${mod ? `    <lastmod>${mod.slice(0, 10)}</lastmod>\n` : ''}${alt}\n  </url>`);
+    }
     for (const n of pages) {
       const mod = (n ? d.days.get(n) : d.matches).map((m) => m.updated_at).filter(Boolean).sort().pop();
       const alt = [...LANGS.map((l) => [l, BASE + path(l, slug, n)]), ['x-default', BASE + path('en', slug, n)]]
@@ -551,7 +645,8 @@ module.exports = async function matchday(req, res) {
     const d = await load(COMPS[compSlug].code);
     if (!d || !d.numbers.length) return notFound(res);
     let html;
-    if (md) {
+    if (md && md === TB[lang].slug) html = tablePage(lang, compSlug, d);
+    else if (md) {
       const m = new RegExp(`^${S[lang].slug}-(\\d{1,2})$`).exec(md);
       const n = m ? Number(m[1]) : NaN;
       if (!d.days.has(n)) return notFound(res);
