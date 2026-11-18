@@ -16,7 +16,17 @@ const { T, SUPPORTED } = createRequire(import.meta.url)(dir + 'i18n.js');
 const BASE = 'https://betina.geniusbet.com';
 const OG_LOCALE = { de: 'de_DE', es: 'es_ES', fr: 'fr_FR', pt: 'pt_PT', it: 'it_IT', ro: 'ro_RO', tr: 'tr_TR', hr: 'hr_HR' };
 
-const source = readFileSync(dir + 'index.html', 'utf8').replace(/\r\n/g, '\n');
+const { menu, BURGER, MENU_CSS } = createRequire(import.meta.url)(dir + 'api/_md/menu.js');
+// The menu comes from the module the feature and matchday pages use, so all pages show the same one.
+const fillMenu = (html) => {
+  const put = (re, text) => { if (!re.test(html)) throw new Error('index.html: marker missing for ' + re); html = html.replace(re, () => text); };
+  put(/<!--menu-->[\s\S]*?<!--\/menu-->/, '<!--menu-->' + menu('en', '', true) + '<!--/menu-->');
+  put(/<!--burger-->[\s\S]*?<!--\/burger-->/, '<!--burger-->' + BURGER + '<!--/burger-->');
+  put(/\/\*menu\*\/[\s\S]*?\/\*\/menu\*\//, '/*menu*/\n' + MENU_CSS + '\n/*/menu*/');
+  return html;
+};
+const source = fillMenu(readFileSync(dir + 'index.html', 'utf8').replace(/\r\n/g, '\n'));
+writeFileSync(dir + 'index.html', source);
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const attr = (s) => esc(s).replace(/"/g, '&quot;');
 
@@ -33,6 +43,10 @@ function page(lang) {
   // Links to feature pages: only languages that have the page keep the link.
   html = html.replace(/\s*<a class="more" href="[^"]*" data-i="[^"]+" data-i-href="([^"]+)">[^<]*<\/a>/g, (all, key) =>
     (dict[key] ? all.replace(/href="[^"]*"/, `href="${dict[key]}"`) : ''));
+
+  // Menu links to feature pages.
+  html = html.replace(/href="[^"]*"( data-i="[^"]+")? data-i-href="([^"]+)"/g, (all, text, key) =>
+    (dict[key] ? all.replace(/href="[^"]*"/, `href="${dict[key]}"`) : all));
 
   // Competition links lead to this language's matchday pages.
   html = html.replace(/href="\/([a-z-]+)" data-comp="\1"/g, (all, comp) => `href="/${lang}/${comp}" data-comp="${comp}"`);

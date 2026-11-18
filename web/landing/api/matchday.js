@@ -9,6 +9,7 @@
 // lists the pages search engines should index (the current matchday and its
 // neighbours per competition — older and later ones are reachable but noindex).
 const S = require('./_md/strings.js');
+const { menu, BURGER, MENU_CSS } = require('./_md/menu.js');
 const { T } = require('../i18n.js');
 
 const BASE = 'https://betina.geniusbet.com';
@@ -240,16 +241,16 @@ ${alternates.map(([l, href]) => `<link rel="alternate" hreflang="${l}" href="${h
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/archivo-variable-latin.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/archivo-italic-900-latin.woff2" crossorigin>
-<style>${CSS}</style>
+<style>${CSS}
+${MENU_CSS}</style>
 </head>
 <body>
 <nav><div class="wrap">
   <a class="brand" href="${home(lang)}" aria-label="BETina"><img src="/assets/v2/logo-mark.webp" alt="" width="114" height="128"><b>BET<span>INA</span></b><small>by GeniusBet</small></a>
-  <div class="navlinks">
-    ${Object.keys(COMPS).map((c) => `<a href="${path(lang, c)}"${c === compSlug ? ' aria-current="page"' : ''}>${COMPS[c].name}</a>`).join('\n    ')}
-  </div>
+  ${menu(lang, compSlug)}
   <details class="langmenu"><summary aria-label="Language">${lang.toUpperCase()}</summary><div>${alternates.filter(([l]) => l !== lang && l !== 'x-default').map(([l, href]) => `<a href="${href.replace(BASE, '')}" hreflang="${l}" lang="${l}">${NAMES[l]}</a>`).join('')}</div></details>
   <a class="btn" href="${WEB}">${esc(ui(lang, 'navWeb'))}</a>
+  ${BURGER}
 </div></nav>
 <main>
 ${body}

@@ -15,6 +15,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const out = fileURLToPath(new URL('../web/landing/', import.meta.url));
 const src = fileURLToPath(new URL('./landing-features/', import.meta.url));
 const { T } = createRequire(import.meta.url)(out + 'i18n.js');
+const { menu, BURGER, MENU_CSS } = createRequire(import.meta.url)(out + 'api/_md/menu.js');
 const BASE = 'https://betina.geniusbet.com';
 const APPLE = 'https://apps.apple.com/app/betina-ai/id6796780870';
 const PLAY = 'https://play.google.com/store/apps/details?id=com.geniusbet.betina&pcampaignid=web_share&referrer=utm_source%3Dbetina_web%26utm_medium%3Dfeature';
@@ -377,22 +378,21 @@ ${alternates}
 <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/archivo-variable-latin.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/archivo-italic-900-latin.woff2" crossorigin>
 <link rel="preload" as="image" href="/assets/v2/${feature.shot}.webp" fetchpriority="high">
-<style>${CSS}</style>
+<style>${CSS}
+${MENU_CSS}</style>
 </head>
 <body>
 
 <nav>
   <div class="wrap">
     <a class="brand" href="${home(lang)}" aria-label="BETina"><img src="/assets/v2/logo-mark.webp" alt="" width="114" height="128"><b>BET<span>INA</span></b><small>by GeniusBet</small></a>
-    <div class="navlinks">
-      ${all.filter((f) => f.pages[lang]).map((f) => `<a href="${f.pages[lang].path}"${f.id === feature.id ? ' aria-current="page"' : ''}>${f.pages[lang].nav}</a>`).join('\n      ')}
-      <a href="/support">${esc(ui(lang, 'navSupport'))}</a>
-    </div>
+    ${menu(lang, feature.id)}
     <details class="langmenu">
       <summary aria-label="Language">${lang.toUpperCase()}</summary>
       <div>${other.map((l) => `<a href="${feature.pages[l].path}" hreflang="${l}" lang="${l}">${NAMES[l]}</a>`).join('')}</div>
     </details>
     <a class="btn" href="${WEB}">${esc(ui(lang, 'navWeb'))}</a>
+    ${BURGER}
   </div>
 </nav>
 

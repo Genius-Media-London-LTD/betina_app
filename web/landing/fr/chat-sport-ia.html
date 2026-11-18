@@ -29,7 +29,7 @@
 <link rel="alternate" hreflang="tr" href="https://betina.geniusbet.com/tr/yapay-zeka-spor-sohbeti">
 <link rel="alternate" hreflang="hr" href="https://betina.geniusbet.com/hr/ai-sportski-chat">
 <link rel="alternate" hreflang="x-default" href="https://betina.geniusbet.com/ai-sports-chat">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://betina.geniusbet.com/fr/chat-sport-ia#webpage","url":"https://betina.geniusbet.com/fr/chat-sport-ia","name":"Chat sport IA : parler de foot avec une IA | BETina","description":"Chat sport IA avec BETina : écris-lui ou appelle-la. Elle connaît tes équipes, se souvient de vos échanges et parle 9 langues. Gratuit, sans argent.","inLanguage":"fr","isPartOf":{"@id":"https://betina.geniusbet.com/#website"},"about":{"@id":"https://betina.geniusbet.com/#app"},"publisher":{"@id":"https://betina.geniusbet.com/#org"},"primaryImageOfPage":"https://betina.geniusbet.com/assets/v2/screen-chat.jpg","dateModified":"2026-11-17"},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"BETina","item":"https://betina.geniusbet.com/fr"},{"@type":"ListItem","position":2,"name":"Chat sport IA","item":"https://betina.geniusbet.com/fr/chat-sport-ia"}]}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://betina.geniusbet.com/fr/chat-sport-ia#webpage","url":"https://betina.geniusbet.com/fr/chat-sport-ia","name":"Chat sport IA : parler de foot avec une IA | BETina","description":"Chat sport IA avec BETina : écris-lui ou appelle-la. Elle connaît tes équipes, se souvient de vos échanges et parle 9 langues. Gratuit, sans argent.","inLanguage":"fr","isPartOf":{"@id":"https://betina.geniusbet.com/#website"},"about":{"@id":"https://betina.geniusbet.com/#app"},"publisher":{"@id":"https://betina.geniusbet.com/#org"},"primaryImageOfPage":"https://betina.geniusbet.com/assets/v2/screen-chat.jpg","dateModified":"2026-11-18"},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"BETina","item":"https://betina.geniusbet.com/fr"},{"@type":"ListItem","position":2,"name":"Chat sport IA","item":"https://betina.geniusbet.com/fr/chat-sport-ia"}]}]}</script>
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/archivo-variable-latin.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/archivo-italic-900-latin.woff2" crossorigin>
@@ -258,24 +258,57 @@ footer .fine { font-size: 13px; line-height: 1.6; max-width: 820px; margin: 0; }
   .store { flex: 1 1 100%; }
   .push { display: none; }
 }
-</style>
+
+.menu{display:flex;align-items:center;gap:26px;margin-left:auto;font-size:14px;font-weight:600;color:var(--soft)}
+.menu a{white-space:nowrap}
+.menu>a:hover,.menu .drop a:hover,.menu a[aria-current],.menu .sub:hover>span,.menu .sub:focus-within>span{color:var(--lime)}
+.menu .grp,.menu .m-only{display:none}
+.menu .sub{position:relative}
+.menu .sub>span{cursor:pointer;white-space:nowrap;outline:0}.menu .sub>span::after{content:' ▾';color:var(--muted)}
+.menu .drop{display:none;position:absolute;left:-16px;top:100%;padding-top:16px;min-width:200px}
+.menu .drop>div{background:var(--surface);border:1px solid var(--line);box-shadow:0 20px 44px rgba(0,0,0,.5);padding:6px 0}
+.menu .sub:hover .drop,.menu .sub:focus-within .drop{display:block}
+.menu .drop a{display:block;padding:9px 16px}
+.burger{display:none;flex-direction:column;justify-content:center;gap:5px;width:42px;height:38px;padding:0 10px;background:rgba(255,255,255,.04);border:1px solid var(--line);cursor:pointer}
+.burger i{display:block;height:2px;background:var(--text);transition:transform .25s,opacity .2s}
+nav.open .burger{border-color:var(--lime)}
+nav.open .burger i:nth-child(1){transform:translateY(7px) rotate(45deg)}nav.open .burger i:nth-child(2){opacity:0}nav.open .burger i:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+@media (max-width:1040px){
+.burger{display:flex}
+nav .lang,nav .langmenu{margin-left:auto}
+nav.open{background:var(--bg)}
+.menu{display:none;position:absolute;left:0;right:0;top:100%;height:calc(100vh - 68px);height:calc(100dvh - 68px);overflow:auto;flex-direction:column;align-items:stretch;gap:0;margin:0;padding:4px var(--gutter) 48px;background:var(--bg);border-top:1px solid var(--line);font-size:19px}
+nav.open .menu{display:flex}
+.menu .grp,.menu .sub>span{display:block;margin:26px 0 6px;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);cursor:default}
+.menu .sub>span::after{content:''}
+.menu>a,.menu .drop a{display:block;padding:14px 0;border-bottom:1px solid var(--line);color:var(--text);font-weight:700}
+.menu .drop{display:block;position:static;padding:0;min-width:0}.menu .drop>div{background:none;border:0;box-shadow:none;padding:0}
+.menu .m-only{display:block}.menu>a.gap{margin-top:26px}.menu a[aria-current]{color:var(--lime)}
+.menu a.btn{display:flex;margin-top:28px;border:0;padding:15px 18px;color:var(--lime-ink)}
+}
+@media (max-width:620px){nav .wrap>.btn{display:none}}</style>
 </head>
 <body>
 
 <nav>
   <div class="wrap">
     <a class="brand" href="/fr" aria-label="BETina"><img src="/assets/v2/logo-mark.webp" alt="" width="114" height="128"><b>BET<span>INA</span></b><small>by GeniusBet</small></a>
-    <div class="navlinks">
-      <a href="/fr/jeu-de-pronostics-foot">Jeu de pronostics</a>
-      <a href="/fr/scores-foot-en-direct">Scores en direct</a>
-      <a href="/fr/chat-sport-ia" aria-current="page">Chat sport IA</a>
-      <a href="/support">Support</a>
+    <div class="menu" id="menu">
+      <span class="grp">Fonctionnalités</span>
+      <a href="/fr/jeu-de-pronostics-foot">Pronostics</a>
+      <a href="/fr/scores-foot-en-direct">En direct</a>
+      <a href="/fr/chat-sport-ia" aria-current="page">Chat IA</a>
+      <div class="sub"><span tabindex="0">Championnats</span><div class="drop"><div><a href="/fr/bundesliga">Bundesliga</a><a href="/fr/premier-league">Premier League</a><a href="/fr/laliga">LaLiga</a><a href="/fr/serie-a">Serie A</a><a href="/fr/champions-league">Champions League</a></div></div></div>
+      <a class="gap" href="/support">Support</a>
+      <a class="m-only" href="/privacy">Confidentialité</a>
+      <a class="btn m-only" href="https://app.betina.geniusbet.com">App web →</a>
     </div>
     <details class="langmenu">
       <summary aria-label="Language">FR</summary>
       <div><a href="/ai-sports-chat" hreflang="en" lang="en">English</a><a href="/de/ki-sport-chat" hreflang="de" lang="de">Deutsch</a><a href="/es/chat-deportivo-ia" hreflang="es" lang="es">Español</a><a href="/pt/chat-de-desporto-com-ia" hreflang="pt" lang="pt">Português</a><a href="/it/chat-sportiva-ia" hreflang="it" lang="it">Italiano</a><a href="/ro/chat-sportiv-ai" hreflang="ro" lang="ro">Română</a><a href="/tr/yapay-zeka-spor-sohbeti" hreflang="tr" lang="tr">Türkçe</a><a href="/hr/ai-sportski-chat" hreflang="hr" lang="hr">Hrvatski</a></div>
     </details>
     <a class="btn" href="https://app.betina.geniusbet.com">App web →</a>
+    <button class="burger" type="button" aria-label="Menu" aria-controls="menu" aria-expanded="false" onclick="var n=this.closest('nav'),o=n.classList.toggle('open');this.setAttribute('aria-expanded',o);document.documentElement.style.overflow=o?'hidden':''"><i></i><i></i><i></i></button>
   </div>
 </nav>
 

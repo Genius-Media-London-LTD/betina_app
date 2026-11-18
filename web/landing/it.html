@@ -108,6 +108,37 @@ nav .wrap { display: flex; align-items: center; gap: 22px; height: 72px; }
 }
 .btn:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 rgba(184, 233, 38, .35); }
 
+/*menu*/
+.menu{display:flex;align-items:center;gap:26px;margin-left:auto;font-size:14px;font-weight:600;color:var(--soft)}
+.menu a{white-space:nowrap}
+.menu>a:hover,.menu .drop a:hover,.menu a[aria-current],.menu .sub:hover>span,.menu .sub:focus-within>span{color:var(--lime)}
+.menu .grp,.menu .m-only{display:none}
+.menu .sub{position:relative}
+.menu .sub>span{cursor:pointer;white-space:nowrap;outline:0}.menu .sub>span::after{content:' ▾';color:var(--muted)}
+.menu .drop{display:none;position:absolute;left:-16px;top:100%;padding-top:16px;min-width:200px}
+.menu .drop>div{background:var(--surface);border:1px solid var(--line);box-shadow:0 20px 44px rgba(0,0,0,.5);padding:6px 0}
+.menu .sub:hover .drop,.menu .sub:focus-within .drop{display:block}
+.menu .drop a{display:block;padding:9px 16px}
+.burger{display:none;flex-direction:column;justify-content:center;gap:5px;width:42px;height:38px;padding:0 10px;background:rgba(255,255,255,.04);border:1px solid var(--line);cursor:pointer}
+.burger i{display:block;height:2px;background:var(--text);transition:transform .25s,opacity .2s}
+nav.open .burger{border-color:var(--lime)}
+nav.open .burger i:nth-child(1){transform:translateY(7px) rotate(45deg)}nav.open .burger i:nth-child(2){opacity:0}nav.open .burger i:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+@media (max-width:1040px){
+.burger{display:flex}
+nav .lang,nav .langmenu{margin-left:auto}
+nav.open{background:var(--bg)}
+.menu{display:none;position:absolute;left:0;right:0;top:100%;height:calc(100vh - 68px);height:calc(100dvh - 68px);overflow:auto;flex-direction:column;align-items:stretch;gap:0;margin:0;padding:4px var(--gutter) 48px;background:var(--bg);border-top:1px solid var(--line);font-size:19px}
+nav.open .menu{display:flex}
+.menu .grp,.menu .sub>span{display:block;margin:26px 0 6px;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);cursor:default}
+.menu .sub>span::after{content:''}
+.menu>a,.menu .drop a{display:block;padding:14px 0;border-bottom:1px solid var(--line);color:var(--text);font-weight:700}
+.menu .drop{display:block;position:static;padding:0;min-width:0}.menu .drop>div{background:none;border:0;box-shadow:none;padding:0}
+.menu .m-only{display:block}.menu>a.gap{margin-top:26px}.menu a[aria-current]{color:var(--lime)}
+.menu a.btn{display:flex;margin-top:28px;border:0;padding:15px 18px;color:var(--lime-ink)}
+}
+@media (max-width:620px){nav .wrap>.btn{display:none}}
+/*/menu*/
+
 /* ---------- Store buttons ---------- */
 .stores { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .store {
@@ -329,17 +360,23 @@ footer .fine { font-size: 13px; line-height: 1.6; max-width: 820px; margin: 0; }
       <b>BET<span>INA</span></b>
       <small>by GeniusBet</small>
     </a>
-    <div class="navlinks">
-      <a href="#features" data-i="navFeatures">Funzioni</a>
-      <a href="#how" data-i="navHow">Come funziona</a>
-      <a href="/support" data-i="navSupport">Supporto</a>
-    </div>
+    <!--menu--><div class="menu" id="menu">
+      <span class="grp" data-i="navFeatures">Funzioni</span>
+      <a href="/it/gioco-pronostici-calcio" data-i="mGame" data-i-href="hrefGame">Pronostici</a>
+      <a href="/it/risultati-calcio-in-diretta" data-i="mLive" data-i-href="hrefLive">In diretta</a>
+      <a href="/it/chat-sportiva-ia" data-i="mChat" data-i-href="hrefChat">Chat IA</a>
+      <div class="sub"><span tabindex="0" data-i="mLeagues">Campionati</span><div class="drop"><div><a href="/it/bundesliga" data-comp="bundesliga">Bundesliga</a><a href="/it/premier-league" data-comp="premier-league">Premier League</a><a href="/it/laliga" data-comp="laliga">LaLiga</a><a href="/it/serie-a" data-comp="serie-a">Serie A</a><a href="/it/champions-league" data-comp="champions-league">Champions League</a></div></div></div>
+      <a class="gap" href="/support" data-i="navSupport">Supporto</a>
+      <a class="m-only" href="/privacy" data-i="fPrivacy">Privacy</a>
+      <a class="btn m-only" href="https://app.betina.geniusbet.com" data-i="navWeb">Web app →</a>
+    </div><!--/menu-->
     <select class="lang" id="language-select" aria-label="Language">
       <option value="en">EN</option><option value="de">DE</option><option value="es">ES</option>
       <option value="fr">FR</option><option value="pt">PT</option><option value="it" selected>IT</option>
       <option value="ro">RO</option><option value="tr">TR</option><option value="hr">HR</option>
     </select>
     <a class="btn" href="https://app.betina.geniusbet.com" data-i="navWeb">Web app →</a>
+    <!--burger--><button class="burger" type="button" aria-label="Menu" aria-controls="menu" aria-expanded="false" onclick="var n=this.closest('nav'),o=n.classList.toggle('open');this.setAttribute('aria-expanded',o);document.documentElement.style.overflow=o?'hidden':''"><i></i><i></i><i></i></button><!--/burger-->
   </div>
 </nav>
 
