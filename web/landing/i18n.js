@@ -890,10 +890,22 @@
   };
 
   // The build script reads the texts from here (Node); the browser goes on.
+  /*videos*/
+  Object.assign(T.de, {"mVideos":"Videos","hrefVideos":"/de/videos","vidKicker":"Videos","vidA":"BETina","vidB":"in Bewegung.","vidAll":"Alle Videos →","vid1":"Hi, ich bin BETina.","vid2":"Mexiko-Stadt 1986: Maradonas zwei Tore","vid3":"Montevideo 1930: die erste WM"});
+  Object.assign(T.es, {"mVideos":"Vídeos","hrefVideos":"/es/videos","vidKicker":"Vídeos","vidA":"BETina","vidB":"en movimiento.","vidAll":"Todos los vídeos →","vid1":"Hola, soy BETina.","vid2":"Ciudad de México 1986: los dos goles de Maradona","vid3":"Montevideo 1930: el primer Mundial"});
+  Object.assign(T.fr, {"mVideos":"Vidéos","hrefVideos":"/fr/videos","vidKicker":"Vidéos","vidA":"BETina","vidB":"en mouvement.","vidAll":"Toutes les vidéos →","vid1":"Salut, moi c’est BETina.","vid2":"Mexico 1986 : les deux buts de Maradona","vid3":"Montevideo 1930 : la première Coupe du monde"});
+  Object.assign(T.pt, {"mVideos":"Vídeos","hrefVideos":"/pt/videos","vidKicker":"Vídeos","vidA":"BETina","vidB":"em movimento.","vidAll":"Todos os vídeos →","vid1":"Olá, eu sou a BETina.","vid2":"Cidade do México 1986: os dois golos de Maradona","vid3":"Montevideu 1930: o primeiro Mundial"});
+  Object.assign(T.it, {"mVideos":"Video","hrefVideos":"/it/videos","vidKicker":"Video","vidA":"BETina","vidB":"in movimento.","vidAll":"Tutti i video →","vid1":"Ciao, sono BETina.","vid2":"Città del Messico 1986: i due gol di Maradona","vid3":"Montevideo 1930: il primo Mondiale"});
+  Object.assign(T.ro, {"mVideos":"Video","hrefVideos":"/ro/videos","vidKicker":"Video","vidA":"BETina","vidB":"în mișcare.","vidAll":"Toate clipurile →","vid1":"Salut, eu sunt BETina.","vid2":"Ciudad de México 1986: cele două goluri ale lui Maradona","vid3":"Montevideo 1930: primul Campionat Mondial"});
+  Object.assign(T.tr, {"mVideos":"Videolar","hrefVideos":"/tr/videos","vidKicker":"Videolar","vidA":"BETina","vidB":"hareket halinde.","vidAll":"Tüm videolar →","vid1":"Merhaba, ben BETina.","vid2":"Meksiko 1986: Maradona’nın iki golü","vid3":"Montevideo 1930: ilk Dünya Kupası"});
+  Object.assign(T.hr, {"mVideos":"Video","hrefVideos":"/hr/videos","vidKicker":"Video","vidA":"BETina","vidB":"u pokretu.","vidAll":"Svi videozapisi →","vid1":"Bok, ja sam BETina.","vid2":"Mexico City 1986.: dva Maradonina gola","vid3":"Montevideo 1930.: prvo Svjetsko prvenstvo"});
+  /*/videos*/
+
   if (typeof module !== 'undefined' && module.exports) { module.exports = { T: T, SUPPORTED: SUPPORTED }; return; }
 
   var EN_TITLE = document.title;
   var originals = null;
+
 
   function remember() {
     originals = new Map();

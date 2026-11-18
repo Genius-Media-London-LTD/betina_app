@@ -3,9 +3,9 @@
 const { T } = require('../../i18n.js');
 
 const EN = {
-  mGame: 'Prediction game', mLive: 'Live scores', mChat: 'AI chat', mLeagues: 'Leagues', mMenu: 'Menu',
+  mGame: 'Prediction game', mLive: 'Live scores', mChat: 'AI chat', mLeagues: 'Leagues', mVideos: 'Videos', mMenu: 'Menu',
   navFeatures: 'Features', navSupport: 'Support', fPrivacy: 'Privacy', navWeb: 'Web app →',
-  hrefGame: '/prediction-game', hrefLive: '/live-scores', hrefChat: '/ai-sports-chat',
+  hrefGame: '/prediction-game', hrefLive: '/live-scores', hrefChat: '/ai-sports-chat', hrefVideos: '/videos',
   tgTitle: 'BETina is now on Telegram', tgText: 'Message her directly, whenever you like. 18+ only.', tgBtn: 'Open in Telegram',
 };
 const TG = 'https://t.me/GeniusBETina_bot';
@@ -32,6 +32,7 @@ function menu(lang, current = '', attrs = false) {
       ${feature('live', 'mLive', 'hrefLive')}
       ${feature('chat', 'mChat', 'hrefChat')}
       <div class="sub"><span tabindex="0"${text('mLeagues')}>${esc(t(lang, 'mLeagues'))}</span><div class="drop"><div>${COMPS.map(comp).join('')}</div></div></div>
+      ${feature('videos', 'mVideos', 'hrefVideos')}
       <a class="gap" href="/support"${text('navSupport')}>${esc(t(lang, 'navSupport'))}</a>
       <a href="${TG}" target="_blank" rel="me noopener">Telegram</a>
       <a class="m-only" href="/privacy"${text('fPrivacy')}>${esc(t(lang, 'fPrivacy'))}</a>
@@ -88,7 +89,7 @@ const MENU_CSS = `.menu{display:flex;align-items:center;gap:26px;margin-left:aut
 .burger i{display:block;height:2px;background:var(--text);transition:transform .25s,opacity .2s}
 nav.open .burger{border-color:var(--lime)}
 nav.open .burger i:nth-child(1){transform:translateY(7px) rotate(45deg)}nav.open .burger i:nth-child(2){opacity:0}nav.open .burger i:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
-@media (max-width:1140px){
+@media (max-width:1240px){
 .burger{display:flex}
 nav .lang,nav .langmenu{margin-left:auto}
 nav.open{background:var(--bg)}

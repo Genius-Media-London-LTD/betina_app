@@ -24,7 +24,7 @@ const OG_LOCALE = { en: 'en_US', de: 'de_DE', es: 'es_ES', fr: 'fr_FR', pt: 'pt_
 
 // Interface texts: English here, the other languages from the landing page's dictionary.
 const EN = {
-  navSupport: 'Support', navWeb: 'Web app →', storeApple: 'Download on the', storeGoogle: 'Get it on',
+  mVideos: 'Videos', navSupport: 'Support', navWeb: 'Web app →', storeApple: 'Download on the', storeGoogle: 'Get it on',
   tryWeb: 'or try it on the web →', heroFree: 'Free · No money, no stakes · iPhone, Android & web',
   fPrivacy: 'Privacy', fTerms: 'Terms', fDelete: 'Delete account', fContact: 'Contact',
   fFine: '18+ only. BETina is an AI companion for sports fans and entertainment — no real money is wagered or moved in the app.',
@@ -272,7 +272,7 @@ footer .fine { font-size: 13px; line-height: 1.6; max-width: 820px; margin: 0; }
 const APPLE_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.7c-.03-2.6 2.12-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.89-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.34.86 1.25 1.89 2.65 3.23 2.6 1.3-.05 1.79-.84 3.36-.84 1.57 0 2.01.84 3.38.81 1.4-.02 2.28-1.27 3.13-2.52.99-1.45 1.4-2.85 1.42-2.92-.03-.01-2.72-1.04-2.71-4.14zM13.8 5.06c.71-.86 1.19-2.06 1.06-3.26-1.03.04-2.27.69-3.01 1.55-.66.76-1.24 1.98-1.08 3.16 1.14.09 2.31-.58 3.03-1.45z"/></svg>';
 const PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#00D7FE" d="M3.6 1.8 13.4 12 3.6 22.2c-.4-.2-.6-.7-.6-1.2V3c0-.5.2-1 .6-1.2z"/><path fill="#FFCE00" d="m17 8.4 3.3 1.9c1 .6 1 2.8 0 3.4L17 15.6 13.4 12z"/><path fill="#FF3A44" d="M17 15.6 13.4 12 3.6 22.2c.4.2.9.2 1.4-.1z"/><path fill="#00F076" d="M5 1.9c-.5-.3-1-.3-1.4-.1L13.4 12 17 8.4z"/></svg>';
 
-const stores = (lang) => `<div class="stores">
+export const stores = (lang) => `<div class="stores">
         <a class="store" href="${APPLE}" target="_blank" rel="noopener">${APPLE_SVG}<span><small>${esc(ui(lang, 'storeApple'))}</small><strong>App Store</strong></span></a>
         <a class="store" href="${attr(PLAY)}" target="_blank" rel="noopener">${PLAY_SVG}<span><small>${esc(ui(lang, 'storeGoogle'))}</small><strong>Google Play</strong></span></a>
       </div>
@@ -322,6 +322,102 @@ const RENDER = {
       </ul>`,
 };
 
+/** Everything from the doctype to <body>. */
+export function head({ lang, title, desc, url, alternates, ld, preload = '', css = '', image = '' }) {
+  return `<!DOCTYPE html>
+<html lang="${lang}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>${esc(title)}</title>
+<meta name="description" content="${attr(desc)}">
+<meta name="theme-color" content="#0D0B11">
+<meta property="og:title" content="${attr(title)}">
+<meta property="og:description" content="${attr(desc)}">
+<meta property="og:image" content="${image || BASE + '/assets/v2/share-card.jpg'}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta property="og:url" content="${url}">
+<meta property="og:locale" content="${OG_LOCALE[lang]}">
+<meta property="og:site_name" content="BETina">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@betina_sports">
+<meta name="apple-itunes-app" content="app-id=6796780870">
+<link rel="canonical" href="${url}">
+${alternates}
+<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/archivo-variable-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/archivo-italic-900-latin.woff2" crossorigin>
+${preload}
+<style>${CSS}
+${MENU_CSS}${css}</style>
+</head>
+<body>
+`;
+}
+
+/** Footer, cookie bar, analytics and the Telegram card, to the end of the document. */
+export function foot(lang, all) {
+  return `<footer>
+  <div class="wrap">
+    <div class="top">
+      <a class="brand" href="${home(lang)}" aria-label="BETina"><img src="/assets/v2/logo-mark.webp" alt="" width="114" height="128" loading="lazy"><b>BET<span>INA</span></b><small>by GeniusBet</small></a>
+      <div class="links">
+        ${all.filter((f) => f.pages[lang]).map((f) => `<a href="${f.pages[lang].path}">${f.pages[lang].nav}</a>`).join('\n        ')}
+        ${COMPS.map(([c, n]) => `<a href="${lang === 'en' ? '' : '/' + lang}/${c}">${n}</a>`).join('\n        ')}
+        <a href="${lang === 'en' ? '' : '/' + lang}/videos">${esc(ui(lang, 'mVideos'))}</a>
+        <a href="/privacy">${esc(ui(lang, 'fPrivacy'))}</a>
+        <a href="/privacy#terms">${esc(ui(lang, 'fTerms'))}</a>
+        <a href="/support">${esc(ui(lang, 'navSupport'))}</a>
+        <a href="/delete-account">${esc(ui(lang, 'fDelete'))}</a>
+        <a href="mailto:marketing@geniusbet.com">${esc(ui(lang, 'fContact'))}</a>
+        <a href="https://t.me/GeniusBETina_bot" target="_blank" rel="me noopener">Telegram</a>
+        <a href="https://x.com/betina_sports" target="_blank" rel="me noopener">X</a>
+        <a href="https://www.instagram.com/geniusbet.betina/" target="_blank" rel="me noopener">Instagram</a>
+        <a href="https://www.facebook.com/profile.php?id=61593822575539" target="_blank" rel="me noopener">Facebook</a>
+      </div>
+    </div>
+    <p class="fine">${esc(ui(lang, 'fFine'))}<br>© 2026 Genius Media London Ltd · Company No. 11133948</p>
+  </div>
+</footer>
+
+<div id="ck" role="dialog" aria-label="Cookies">
+  <span>${esc(ui(lang, 'ckText'))} <a href="/privacy">${esc(ui(lang, 'fPrivacy'))}</a></span>
+  <div class="row"><button id="ck-e">${esc(ui(lang, 'ckNo'))}</button><button id="ck-a" class="yes">${esc(ui(lang, 'ckYes'))}</button></div>
+</div>
+
+<script>
+// Analytics only after consent; "essential" keeps Google out entirely.
+(function () {
+  var KEY = 'betina_ck';
+  function store(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
+  function read() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+  function loadGA() {
+    var s = document.createElement('script');
+    s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=G-LRFD2P7EPN';
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { dataLayer.push(arguments); };
+    gtag('js', new Date()); gtag('config', 'G-LRFD2P7EPN', { anonymize_ip: true });
+  }
+  var choice = read();
+  if (choice === 'all') loadGA();
+  else if (choice !== 'essential') {
+    var bar = document.getElementById('ck');
+    bar.classList.add('show');
+    document.getElementById('ck-a').onclick = function () { store('all'); bar.remove(); loadGA(); };
+    document.getElementById('ck-e').onclick = function () { store('essential'); bar.remove(); };
+  }
+})();
+</script>
+${tgCard(lang)}
+</body>
+</html>
+`;
+}
+
 function render(feature, lang, all) {
   const p = feature.pages[lang];
   const L = LOCAL[lang];
@@ -351,38 +447,7 @@ function render(feature, lang, all) {
     </div>
   </section>`).join('\n\n');
 
-  return `<!DOCTYPE html>
-<html lang="${lang}">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>${esc(p.title)}</title>
-<meta name="description" content="${attr(p.desc)}">
-<meta name="theme-color" content="#0D0B11">
-<meta property="og:title" content="${attr(p.title)}">
-<meta property="og:description" content="${attr(p.desc)}">
-<meta property="og:image" content="${BASE}/assets/v2/share-card.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:type" content="website">
-<meta property="og:url" content="${url}">
-<meta property="og:locale" content="${OG_LOCALE[lang]}">
-<meta property="og:site_name" content="BETina">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:site" content="@betina_sports">
-<meta name="apple-itunes-app" content="app-id=6796780870">
-<link rel="canonical" href="${url}">
-${alternates}
-<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>
-<link rel="icon" type="image/png" href="/favicon.png">
-<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/archivo-variable-latin.woff2" crossorigin>
-<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/archivo-italic-900-latin.woff2" crossorigin>
-<link rel="preload" as="image" href="/assets/v2/${feature.shot}.webp" fetchpriority="high">
-<style>${CSS}
-${MENU_CSS}</style>
-</head>
-<body>
-
+  return head({ lang, title: p.title, desc: p.desc, url, alternates, ld, preload: `<link rel="preload" as="image" href="/assets/v2/${feature.shot}.webp" fetchpriority="high">` }) + `
 <nav>
   <div class="wrap">
     <a class="brand" href="${home(lang)}" aria-label="BETina"><img src="/assets/v2/logo-mark.webp" alt="" width="114" height="128"><b>BET<span>INA</span></b><small>by GeniusBet</small></a>
@@ -452,61 +517,7 @@ ${body}
   </section>
 </main>
 
-<footer>
-  <div class="wrap">
-    <div class="top">
-      <a class="brand" href="${home(lang)}" aria-label="BETina"><img src="/assets/v2/logo-mark.webp" alt="" width="114" height="128" loading="lazy"><b>BET<span>INA</span></b><small>by GeniusBet</small></a>
-      <div class="links">
-        ${all.filter((f) => f.pages[lang]).map((f) => `<a href="${f.pages[lang].path}">${f.pages[lang].nav}</a>`).join('\n        ')}
-        ${COMPS.map(([c, n]) => `<a href="${lang === 'en' ? '' : '/' + lang}/${c}">${n}</a>`).join('\n        ')}
-        <a href="/privacy">${esc(ui(lang, 'fPrivacy'))}</a>
-        <a href="/privacy#terms">${esc(ui(lang, 'fTerms'))}</a>
-        <a href="/support">${esc(ui(lang, 'navSupport'))}</a>
-        <a href="/delete-account">${esc(ui(lang, 'fDelete'))}</a>
-        <a href="mailto:marketing@geniusbet.com">${esc(ui(lang, 'fContact'))}</a>
-        <a href="https://t.me/GeniusBETina_bot" target="_blank" rel="me noopener">Telegram</a>
-        <a href="https://x.com/betina_sports" target="_blank" rel="me noopener">X</a>
-        <a href="https://www.instagram.com/geniusbet.betina/" target="_blank" rel="me noopener">Instagram</a>
-        <a href="https://www.facebook.com/profile.php?id=61593822575539" target="_blank" rel="me noopener">Facebook</a>
-      </div>
-    </div>
-    <p class="fine">${esc(ui(lang, 'fFine'))}<br>© 2026 Genius Media London Ltd · Company No. 11133948</p>
-  </div>
-</footer>
-
-<div id="ck" role="dialog" aria-label="Cookies">
-  <span>${esc(ui(lang, 'ckText'))} <a href="/privacy">${esc(ui(lang, 'fPrivacy'))}</a></span>
-  <div class="row"><button id="ck-e">${esc(ui(lang, 'ckNo'))}</button><button id="ck-a" class="yes">${esc(ui(lang, 'ckYes'))}</button></div>
-</div>
-
-<script>
-// Analytics only after consent; "essential" keeps Google out entirely.
-(function () {
-  var KEY = 'betina_ck';
-  function store(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
-  function read() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
-  function loadGA() {
-    var s = document.createElement('script');
-    s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=G-LRFD2P7EPN';
-    document.head.appendChild(s);
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = function () { dataLayer.push(arguments); };
-    gtag('js', new Date()); gtag('config', 'G-LRFD2P7EPN', { anonymize_ip: true });
-  }
-  var choice = read();
-  if (choice === 'all') loadGA();
-  else if (choice !== 'essential') {
-    var bar = document.getElementById('ck');
-    bar.classList.add('show');
-    document.getElementById('ck-a').onclick = function () { store('all'); bar.remove(); loadGA(); };
-    document.getElementById('ck-e').onclick = function () { store('essential'); bar.remove(); };
-  }
-})();
-</script>
-${tgCard(lang)}
-</body>
-</html>
-`;
+` + foot(lang, all);
 }
 
 /** Writes every feature page and returns their sitemap entries. */
@@ -548,3 +559,5 @@ export async function buildFeatures() {
   }
   return { entries, features: all, homeLinks };
 }
+
+export { BASE, WEB, NAMES, ORDER, OG_LOCALE, T, ui, esc, attr, home, words, out };

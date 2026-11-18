@@ -10,6 +10,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { buildFeatures } from './landing-features.mjs';
+import { buildVideos, loadVideoTexts, homeSection, homeKeys, VIDEO_CSS, VIDEO_JS } from './landing-videos.mjs';
 
 const dir = fileURLToPath(new URL('../web/landing/', import.meta.url));
 const { T, SUPPORTED } = createRequire(import.meta.url)(dir + 'i18n.js');
@@ -18,10 +19,24 @@ const OG_LOCALE = { de: 'de_DE', es: 'es_ES', fr: 'fr_FR', pt: 'pt_PT', it: 'it_
 
 const { menu, tgCard, BURGER, MENU_CSS } = createRequire(import.meta.url)(dir + 'api/_md/menu.js');
 // The menu comes from the module the feature and matchday pages use, so all pages show the same one.
+const videoTexts = await loadVideoTexts();
+const HOME_VIDEO_CSS = VIDEO_CSS + '#videos .wrap{padding-bottom:120px}#videos .more{display:inline-block;margin-top:34px;font-weight:800;font-size:15px;color:var(--lime)}#videos .more:hover{text-decoration:underline;text-underline-offset:4px}\n';
+// Home-page texts of the video section: into the dictionaries used here and into i18n.js for the language swap in the browser.
+for (const lang of Object.keys(videoTexts)) if (lang !== 'en' && T[lang]) Object.assign(T[lang], homeKeys(lang, videoTexts[lang]));
+{
+  const file = dir + 'i18n.js';
+  const js = readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+  const block = Object.keys(videoTexts).filter((l) => l !== 'en' && T[l]).map((l) => `\n  Object.assign(T.${l}, ${JSON.stringify(homeKeys(l, videoTexts[l]))});`).join('');
+  if (!/\/\*videos\*\/[\s\S]*?\/\*\/videos\*\//.test(js)) throw new Error('i18n.js: videos block missing');
+  writeFileSync(file, js.replace(/\/\*videos\*\/[\s\S]*?\/\*\/videos\*\//, () => '/*videos*/' + block + '\n  /*/videos*/'));
+}
 const fillMenu = (html) => {
   const put = (re, text) => { if (!re.test(html)) throw new Error('index.html: marker missing for ' + re); html = html.replace(re, () => text); };
   put(/<!--menu-->[\s\S]*?<!--\/menu-->/, '<!--menu-->' + menu('en', '', true) + '<!--/menu-->');
   put(/<!--tg-->[\s\S]*?<!--\/tg-->/, '<!--tg-->' + tgCard('en', true) + '<!--/tg-->');
+  put(/<!--videos-->[\s\S]*?<!--\/videos-->/, '<!--videos-->' + homeSection('en', videoTexts.en, true) + '<!--/videos-->');
+  put(/\/\*videos\*\/[\s\S]*?\/\*\/videos\*\//, '/*videos*/' + HOME_VIDEO_CSS + '/*/videos*/');
+  put(/<!--vjs-->[\s\S]*?<!--\/vjs-->/, '<!--vjs-->' + VIDEO_JS + '<!--/vjs-->');
   put(/<!--burger-->[\s\S]*?<!--\/burger-->/, '<!--burger-->' + BURGER + '<!--/burger-->');
   put(/\/\*menu\*\/[\s\S]*?\/\*\/menu\*\//, '/*menu*/\n' + MENU_CSS + '\n/*/menu*/');
   return html;
@@ -90,7 +105,9 @@ function page(lang) {
 }
 
 console.log('feature pages:');
-const { entries: featureEntries } = await buildFeatures();
+const { entries: featureEntries, features } = await buildFeatures();
+console.log('video pages:');
+const videoEntries = await buildVideos(features, videoTexts);
 
 const others = SUPPORTED.filter((lang) => lang !== 'en');
 for (const lang of others) writeFileSync(`${dir}${lang}.html`, page(lang));
@@ -108,6 +125,7 @@ writeFileSync(`${dir}sitemap.xml`, [
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
   ...home.map((loc) => entry(loc, alternates + '\n')),
   ...featureEntries.map((e) => entry(e.loc, e.alternates.map(([l, href]) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${href}"/>`).join('\n') + '\n')),
+  ...videoEntries.map((e) => entry(e.loc, e.alternates.map(([l, href]) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${href}"/>`).join('\n') + '\n')),
   entry(`${BASE}/support`),
   entry(`${BASE}/privacy`),
   entry(`${BASE}/delete-account`),
