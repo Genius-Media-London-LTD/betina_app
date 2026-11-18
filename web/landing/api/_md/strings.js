@@ -405,7 +405,7 @@ module.exports = {
     title: '{comp}, {md}: rezultati i ljestvica | BETina',
     hubTitle: '{comp} {season}: kola i ljestvica | BETina',
     descUpcoming: '{comp}, {md} {season}: utakmice ({count}) od {from} do {to}, s terminima i ljestvicom. Prognoziraj ih u besplatnoj igri prognoza.',
-    descLive: '{comp}, {md} {season} – odigrane utakmice: {done} od {count}. Rezultati, ljestvica i prognoze koje je BETina dala prije početka.',
+    descLive: '{comp}, {md} {season}: odigrane utakmice: {done} od {count}. Rezultati, ljestvica i prognoze koje je BETina dala prije početka.',
     descFinished: '{comp}, {md} {season}: rezultati ({count}), golovi ({goals}), ljestvica nakon kola i kako su prošle BETinine prognoze.',
     hubDesc: '{comp} {season}: sva kola s utakmicama i rezultatima, aktualna ljestvica s formom i BETinin učinak u besplatnoj igri prognoza.',
     h1b: 'utakmice, rezultati i ljestvica.',

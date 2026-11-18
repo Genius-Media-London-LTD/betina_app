@@ -13,7 +13,7 @@ export default {
     teaser: 'Pronostique les scores de foot, marque des points et bats tes amis. Sans argent.',
     more: 'En savoir plus sur le jeu de pronostics',
     crumb: 'Jeu de pronostics',
-    title: 'Jeu de pronostics foot gratuit entre amis – BETina',
+    title: 'Jeu de pronostics foot gratuit entre amis | BETina',
     desc: 'Jeu de pronostics foot gratuit : trouve les scores, marque des points et bats tes amis au classement. Sans argent, avec une IA qui joue avec toi.',
     sticker: 'Juste pour le fun · Sans argent',
     h1: 'Jeu de pronostics foot gratuit :',

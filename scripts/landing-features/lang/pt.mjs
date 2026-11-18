@@ -13,7 +13,7 @@ export default {
     teaser: 'Dá o teu palpite para os jogos de futebol, soma pontos e passa à frente dos teus amigos. Sem dinheiro.',
     more: 'Mais sobre o jogo de palpites',
     crumb: 'Jogo de palpites',
-    title: 'Jogo de palpites de futebol grátis, com amigos – BETina',
+    title: 'Jogo de palpites de futebol grátis, com amigos | BETina',
     desc: 'Jogo de palpites de futebol grátis: acerta nos resultados, soma pontos e sobe na classificação com os amigos. Sem dinheiro, com uma IA que joga contigo.',
     sticker: 'Só por diversão · Sem dinheiro',
     h1: 'Jogo de palpites de futebol grátis:',

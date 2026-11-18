@@ -10,7 +10,7 @@ export default {
       teaser: 'Chat or call an AI companion who knows your teams and remembers your talks.',
       more: 'About the AI sports chat',
       crumb: 'AI sports chat',
-      title: 'AI Sports Chat & Voice Calls – Talk Sport with BETina',
+      title: 'AI Sports Chat & Voice Calls: Talk Sport with BETina',
       desc: 'AI sports chat with BETina: chat or call a companion who knows your teams, remembers your talks and speaks 9 languages. Free, no money involved.',
       sticker: 'Chat · Voice · 9 languages',
       h1: 'AI sports chat:',

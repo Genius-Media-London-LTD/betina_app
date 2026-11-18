@@ -7,7 +7,7 @@
 //
 // vercel.json rewrites the public paths to this function; /sitemap-matchdays.xml
 // lists the pages search engines should index (the current matchday and its
-// neighbours per competition — older and later ones are reachable but noindex).
+// neighbours per competition, older and later ones are reachable but noindex).
 const S = require('./_md/strings.js');
 const { menu, tgCard, BURGER, MENU_CSS } = require('./_md/menu.js');
 const { T } = require('../i18n.js');
@@ -31,7 +31,7 @@ const LANGS = ORDER.filter((l) => S[l]);
 const NAMES = { en: 'English', de: 'Deutsch', es: 'Español', fr: 'Français', pt: 'Português', it: 'Italiano', ro: 'Română', tr: 'Türkçe', hr: 'Hrvatski' };
 const OG_LOCALE = { en: 'en_US', de: 'de_DE', es: 'es_ES', fr: 'fr_FR', pt: 'pt_PT', it: 'it_IT', ro: 'ro_RO', tr: 'tr_TR', hr: 'hr_HR' };
 const EN_UI = { ckText: "We'd like to use cookies for anonymous usage statistics.", ckNo: 'Essential only', ckYes: 'Accept all', navSupport: 'Support', navWeb: 'Web app →', storeApple: 'Download on the', storeGoogle: 'Get it on', fPrivacy: 'Privacy', fTerms: 'Terms', fDelete: 'Delete account', fContact: 'Contact',
-  fFine: '18+ only. BETina is an AI companion for sports fans and entertainment — no real money is wagered or moved in the app.' };
+  fFine: '18+ only. BETina is an AI companion for sports fans and entertainment. No real money is wagered or moved in the app.' };
 const ui = (lang, key) => (lang !== 'en' && T[lang] && T[lang][key]) || EN_UI[key];
 
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -535,7 +535,7 @@ function notFound(res) {
   res.statusCode = 404;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'public, s-maxage=60');
-  res.end('<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>Page not found — BETina</title><body style="background:#0D0B11;color:#F2F0F5;font-family:system-ui;padding:40px"><h1>This page is offside.</h1><p><a style="color:#B8E926" href="/">BETina home</a></p>');
+  res.end('<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>Page not found | BETina</title><body style="background:#0D0B11;color:#F2F0F5;font-family:system-ui;padding:40px"><h1>This page is offside.</h1><p><a style="color:#B8E926" href="/">BETina home</a></p>');
 }
 
 module.exports = async function matchday(req, res) {

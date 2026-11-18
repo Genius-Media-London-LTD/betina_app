@@ -13,7 +13,7 @@ export default {
     teaser: 'Maç skorlarını tahmin et, puan topla ve arkadaşlarını geç. İşin içinde para yok.',
     more: 'Tahmin oyunu hakkında',
     crumb: 'Tahmin oyunu',
-    title: 'Skor Tahmin Oyunu: Ücretsiz, Arkadaşlarınla – BETina',
+    title: 'Skor Tahmin Oyunu: Ücretsiz, Arkadaşlarınla | BETina',
     desc: 'Ücretsiz skor tahmin oyunu: maç skorlarını tahmin et, puan topla, sıralamada arkadaşlarını geç. Para yok; seninle birlikte oynayan bir yapay zekâ var.',
     sticker: 'Sadece eğlence · Para yok',
     h1: 'Ücretsiz skor tahmin oyunu:',

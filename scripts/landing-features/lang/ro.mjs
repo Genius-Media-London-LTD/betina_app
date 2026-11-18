@@ -13,7 +13,7 @@ export default {
     teaser: 'Ghicește scorurile la fotbal, adună puncte și bate-ți prietenii. Fără niciun ban.',
     more: 'Despre jocul de pronosticuri',
     crumb: 'Joc de pronosticuri',
-    title: 'Joc de pronosticuri fotbal: gratuit, cu prietenii – BETina',
+    title: 'Joc de pronosticuri fotbal: gratuit, cu prietenii | BETina',
     desc: 'Joc de pronosticuri la fotbal, gratuit: ghicești scoruri, aduni puncte și urci în clasament cu prietenii. Fără bani, cu o parteneră AI care joacă și ea.',
     sticker: 'Doar pentru distracție · Fără bani',
     h1: 'Joc de pronosticuri la fotbal:',

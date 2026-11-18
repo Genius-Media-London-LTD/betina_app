@@ -6,7 +6,7 @@
 // Content lives in scripts/landing-features/<feature>.mjs (English and German)
 // and in scripts/landing-features/lang/<lang>.mjs (all three pages of one
 // further language). build-landing-langs.mjs calls buildFeatures() and puts the pages
-// into the sitemap — run that script after changing content or this template.
+// into the sitemap, run that script after changing content or this template.
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname } from 'node:path';
@@ -27,7 +27,7 @@ const EN = {
   mVideos: 'Videos', navSupport: 'Support', navWeb: 'Web app →', storeApple: 'Download on the', storeGoogle: 'Get it on',
   tryWeb: 'or try it on the web →', heroFree: 'Free · No money, no stakes · iPhone, Android & web',
   fPrivacy: 'Privacy', fTerms: 'Terms', fDelete: 'Delete account', fContact: 'Contact',
-  fFine: '18+ only. BETina is an AI companion for sports fans and entertainment — no real money is wagered or moved in the app.',
+  fFine: '18+ only. BETina is an AI companion for sports fans and entertainment. No real money is wagered or moved in the app.',
   ckText: "We'd like to use cookies for anonymous usage statistics.", ckNo: 'Essential only', ckYes: 'Accept all',
 };
 const LOCAL = {
